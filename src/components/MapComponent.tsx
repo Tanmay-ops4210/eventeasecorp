@@ -1,16 +1,10 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { MapContainer, TileLayer, Marker, Popup, useMapEvents } from 'react-leaflet';
-import { LatLngExpression, Icon } from 'leaflet';
 import { MapPin, Navigation, Check, ArrowLeft, ArrowRight } from 'lucide-react';
-import 'leaflet/dist/leaflet.css';
 
-// Fix for default markers in react-leaflet
-delete (Icon.Default.prototype as any)._getIconUrl;
-Icon.Default.mergeOptions({
-  iconRetinaUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon-2x.png',
-  iconUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon.png',
-  shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png',
-});
+// Define a global variable for the Google Maps API key
+// IMPORTANT: Replace 'YOUR_GOOGLE_MAPS_API_KEY' with your actual Google Maps API key.
+// You can obtain one from the Google Cloud Console.
+const GOOGLE_MAPS_API_KEY = 'YOUR_GOOGLE_MAPS_API_KEY';
 
 interface MapComponentProps {
   onLocationSelect: (location: { lat: number; lng: number; address: string }) => void;
@@ -19,57 +13,108 @@ interface MapComponentProps {
   eventData: any;
 }
 
-interface LocationMarkerProps {
-  position: LatLngExpression | null;
-  setPosition: (position: LatLngExpression | null) => void;
-  onLocationChange: (location: { lat: number; lng: number; address: string }) => void;
-}
-
-const LocationMarker: React.FC<LocationMarkerProps> = ({ position, setPosition, onLocationChange }) => {
-  const map = useMapEvents({
-    click(e) {
-      const newPosition: LatLngExpression = [e.latlng.lat, e.latlng.lng];
-      setPosition(newPosition);
-      
-      // Reverse geocoding simulation (in real app, use a geocoding service)
-      const address = `${e.latlng.lat.toFixed(4)}, ${e.latlng.lng.toFixed(4)}, Ambernath, Thane, Maharashtra`;
-      onLocationChange({
-        lat: e.latlng.lat,
-        lng: e.latlng.lng,
-        address
-      });
-    },
-  });
-
-  return position === null ? null : (
-    <Marker position={position}>
-      <Popup>
-        <div className="text-center">
-          <MapPin className="w-4 h-4 mx-auto mb-2 text-indigo-600" />
-          <p className="text-sm font-medium">Selected Location</p>
-          <p className="text-xs text-gray-600">Click anywhere to change</p>
-        </div>
-      </Popup>
-    </Marker>
-  );
-};
-
 const MapComponent: React.FC<MapComponentProps> = ({ onLocationSelect, onBack, onNext, eventData }) => {
-  // Ambernath, Thane, Maharashtra coordinates
-  const defaultCenter: LatLngExpression = [19.1972, 73.1567];
-  const [position, setPosition] = useState<LatLngExpression | null>(null);
+  // Ambernath, Thane, Maharashtra coordinates as default center
+  const defaultCenter = { lat: 19.1972, lng: 73.1567 };
+  const [map, setMap] = useState<google.maps.Map | null>(null);
+  const [marker, setMarker] = useState<google.maps.Marker | null>(null);
   const [selectedLocation, setSelectedLocation] = useState<{ lat: number; lng: number; address: string } | null>(null);
   const [isLoading, setIsLoading] = useState(false);
-  const mapRef = useRef<any>(null);
+  const mapRef = useRef<HTMLDivElement>(null); // Ref for the map container div
 
+  /**
+   * Loads the Google Maps API script dynamically.
+   */
+  useEffect(() => {
+    if (!window.google || !window.google.maps) {
+      const script = document.createElement('script');
+      script.src = `https://maps.googleapis.com/maps/api/js?key=${GOOGLE_MAPS_API_KEY}&libraries=places`;
+      script.async = true;
+      script.defer = true;
+      script.onload = () => {
+        // Script loaded, now initialize the map
+        initializeMap();
+      };
+      script.onerror = () => {
+        console.error('Failed to load Google Maps script.');
+        // Optionally, show an error message to the user
+      };
+      document.head.appendChild(script);
+    } else {
+      // Google Maps script is already loaded
+      initializeMap();
+    }
+
+    // Cleanup function to remove the script if the component unmounts
+    return () => {
+      const existingScript = document.querySelector(`script[src*="maps.googleapis.com"]`);
+      if (existingScript) {
+        existingScript.remove();
+      }
+    };
+  }, []); // Empty dependency array ensures this runs once on mount
+
+  /**
+   * Initializes the Google Map instance.
+   */
+  const initializeMap = () => {
+    if (mapRef.current && window.google && window.google.maps) {
+      const googleMap = new window.google.maps.Map(mapRef.current, {
+        center: defaultCenter,
+        zoom: 13,
+        mapTypeControl: false, // Hide map type controls
+        streetViewControl: false, // Hide street view control
+        fullscreenControl: false, // Hide fullscreen control
+        zoomControl: true, // Show zoom controls
+      });
+
+      setMap(googleMap);
+
+      // Add click listener to the map
+      googleMap.addListener('click', (e: google.maps.MapMouseEvent) => {
+        if (e.latLng) {
+          const lat = e.latLng.lat();
+          const lng = e.latLng.lng();
+          const newPosition = { lat, lng };
+
+          // Update marker position
+          if (marker) {
+            marker.setPosition(newPosition);
+          } else {
+            const newMarker = new window.google.maps.Marker({
+              position: newPosition,
+              map: googleMap,
+              icon: {
+                url: 'https://maps.google.com/mapfiles/ms/icons/red-dot.png', // Custom marker icon
+                scaledSize: new window.google.maps.Size(40, 40), // Adjust size if needed
+              },
+            });
+            setMarker(newMarker);
+          }
+
+          // Simulate reverse geocoding
+          const address = `${lat.toFixed(4)}, ${lng.toFixed(4)}, Ambernath, Thane, Maharashtra`;
+          handleLocationChange({ lat, lng, address });
+        }
+      });
+    }
+  };
+
+  /**
+   * Handles changes to the selected location and updates parent component.
+   * @param location The selected latitude, longitude, and address.
+   */
   const handleLocationChange = (location: { lat: number; lng: number; address: string }) => {
     setSelectedLocation(location);
     onLocationSelect(location);
   };
 
+  /**
+   * Handles the "Continue to Payment" action.
+   */
   const handleNext = async () => {
     if (!selectedLocation) return;
-    
+
     setIsLoading(true);
     // Simulate API call to save location
     await new Promise(resolve => setTimeout(resolve, 1000));
@@ -77,33 +122,63 @@ const MapComponent: React.FC<MapComponentProps> = ({ onLocationSelect, onBack, o
     onNext();
   };
 
+  /**
+   * Attempts to get the user's current location and centers the map.
+   */
   const handleCurrentLocation = () => {
-    if (navigator.geolocation) {
+    if (navigator.geolocation && map) {
       navigator.geolocation.getCurrentPosition(
         (position) => {
-          const newPos: LatLngExpression = [position.coords.latitude, position.coords.longitude];
-          setPosition(newPos);
-          handleLocationChange({
-            lat: position.coords.latitude,
-            lng: position.coords.longitude,
-            address: `${position.coords.latitude.toFixed(4)}, ${position.coords.longitude.toFixed(4)}, Current Location`
-          });
+          const newPos = { lat: position.coords.latitude, lng: position.coords.longitude };
           
           // Center map on current location
-          if (mapRef.current) {
-            mapRef.current.setView(newPos, 15);
+          map.setCenter(newPos);
+          map.setZoom(15);
+
+          // Update marker position
+          if (marker) {
+            marker.setPosition(newPos);
+          } else {
+            const newMarker = new window.google.maps.Marker({
+              position: newPos,
+              map: map,
+              icon: {
+                url: 'https://maps.google.com/mapfiles/ms/icons/red-dot.png', // Custom marker icon
+                scaledSize: new window.google.maps.Size(40, 40), // Adjust size if needed
+              },
+            });
+            setMarker(newMarker);
           }
+
+          handleLocationChange({
+            lat: newPos.lat,
+            lng: newPos.lng,
+            address: `${newPos.lat.toFixed(4)}, ${newPos.lng.toFixed(4)}, Current Location`
+          });
         },
         (error) => {
           console.error('Error getting location:', error);
-          alert('Unable to get your current location. Please select manually on the map.');
+          // Using a custom modal/message box instead of alert()
+          const messageBox = document.createElement('div');
+          messageBox.className = 'fixed inset-0 bg-gray-600 bg-opacity-75 flex items-center justify-center z-50';
+          messageBox.innerHTML = `
+            <div class="bg-white p-6 rounded-lg shadow-xl text-center max-w-sm w-full">
+              <p class="text-lg font-semibold text-gray-800 mb-4">Location Error</p>
+              <p class="text-gray-600 mb-6">Unable to get your current location. Please select manually on the map.</p>
+              <button id="closeMessageBox" class="px-5 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 transition-colors">OK</button>
+            </div>
+          `;
+          document.body.appendChild(messageBox);
+          document.getElementById('closeMessageBox')?.addEventListener('click', () => {
+            document.body.removeChild(messageBox);
+          });
         }
       );
     }
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-indigo-50 to-purple-50 py-8">
+    <div className="min-h-screen bg-gradient-to-br from-indigo-50 to-purple-50 py-8 font-inter">
       <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Progress Indicator */}
         <div className="mb-8">
@@ -158,22 +233,8 @@ const MapComponent: React.FC<MapComponentProps> = ({ onLocationSelect, onBack, o
               </div>
               
               <div className="h-96 relative">
-                <MapContainer
-                  center={defaultCenter}
-                  zoom={13}
-                  style={{ height: '100%', width: '100%' }}
-                  ref={mapRef}
-                >
-                  <TileLayer
-                    attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-                    url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-                  />
-                  <LocationMarker
-                    position={position}
-                    setPosition={setPosition}
-                    onLocationChange={handleLocationChange}
-                  />
-                </MapContainer>
+                {/* Google Map will be rendered here */}
+                <div ref={mapRef} style={{ height: '100%', width: '100%' }}></div>
               </div>
             </div>
           </div>
