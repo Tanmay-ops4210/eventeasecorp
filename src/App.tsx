@@ -12,12 +12,20 @@ import BlogSection from './components/BlogSection';
 import ContactSection from './components/ContactSection';
 import AuthModal from './components/AuthModal';
 import EnhancedChart from './components/EnhancedChart';
+import MapComponent from './components/MapComponent';
+import PaymentPage from './components/PaymentPage';
+import PaymentSuccess from './components/PaymentSuccess';
 import './components/chart-styles.css';
+
+type AppState = 'home' | 'map' | 'payment' | 'success';
 
 function App() {
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [user, setUser] = useState(null);
+  const [appState, setAppState] = useState<AppState>('home');
+  const [eventData, setEventData] = useState(null);
+  const [locationData, setLocationData] = useState<{ lat: number; lng: number; address: string } | null>(null);
 
   useEffect(() => {
     // Check for saved user data
@@ -41,6 +49,71 @@ function App() {
     localStorage.removeItem('eventUser');
   };
 
+  const handleEventSubmitted = (data: any) => {
+    setEventData(data);
+    setAppState('map');
+  };
+
+  const handleLocationSelected = (location: { lat: number; lng: number; address: string }) => {
+    setLocationData(location);
+  };
+
+  const handleBackToEventForm = () => {
+    setAppState('home');
+  };
+
+  const handleProceedToPayment = () => {
+    setAppState('payment');
+  };
+
+  const handleBackToMap = () => {
+    setAppState('map');
+  };
+
+  const handlePaymentComplete = () => {
+    setAppState('success');
+  };
+
+  const handleBackToHome = () => {
+    setAppState('home');
+    setEventData(null);
+    setLocationData(null);
+  };
+
+  // Render different states
+  if (appState === 'map') {
+    return (
+      <MapComponent
+        eventData={eventData}
+        onLocationSelect={handleLocationSelected}
+        onBack={handleBackToEventForm}
+        onNext={handleProceedToPayment}
+      />
+    );
+  }
+
+  if (appState === 'payment') {
+    return (
+      <PaymentPage
+        eventData={eventData}
+        locationData={locationData}
+        onBack={handleBackToMap}
+        onPaymentComplete={handlePaymentComplete}
+      />
+    );
+  }
+
+  if (appState === 'success') {
+    return (
+      <PaymentSuccess
+        eventData={eventData}
+        locationData={locationData}
+        onBackToHome={handleBackToHome}
+      />
+    );
+  }
+
+  // Default home state
   return (
     <div className="min-h-screen bg-white">
       <Navigation 
@@ -69,7 +142,7 @@ function App() {
         </div>
       </section>
       
-      <PlanEventSection />
+      <PlanEventSection onEventSubmitted={handleEventSubmitted} />
       <BlogSection />
       <BottomSection onBookNow={() => setIsAuthModalOpen(true)} />
       <ContactSection />

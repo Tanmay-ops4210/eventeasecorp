@@ -1,6 +1,10 @@
 import React, { useState } from 'react';
 import { Calendar, Users, MapPin, Clock, Star, CheckCircle } from 'lucide-react';
 
+interface PlanEventSectionProps {
+  onEventSubmitted?: (eventData: any) => void;
+}
+
 const eventTypes = [
   { id: 'conference', name: 'Conference', icon: Users, color: 'bg-indigo-500' },
   { id: 'workshop', name: 'Workshop', icon: Star, color: 'bg-purple-500' },
@@ -19,7 +23,7 @@ const features = [
   'Dedicated event coordinator'
 ];
 
-const PlanEventSection: React.FC = () => {
+const PlanEventSection: React.FC<PlanEventSectionProps> = ({ onEventSubmitted }) => {
   const [selectedType, setSelectedType] = useState('conference');
   const [formData, setFormData] = useState({
     eventName: '',
@@ -30,16 +34,29 @@ const PlanEventSection: React.FC = () => {
     description: ''
   });
 
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
     setFormData(prev => ({ ...prev, [name]: value }));
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    // Handle form submission
-    console.log('Event planning request:', formData);
-    alert('Thank you! We\'ll contact you within 24 hours to discuss your event planning needs.');
+    
+    setIsSubmitting(true);
+    
+    // Simulate API call
+    await new Promise(resolve => setTimeout(resolve, 1000));
+    
+    // Call the callback to trigger the multi-step flow
+    if (onEventSubmitted) {
+      onEventSubmitted(formData);
+    } else {
+      alert('Thank you! We\'ll contact you within 24 hours to discuss your event planning needs.');
+    }
+    
+    setIsSubmitting(false);
   };
 
   return (
@@ -203,9 +220,17 @@ const PlanEventSection: React.FC = () => {
 
                   <button
                     type="submit"
-                    className="w-full bg-gradient-to-r from-indigo-600 to-purple-600 text-white py-4 rounded-lg font-medium hover:from-indigo-700 hover:to-purple-700 transform hover:scale-105 transition-all duration-200 shadow-lg hover:shadow-xl"
+                    disabled={isSubmitting}
+                    className="w-full bg-gradient-to-r from-indigo-600 to-purple-600 text-white py-4 rounded-lg font-medium hover:from-indigo-700 hover:to-purple-700 transform hover:scale-105 transition-all duration-200 shadow-lg hover:shadow-xl disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center space-x-2"
                   >
-                    Request Planning Consultation
+                    {isSubmitting ? (
+                      <>
+                        <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                        <span>Processing...</span>
+                      </>
+                    ) : (
+                      <span>Request Planning Consultation</span>
+                    )}
                   </button>
                 </form>
               </div>
