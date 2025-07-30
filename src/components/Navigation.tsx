@@ -46,6 +46,12 @@ const Navigation: React.FC<NavigationProps> = ({ isAuthenticated, user, onLogin,
                 SCHEDULE
               </button>
               <button
+                onClick={() => scrollToSection('analytics')}
+                className="text-white hover:text-indigo-200 px-3 py-2 text-sm font-medium transition-colors duration-200"
+              >
+                ANALYTICS
+              </button>
+              <button
                 onClick={() => scrollToSection('plan-event')}
                 className="text-white hover:text-indigo-200 px-3 py-2 text-sm font-medium transition-colors duration-200"
               >
@@ -117,6 +123,12 @@ const Navigation: React.FC<NavigationProps> = ({ isAuthenticated, user, onLogin,
                 className="text-white hover:text-indigo-200 block px-3 py-2 text-base font-medium w-full text-left"
               >
                 SCHEDULE
+              </button>
+              <button
+                onClick={() => scrollToSection('analytics')}
+                className="text-white hover:text-indigo-200 block px-3 py-2 text-base font-medium w-full text-left"
+              >
+                ANALYTICS
               </button>
               <button
                 onClick={() => scrollToSection('plan-event')}

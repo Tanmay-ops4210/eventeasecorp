@@ -11,6 +11,8 @@ import PlanEventSection from './components/PlanEventSection';
 import BlogSection from './components/BlogSection';
 import ContactSection from './components/ContactSection';
 import AuthModal from './components/AuthModal';
+import EnhancedChart from './components/EnhancedChart';
+import './components/chart-styles.css';
 
 function App() {
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
@@ -51,6 +53,22 @@ function App() {
       <HeroSection onBookSpot={() => setIsAuthModalOpen(true)} />
       <SpeakersSection />
       <ScheduleSection />
+      
+      {/* Enhanced Chart Section */}
+      <section className="py-20 bg-gradient-to-br from-slate-50 to-indigo-50">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center mb-16">
+            <h2 className="text-5xl md:text-6xl font-bold text-indigo-900 mb-4">
+              ANALYTICS
+            </h2>
+            <p className="text-xl text-gray-600 max-w-3xl mx-auto">
+              Interactive data visualization with smooth animations and pagination
+            </p>
+          </div>
+          <EnhancedChart />
+        </div>
+      </section>
+      
       <PlanEventSection />
       <BlogSection />
       <BottomSection onBookNow={() => setIsAuthModalOpen(true)} />
