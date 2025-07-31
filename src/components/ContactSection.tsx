@@ -1,16 +1,5 @@
 import React, { useState } from 'react';
 import { Mail, Phone, MapPin, Send, Clock, Globe, MessageCircle, Navigation } from 'lucide-react';
-import { MapContainer, TileLayer, Marker, Popup } from 'react-leaflet';
-import 'leaflet/dist/leaflet.css';
-
-// Fix for default markers in react-leaflet
-import { Icon } from 'leaflet';
-delete (Icon.Default.prototype as any)._getIconUrl;
-Icon.Default.mergeOptions({
-  iconRetinaUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon-2x.png',
-  iconUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon.png',
-  shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png',
-});
 
 const contactInfo = [
   {
@@ -55,9 +44,6 @@ const ContactSection: React.FC = () => {
   });
 
   const [isSubmitting, setIsSubmitting] = useState(false);
-  
-  // Office location coordinates (example: Mumbai office)
-  const officeLocation: [number, number] = [19.0760, 72.8777];
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
@@ -131,32 +117,25 @@ const ContactSection: React.FC = () => {
               </div>
             </div>
 
-            {/* Interactive Map */}
+            {/* Location Info */}
             <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-6">
               <div className="flex items-center space-x-3 mb-4">
                 <Navigation className="w-5 h-5 text-white" />
                 <h3 className="text-lg font-bold text-white">Our Location</h3>
               </div>
-              <div className="h-48 rounded-xl overflow-hidden">
-                <MapContainer
-                  center={officeLocation}
-                  zoom={13}
-                  style={{ height: '100%', width: '100%' }}
-                  scrollWheelZoom={false}
-                >
-                  <TileLayer
-                    attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-                    url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-                  />
-                  <Marker position={officeLocation}>
-                    <Popup>
-                      <div className="text-center">
-                        <h4 className="font-semibold text-gray-900">Event Websites Office</h4>
-                        <p className="text-sm text-gray-600">123 Event Street, Mumbai</p>
-                      </div>
-                    </Popup>
-                  </Marker>
-                </MapContainer>
+              <div className="bg-white/10 rounded-xl p-6">
+                <div className="flex items-center space-x-3 mb-4">
+                  <MapPin className="w-6 h-6 text-white" />
+                  <div>
+                    <h4 className="font-semibold text-white">Event Websites Office</h4>
+                    <p className="text-white/80 text-sm">123 Event Street, Mumbai, Maharashtra</p>
+                  </div>
+                </div>
+                <div className="text-white/70 text-sm space-y-2">
+                  <p>📍 Located in the heart of Mumbai's business district</p>
+                  <p>🚇 Near Andheri Metro Station</p>
+                  <p>🅿️ Free parking available</p>
+                </div>
               </div>
               <p className="text-white/80 text-sm mt-3">
                 Visit our office for in-person consultations

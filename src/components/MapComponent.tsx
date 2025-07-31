@@ -1,10 +1,5 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState } from 'react';
 import { MapPin, Navigation, Check, ArrowLeft, ArrowRight } from 'lucide-react';
-
-// Define a global variable for the Google Maps API key
-// IMPORTANT: Replace 'YOUR_GOOGLE_MAPS_API_KEY' with your actual Google Maps API key.
-// You can obtain one from the Google Cloud Console.
-const GOOGLE_MAPS_API_KEY = 'YOUR_GOOGLE_MAPS_API_KEY';
 
 interface MapComponentProps {
   onLocationSelect: (location: { lat: number; lng: number; address: string }) => void;
@@ -14,104 +9,33 @@ interface MapComponentProps {
 }
 
 const MapComponent: React.FC<MapComponentProps> = ({ onLocationSelect, onBack, onNext, eventData }) => {
-  // Ambernath, Thane, Maharashtra coordinates as default center
-  const defaultCenter = { lat: 19.1972, lng: 73.1567 };
-  const [map, setMap] = useState<google.maps.Map | null>(null);
-  const [marker, setMarker] = useState<google.maps.Marker | null>(null);
   const [selectedLocation, setSelectedLocation] = useState<{ lat: number; lng: number; address: string } | null>(null);
   const [isLoading, setIsLoading] = useState(false);
-  const mapRef = useRef<HTMLDivElement>(null); // Ref for the map container div
+  const [customAddress, setCustomAddress] = useState('');
 
-  /**
-   * Loads the Google Maps API script dynamically.
-   */
-  useEffect(() => {
-    if (!window.google || !window.google.maps) {
-      const script = document.createElement('script');
-      script.src = `https://maps.googleapis.com/maps/api/js?key=${GOOGLE_MAPS_API_KEY}&libraries=places`;
-      script.async = true;
-      script.defer = true;
-      script.onload = () => {
-        // Script loaded, now initialize the map
-        initializeMap();
-      };
-      script.onerror = () => {
-        console.error('Failed to load Google Maps script.');
-        // Optionally, show an error message to the user
-      };
-      document.head.appendChild(script);
-    } else {
-      // Google Maps script is already loaded
-      initializeMap();
-    }
+  const predefinedLocations = [
+    { name: 'Ambernath Convention Center', lat: 19.1972, lng: 73.1567, address: 'Ambernath Convention Center, Thane, Maharashtra' },
+    { name: 'Thane Event Hall', lat: 19.2183, lng: 72.9781, address: 'Thane Event Hall, Thane, Maharashtra' },
+    { name: 'Mumbai Conference Center', lat: 19.0760, lng: 72.8777, address: 'Mumbai Conference Center, Mumbai, Maharashtra' },
+    { name: 'Kalyan Community Hall', lat: 19.2437, lng: 73.1355, address: 'Kalyan Community Hall, Kalyan, Maharashtra' }
+  ];
 
-    // Cleanup function to remove the script if the component unmounts
-    return () => {
-      const existingScript = document.querySelector(`script[src*="maps.googleapis.com"]`);
-      if (existingScript) {
-        existingScript.remove();
-      }
-    };
-  }, []); // Empty dependency array ensures this runs once on mount
-
-  /**
-   * Initializes the Google Map instance.
-   */
-  const initializeMap = () => {
-    if (mapRef.current && window.google && window.google.maps) {
-      const googleMap = new window.google.maps.Map(mapRef.current, {
-        center: defaultCenter,
-        zoom: 13,
-        mapTypeControl: false, // Hide map type controls
-        streetViewControl: false, // Hide street view control
-        fullscreenControl: false, // Hide fullscreen control
-        zoomControl: true, // Show zoom controls
-      });
-
-      setMap(googleMap);
-
-      // Add click listener to the map
-      googleMap.addListener('click', (e: google.maps.MapMouseEvent) => {
-        if (e.latLng) {
-          const lat = e.latLng.lat();
-          const lng = e.latLng.lng();
-          const newPosition = { lat, lng };
-
-          // Update marker position
-          if (marker) {
-            marker.setPosition(newPosition);
-          } else {
-            const newMarker = new window.google.maps.Marker({
-              position: newPosition,
-              map: googleMap,
-              icon: {
-                url: 'https://maps.google.com/mapfiles/ms/icons/red-dot.png', // Custom marker icon
-                scaledSize: new window.google.maps.Size(40, 40), // Adjust size if needed
-              },
-            });
-            setMarker(newMarker);
-          }
-
-          // Simulate reverse geocoding
-          const address = `${lat.toFixed(4)}, ${lng.toFixed(4)}, Ambernath, Thane, Maharashtra`;
-          handleLocationChange({ lat, lng, address });
-        }
-      });
-    }
-  };
-
-  /**
-   * Handles changes to the selected location and updates parent component.
-   * @param location The selected latitude, longitude, and address.
-   */
-  const handleLocationChange = (location: { lat: number; lng: number; address: string }) => {
+  const handleLocationSelect = (location: { lat: number; lng: number; address: string }) => {
     setSelectedLocation(location);
     onLocationSelect(location);
   };
 
-  /**
-   * Handles the "Continue to Payment" action.
-   */
+  const handleCustomLocation = () => {
+    if (customAddress.trim()) {
+      const customLocation = {
+        lat: 19.1972 + (Math.random() - 0.5) * 0.1,
+        lng: 73.1567 + (Math.random() - 0.5) * 0.1,
+        address: customAddress
+      };
+      handleLocationSelect(customLocation);
+    }
+  };
+
   const handleNext = async () => {
     if (!selectedLocation) return;
 
@@ -120,61 +44,6 @@ const MapComponent: React.FC<MapComponentProps> = ({ onLocationSelect, onBack, o
     await new Promise(resolve => setTimeout(resolve, 1000));
     setIsLoading(false);
     onNext();
-  };
-
-  /**
-   * Attempts to get the user's current location and centers the map.
-   */
-  const handleCurrentLocation = () => {
-    if (navigator.geolocation && map) {
-      navigator.geolocation.getCurrentPosition(
-        (position) => {
-          const newPos = { lat: position.coords.latitude, lng: position.coords.longitude };
-          
-          // Center map on current location
-          map.setCenter(newPos);
-          map.setZoom(15);
-
-          // Update marker position
-          if (marker) {
-            marker.setPosition(newPos);
-          } else {
-            const newMarker = new window.google.maps.Marker({
-              position: newPos,
-              map: map,
-              icon: {
-                url: 'https://maps.google.com/mapfiles/ms/icons/red-dot.png', // Custom marker icon
-                scaledSize: new window.google.maps.Size(40, 40), // Adjust size if needed
-              },
-            });
-            setMarker(newMarker);
-          }
-
-          handleLocationChange({
-            lat: newPos.lat,
-            lng: newPos.lng,
-            address: `${newPos.lat.toFixed(4)}, ${newPos.lng.toFixed(4)}, Current Location`
-          });
-        },
-        (error) => {
-          console.error('Error getting location:', error);
-          // Using a custom modal/message box instead of alert()
-          const messageBox = document.createElement('div');
-          messageBox.className = 'fixed inset-0 bg-gray-600 bg-opacity-75 flex items-center justify-center z-50';
-          messageBox.innerHTML = `
-            <div class="bg-white p-6 rounded-lg shadow-xl text-center max-w-sm w-full">
-              <p class="text-lg font-semibold text-gray-800 mb-4">Location Error</p>
-              <p class="text-gray-600 mb-6">Unable to get your current location. Please select manually on the map.</p>
-              <button id="closeMessageBox" class="px-5 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 transition-colors">OK</button>
-            </div>
-          `;
-          document.body.appendChild(messageBox);
-          document.getElementById('closeMessageBox')?.addEventListener('click', () => {
-            document.body.removeChild(messageBox);
-          });
-        }
-      );
-    }
   };
 
   return (
@@ -215,26 +84,66 @@ const MapComponent: React.FC<MapComponentProps> = ({ onLocationSelect, onBack, o
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          {/* Map Container */}
+          {/* Location Selection */}
           <div className="lg:col-span-2">
             <div className="bg-white rounded-2xl shadow-xl overflow-hidden">
               <div className="p-6 border-b border-gray-200">
-                <div className="flex items-center justify-between">
-                  <h3 className="text-lg font-semibold text-gray-900">Interactive Map</h3>
-                  <button
-                    onClick={handleCurrentLocation}
-                    className="flex items-center space-x-2 px-4 py-2 bg-indigo-100 text-indigo-700 rounded-lg hover:bg-indigo-200 transition-colors duration-200"
-                  >
-                    <Navigation className="w-4 h-4" />
-                    <span className="text-sm font-medium">Use Current Location</span>
-                  </button>
-                </div>
-                <p className="text-sm text-gray-600 mt-2">Click anywhere on the map to select your event location</p>
+                <h3 className="text-lg font-semibold text-gray-900">Available Locations</h3>
+                <p className="text-sm text-gray-600 mt-2">Select from our recommended venues or add a custom location</p>
               </div>
               
-              <div className="h-96 relative">
-                {/* Google Map will be rendered here */}
-                <div ref={mapRef} style={{ height: '100%', width: '100%' }}></div>
+              <div className="p-6">
+                {/* Predefined Locations */}
+                <div className="space-y-4 mb-8">
+                  {predefinedLocations.map((location, index) => (
+                    <div
+                      key={index}
+                      onClick={() => handleLocationSelect(location)}
+                      className={`p-4 border-2 rounded-xl cursor-pointer transition-all duration-200 hover:shadow-md ${
+                        selectedLocation?.address === location.address
+                          ? 'border-indigo-500 bg-indigo-50'
+                          : 'border-gray-200 hover:border-indigo-300'
+                      }`}
+                    >
+                      <div className="flex items-start space-x-3">
+                        <MapPin className={`w-5 h-5 mt-0.5 ${
+                          selectedLocation?.address === location.address ? 'text-indigo-600' : 'text-gray-400'
+                        }`} />
+                        <div className="flex-1">
+                          <h4 className="font-semibold text-gray-900">{location.name}</h4>
+                          <p className="text-sm text-gray-600">{location.address}</p>
+                          <p className="text-xs text-gray-500 mt-1">
+                            Coordinates: {location.lat.toFixed(4)}, {location.lng.toFixed(4)}
+                          </p>
+                        </div>
+                        {selectedLocation?.address === location.address && (
+                          <Check className="w-5 h-5 text-indigo-600" />
+                        )}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+
+                {/* Custom Location */}
+                <div className="border-t border-gray-200 pt-6">
+                  <h4 className="font-semibold text-gray-900 mb-4">Custom Location</h4>
+                  <div className="flex space-x-3">
+                    <input
+                      type="text"
+                      value={customAddress}
+                      onChange={(e) => setCustomAddress(e.target.value)}
+                      placeholder="Enter custom address..."
+                      className="flex-1 px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                    />
+                    <button
+                      onClick={handleCustomLocation}
+                      disabled={!customAddress.trim()}
+                      className="px-6 py-3 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors duration-200"
+                    >
+                      Add
+                    </button>
+                  </div>
+                </div>
               </div>
             </div>
           </div>
@@ -274,8 +183,9 @@ const MapComponent: React.FC<MapComponentProps> = ({ onLocationSelect, onBack, o
                   <div className="flex items-start space-x-3">
                     <MapPin className="w-5 h-5 text-indigo-600 mt-0.5" />
                     <div>
-                      <p className="font-medium text-gray-900">Coordinates</p>
-                      <p className="text-sm text-gray-600">
+                      <p className="font-medium text-gray-900">Location Confirmed</p>
+                      <p className="text-sm text-gray-600">{selectedLocation.address}</p>
+                      <p className="text-xs text-gray-500 mt-1">
                         {selectedLocation.lat.toFixed(6)}, {selectedLocation.lng.toFixed(6)}
                       </p>
                     </div>
@@ -290,7 +200,7 @@ const MapComponent: React.FC<MapComponentProps> = ({ onLocationSelect, onBack, o
               ) : (
                 <div className="text-center py-8">
                   <MapPin className="w-12 h-12 text-gray-400 mx-auto mb-3" />
-                  <p className="text-gray-600">Click on the map to select a location</p>
+                  <p className="text-gray-600">Select a location from the list above</p>
                 </div>
               )}
             </div>
