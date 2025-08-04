@@ -15,9 +15,11 @@ import EnhancedChart from './components/EnhancedChart';
 import MapComponent from './components/MapComponent';
 import PaymentPage from './components/PaymentPage';
 import PaymentSuccess from './components/PaymentSuccess';
+import AdminPanel from './components/AdminPanel';
+import { supabase, db } from './lib/supabase';
 import './components/chart-styles.css';
 
-type AppState = 'home' | 'map' | 'payment' | 'success';
+type AppState = 'home' | 'map' | 'payment' | 'success' | 'admin';
 
 function App() {
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
@@ -34,13 +36,52 @@ function App() {
       setUser(JSON.parse(savedUser));
       setIsAuthenticated(true);
     }
+
+    // Check if admin route is requested
+    const path = window.location.pathname;
+    if (path === '/admin') {
+      setAppState('admin');
+    }
   }, []);
 
-  const handleLogin = (userData) => {
-    setUser(userData);
-    setIsAuthenticated(true);
-    localStorage.setItem('eventUser', JSON.stringify(userData));
-    setIsAuthModalOpen(false);
+  const handleLogin = async (userData) => {
+    try {
+      // Create user in Supabase if it doesn't exist
+      const { data: existingUser, error: fetchError } = await supabase
+        .from('app_users')
+        .select('*')
+        .eq('email', userData.email)
+        .single();
+
+      if (fetchError && fetchError.code !== 'PGRST116') {
+        console.error('Error checking user:', fetchError);
+      }
+
+      if (!existingUser) {
+        // Create new user in database
+        const { data: newUser, error: createError } = await db.createUser({
+          id: userData.id,
+          email: userData.email,
+          username: userData.name
+        });
+
+        if (createError) {
+          console.error('Error creating user:', createError);
+        }
+      }
+
+      setUser(userData);
+      setIsAuthenticated(true);
+      localStorage.setItem('eventUser', JSON.stringify(userData));
+      setIsAuthModalOpen(false);
+    } catch (error) {
+      console.error('Error during login:', error);
+      // Still allow login even if DB operations fail
+      setUser(userData);
+      setIsAuthenticated(true);
+      localStorage.setItem('eventUser', JSON.stringify(userData));
+      setIsAuthModalOpen(false);
+    }
   };
 
   const handleLogout = () => {
@@ -49,9 +90,31 @@ function App() {
     localStorage.removeItem('eventUser');
   };
 
-  const handleEventSubmitted = (data: any) => {
-    setEventData(data);
-    setAppState('map');
+  const handleEventSubmitted = async (data: any) => {
+    try {
+      // Save event to database if user is authenticated
+      if (user) {
+        const eventData = {
+          ...data,
+          user_id: user.id
+        };
+
+        const { data: newEvent, error } = await db.createEvent(eventData);
+        if (error) {
+          console.error('Error creating event:', error);
+        } else {
+          console.log('Event created successfully:', newEvent);
+        }
+      }
+
+      setEventData(data);
+      setAppState('map');
+    } catch (error) {
+      console.error('Error saving event:', error);
+      // Continue with the flow even if DB save fails
+      setEventData(data);
+      setAppState('map');
+    }
   };
 
   const handleLocationSelected = (location: { lat: number; lng: number; address: string }) => {
@@ -78,7 +141,28 @@ function App() {
     setAppState('home');
     setEventData(null);
     setLocationData(null);
+    window.history.pushState({}, '', '/');
   };
+
+  // Handle admin panel access
+  useEffect(() => {
+    const handlePopState = () => {
+      const path = window.location.pathname;
+      if (path === '/admin') {
+        setAppState('admin');
+      } else {
+        setAppState('home');
+      }
+    };
+
+    window.addEventListener('popstate', handlePopState);
+    return () => window.removeEventListener('popstate', handlePopState);
+  }, []);
+
+  // Admin panel routing
+  if (appState === 'admin') {
+    return <AdminPanel />;
+  }
 
   // Render different states
   if (appState === 'map') {
@@ -113,6 +197,12 @@ function App() {
     );
   }
 
+  // Add admin access button to navigation for development
+  const navigateToAdmin = () => {
+    setAppState('admin');
+    window.history.pushState({}, '', '/admin');
+  };
+
   // Default home state
   return (
     <div className="min-h-screen bg-white">
@@ -122,6 +212,16 @@ function App() {
         onLogin={() => setIsAuthModalOpen(true)}
         onLogout={handleLogout}
       />
+      
+      {/* Admin Access Button (for development) */}
+      <div className="fixed bottom-4 right-4 z-40">
+        <button
+          onClick={navigateToAdmin}
+          className="bg-red-600 text-white px-4 py-2 rounded-lg shadow-lg hover:bg-red-700 transition-colors duration-200 text-sm"
+        >
+          Admin Panel
+        </button>
+      </div>
       
       <HeroSection onBookSpot={() => setIsAuthModalOpen(true)} />
       <SpeakersSection />
