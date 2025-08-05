@@ -6,9 +6,18 @@ interface NavigationProps {
   user: any;
   onLogin: () => void;
   onLogout: () => void;
+  onShowBlog?: () => void;
+  onShowEvents?: () => void;
 }
 
-const Navigation: React.FC<NavigationProps> = ({ isAuthenticated, user, onLogin, onLogout }) => {
+const Navigation: React.FC<NavigationProps> = ({ 
+  isAuthenticated, 
+  user, 
+  onLogin, 
+  onLogout, 
+  onShowBlog, 
+  onShowEvents 
+}) => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
   const scrollToSection = (sectionId: string) => {
@@ -52,13 +61,19 @@ const Navigation: React.FC<NavigationProps> = ({ isAuthenticated, user, onLogin,
                 ANALYTICS
               </button>
               <button
+                onClick={onShowEvents}
+                className="text-white hover:text-indigo-200 px-3 py-2 text-sm font-medium transition-colors duration-200"
+              >
+                EVENTS
+              </button>
+              <button
                 onClick={() => scrollToSection('plan-event')}
                 className="text-white hover:text-indigo-200 px-3 py-2 text-sm font-medium transition-colors duration-200"
               >
                 PLAN EVENT
               </button>
               <button
-                onClick={() => scrollToSection('blog')}
+                onClick={onShowBlog}
                 className="text-white hover:text-indigo-200 px-3 py-2 text-sm font-medium transition-colors duration-200"
               >
                 BLOG
@@ -131,13 +146,19 @@ const Navigation: React.FC<NavigationProps> = ({ isAuthenticated, user, onLogin,
                 ANALYTICS
               </button>
               <button
+                onClick={onShowEvents}
+                className="text-white hover:text-indigo-200 block px-3 py-2 text-base font-medium w-full text-left"
+              >
+                EVENTS
+              </button>
+              <button
                 onClick={() => scrollToSection('plan-event')}
                 className="text-white hover:text-indigo-200 block px-3 py-2 text-base font-medium w-full text-left"
               >
                 PLAN EVENT
               </button>
               <button
-                onClick={() => scrollToSection('blog')}
+                onClick={onShowBlog}
                 className="text-white hover:text-indigo-200 block px-3 py-2 text-base font-medium w-full text-left"
               >
                 BLOG

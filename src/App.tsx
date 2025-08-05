@@ -8,7 +8,7 @@ import SpeakersSection from './components/SpeakersSection';
 import ScheduleSection from './components/ScheduleSection';
 import BottomSection from './components/BottomSection';
 import PlanEventSection from './components/PlanEventSection';
-import BlogSection from './components/BlogSection';
+import BlogContainer from './components/blog/BlogContainer';
 import ContactSection from './components/ContactSection';
 import AuthModal from './components/AuthModal';
 import EnhancedChart from './components/EnhancedChart';
@@ -16,10 +16,12 @@ import MapComponent from './components/MapComponent';
 import PaymentPage from './components/PaymentPage';
 import PaymentSuccess from './components/PaymentSuccess';
 import AdminPanel from './components/AdminPanel';
+import EventsSection from './components/events/EventsSection';
+import BookingFlow from './components/booking/BookingFlow';
 import { supabase, db } from './lib/supabase';
 import './components/chart-styles.css';
 
-type AppState = 'home' | 'map' | 'payment' | 'success' | 'admin';
+type AppState = 'home' | 'blog' | 'events' | 'booking' | 'map' | 'payment' | 'success' | 'admin';
 
 function App() {
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
@@ -28,6 +30,7 @@ function App() {
   const [appState, setAppState] = useState<AppState>('home');
   const [eventData, setEventData] = useState(null);
   const [locationData, setLocationData] = useState<{ lat: number; lng: number; address: string } | null>(null);
+  const [selectedEventId, setSelectedEventId] = useState<string>('');
 
   useEffect(() => {
     // Check for saved user data
@@ -144,6 +147,28 @@ function App() {
     window.history.pushState({}, '', '/');
   };
 
+  const handleShowBlog = () => {
+    setAppState('blog');
+  };
+
+  const handleShowEvents = () => {
+    setAppState('events');
+  };
+
+  const handleBookEvent = (eventId: string) => {
+    setSelectedEventId(eventId);
+    setAppState('booking');
+  };
+
+  const handleBackFromBooking = () => {
+    setAppState('events');
+    setSelectedEventId('');
+  };
+
+  const handleLoginRequired = () => {
+    setIsAuthModalOpen(true);
+  };
+
   // Handle admin panel access
   useEffect(() => {
     const handlePopState = () => {
@@ -162,6 +187,32 @@ function App() {
   // Admin panel routing
   if (appState === 'admin') {
     return <AdminPanel />;
+  }
+
+  // Blog state
+  if (appState === 'blog') {
+    return <BlogContainer />;
+  }
+
+  // Events state
+  if (appState === 'events') {
+    return (
+      <EventsSection
+        onBookEvent={handleBookEvent}
+        isAuthenticated={isAuthenticated}
+        onLoginRequired={handleLoginRequired}
+      />
+    );
+  }
+
+  // Booking flow state
+  if (appState === 'booking') {
+    return (
+      <BookingFlow
+        eventData={{ id: selectedEventId, title: 'Selected Event' }}
+        onBack={handleBackFromBooking}
+      />
+    );
   }
 
   // Render different states
@@ -211,6 +262,8 @@ function App() {
         user={user}
         onLogin={() => setIsAuthModalOpen(true)}
         onLogout={handleLogout}
+        onShowBlog={handleShowBlog}
+        onShowEvents={handleShowEvents}
       />
       
       {/* Admin Access Button (for development) */}
@@ -243,7 +296,7 @@ function App() {
       </section>
       
       <PlanEventSection onEventSubmitted={handleEventSubmitted} />
-      <BlogSection />
+      <div id="blog"><BlogContainer /></div>
       <BottomSection onBookNow={() => setIsAuthModalOpen(true)} />
       <ContactSection />
       
@@ -252,6 +305,11 @@ function App() {
         onClose={() => setIsAuthModalOpen(false)}
         onLogin={handleLogin}
       />
+
+      {/* Events Section */}
+      <div id="events">
+        <EventsSection onBookEvent={handleBookEvent} isAuthenticated={isAuthenticated} onLoginRequired={handleLoginRequired} />
+      </div>
     </div>
   );
 }
