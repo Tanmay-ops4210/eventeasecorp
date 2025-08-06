@@ -18,7 +18,9 @@ import PaymentSuccess from './components/PaymentSuccess';
 import AdminPanel from './components/AdminPanel';
 import EventsSection from './components/events/EventsSection';
 import BookingFlow from './components/booking/BookingFlow';
-import { supabase, db } from './lib/supabase';
+// TEMPORARILY REMOVED SUPABASE
+// import { supabase, db } from './lib/supabase';
+import { db } from './lib/supabase';
 import './components/chart-styles.css';
 
 type AppState = 'home' | 'blog' | 'events' | 'booking' | 'map' | 'payment' | 'success' | 'admin';
@@ -49,29 +51,30 @@ function App() {
 
   const handleLogin = async (userData) => {
     try {
-      // Create user in Supabase if it doesn't exist
-      const { data: existingUser, error: fetchError } = await supabase
-        .from('app_users')
-        .select('*')
-        .eq('email', userData.email)
-        .single();
+      // TEMPORARILY REMOVED SUPABASE - Skip database operations
+      // // Create user in Supabase if it doesn't exist
+      // const { data: existingUser, error: fetchError } = await supabase
+      //   .from('app_users')
+      //   .select('*')
+      //   .eq('email', userData.email)
+      //   .single();
 
-      if (fetchError && fetchError.code !== 'PGRST116') {
-        console.error('Error checking user:', fetchError);
-      }
+      // if (fetchError && fetchError.code !== 'PGRST116') {
+      //   console.error('Error checking user:', fetchError);
+      // }
 
-      if (!existingUser) {
-        // Create new user in database
-        const { data: newUser, error: createError } = await db.createUser({
-          id: userData.id,
-          email: userData.email,
-          username: userData.name
-        });
+      // if (!existingUser) {
+      //   // Create new user in database
+      //   const { data: newUser, error: createError } = await db.createUser({
+      //     id: userData.id,
+      //     email: userData.email,
+      //     username: userData.name
+      //   });
 
-        if (createError) {
-          console.error('Error creating user:', createError);
-        }
-      }
+      //   if (createError) {
+      //     console.error('Error creating user:', createError);
+      //   }
+      // }
 
       setUser(userData);
       setIsAuthenticated(true);
@@ -95,20 +98,21 @@ function App() {
 
   const handleEventSubmitted = async (data: any) => {
     try {
-      // Save event to database if user is authenticated
-      if (user) {
-        const eventData = {
-          ...data,
-          user_id: user.id
-        };
+      // TEMPORARILY REMOVED SUPABASE - Skip database operations
+      // // Save event to database if user is authenticated
+      // if (user) {
+      //   const eventData = {
+      //     ...data,
+      //     user_id: user.id
+      //   };
 
-        const { data: newEvent, error } = await db.createEvent(eventData);
-        if (error) {
-          console.error('Error creating event:', error);
-        } else {
-          console.log('Event created successfully:', newEvent);
-        }
-      }
+      //   const { data: newEvent, error } = await db.createEvent(eventData);
+      //   if (error) {
+      //     console.error('Error creating event:', error);
+      //   } else {
+      //     console.log('Event created successfully:', newEvent);
+      //   }
+      // }
 
       setEventData(data);
       setAppState('map');
