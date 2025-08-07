@@ -8,6 +8,9 @@ interface NavigationProps {
   onLogout: () => void;
   onShowBlog?: () => void;
   onShowEvents?: () => void;
+  onShowSpeakers?: () => void;
+  onShowSponsors?: () => void;
+  onShowDashboard?: () => void;
 }
 
 const Navigation: React.FC<NavigationProps> = ({ 
@@ -16,7 +19,10 @@ const Navigation: React.FC<NavigationProps> = ({
   onLogin, 
   onLogout, 
   onShowBlog, 
-  onShowEvents 
+  onShowEvents,
+  onShowSpeakers,
+  onShowSponsors,
+  onShowDashboard
 }) => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
@@ -49,6 +55,12 @@ const Navigation: React.FC<NavigationProps> = ({
                 SPEAKERS
               </button>
               <button
+                onClick={onShowSpeakers}
+                className="text-white hover:text-indigo-200 px-3 py-2 text-sm font-medium transition-colors duration-200"
+              >
+                SPEAKER DIRECTORY
+              </button>
+              <button
                 onClick={() => scrollToSection('schedule')}
                 className="text-white hover:text-indigo-200 px-3 py-2 text-sm font-medium transition-colors duration-200"
               >
@@ -79,6 +91,12 @@ const Navigation: React.FC<NavigationProps> = ({
                 BLOG
               </button>
               <button
+                onClick={onShowSponsors}
+                className="text-white hover:text-indigo-200 px-3 py-2 text-sm font-medium transition-colors duration-200"
+              >
+                SPONSORS
+              </button>
+              <button
                 onClick={() => scrollToSection('contact')}
                 className="text-white hover:text-indigo-200 px-3 py-2 text-sm font-medium transition-colors duration-200"
               >
@@ -95,6 +113,12 @@ const Navigation: React.FC<NavigationProps> = ({
                   <User className="w-4 h-4" />
                   <span className="text-sm">{user?.name}</span>
                 </div>
+                <button
+                  onClick={onShowDashboard}
+                  className="text-white hover:text-indigo-200 text-sm font-medium transition-colors duration-200"
+                >
+                  Dashboard
+                </button>
                 <button
                   onClick={onLogout}
                   className="text-white hover:text-indigo-200 text-sm font-medium transition-colors duration-200"
@@ -134,6 +158,12 @@ const Navigation: React.FC<NavigationProps> = ({
                 SPEAKERS
               </button>
               <button
+                onClick={onShowSpeakers}
+                className="text-white hover:text-indigo-200 block px-3 py-2 text-base font-medium w-full text-left"
+              >
+                SPEAKER DIRECTORY
+              </button>
+              <button
                 onClick={() => scrollToSection('schedule')}
                 className="text-white hover:text-indigo-200 block px-3 py-2 text-base font-medium w-full text-left"
               >
@@ -164,6 +194,12 @@ const Navigation: React.FC<NavigationProps> = ({
                 BLOG
               </button>
               <button
+                onClick={onShowSponsors}
+                className="text-white hover:text-indigo-200 block px-3 py-2 text-base font-medium w-full text-left"
+              >
+                SPONSORS
+              </button>
+              <button
                 onClick={() => scrollToSection('contact')}
                 className="text-white hover:text-indigo-200 block px-3 py-2 text-base font-medium w-full text-left"
               >
@@ -176,6 +212,12 @@ const Navigation: React.FC<NavigationProps> = ({
                     <User className="w-4 h-4" />
                     <span>{user?.name}</span>
                   </div>
+                  <button
+                    onClick={onShowDashboard}
+                    className="text-white hover:text-indigo-200 block px-3 py-2 text-base font-medium w-full text-left"
+                  >
+                    Dashboard
+                  </button>
                   <button
                     onClick={onLogout}
                     className="text-white hover:text-indigo-200 block px-3 py-2 text-base font-medium w-full text-left"

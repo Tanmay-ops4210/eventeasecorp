@@ -11,6 +11,9 @@ import PlanEventSection from './components/PlanEventSection';
 import BlogContainer from './components/blog/BlogContainer';
 import ContactSection from './components/ContactSection';
 import AuthModal from './components/AuthModal';
+import SpeakerContainer from './components/speakers/SpeakerContainer';
+import SponsorsPartnersPage from './components/SponsorsPartnersPage';
+import AttendeeDashboard from './components/attendee/AttendeeDashboard';
 import EnhancedChart from './components/EnhancedChart';
 import MapComponent from './components/MapComponent';
 import PaymentPage from './components/PaymentPage';
@@ -23,7 +26,7 @@ import BookingFlow from './components/booking/BookingFlow';
 import { db } from './lib/supabase';
 import './components/chart-styles.css';
 
-type AppState = 'home' | 'blog' | 'events' | 'booking' | 'map' | 'payment' | 'success' | 'admin';
+type AppState = 'home' | 'blog' | 'events' | 'booking' | 'map' | 'payment' | 'success' | 'admin' | 'speakers' | 'sponsors' | 'dashboard';
 
 function App() {
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
@@ -159,6 +162,22 @@ function App() {
     setAppState('events');
   };
 
+  const handleShowSpeakers = () => {
+    setAppState('speakers');
+  };
+
+  const handleShowSponsors = () => {
+    setAppState('sponsors');
+  };
+
+  const handleShowDashboard = () => {
+    if (isAuthenticated) {
+      setAppState('dashboard');
+    } else {
+      setIsAuthModalOpen(true);
+    }
+  };
+
   const handleBookEvent = (eventId: string) => {
     setSelectedEventId(eventId);
     setAppState('booking');
@@ -196,6 +215,29 @@ function App() {
   // Blog state
   if (appState === 'blog') {
     return <BlogContainer />;
+  }
+
+  // Speakers state
+  if (appState === 'speakers') {
+    return <SpeakerContainer />;
+  }
+
+  // Sponsors & Partners state
+  if (appState === 'sponsors') {
+    return <SponsorsPartnersPage />;
+  }
+
+  // Attendee Dashboard state
+  if (appState === 'dashboard') {
+    return (
+      <AttendeeDashboard
+        user={user}
+        onLogout={() => {
+          handleLogout();
+          setAppState('home');
+        }}
+      />
+    );
   }
 
   // Events state
@@ -268,6 +310,9 @@ function App() {
         onLogout={handleLogout}
         onShowBlog={handleShowBlog}
         onShowEvents={handleShowEvents}
+        onShowSpeakers={handleShowSpeakers}
+        onShowSponsors={handleShowSponsors}
+        onShowDashboard={handleShowDashboard}
       />
       
       {/* Admin Access Button (for development) */}

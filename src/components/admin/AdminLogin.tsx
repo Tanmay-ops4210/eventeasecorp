@@ -28,7 +28,7 @@ const AdminLogin: React.FC<AdminLoginProps> = ({ onLoginSuccess }) => {
 
     try {
       // Validate admin email
-      if (credentials.email !== 'tanmay365210@gmail.com') {
+      if (credentials.email !== 'tanmay365210mogabbera@gmail.com') {
         setError('Access denied. Admin credentials required.');
         setIsLoading(false);
         return;

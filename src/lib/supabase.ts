@@ -86,7 +86,7 @@ export const adminAuth = {
     // return { data, error };
     
     // Mock admin authentication - only allow specific admin email
-    if (email === 'tanmay365210@gmail.com' && password) {
+    if (email === 'tanmay365210mogabbera@gmail.com' && password === 'TAM123***') {
       return { 
         data: { 
           user: { 
@@ -124,7 +124,7 @@ export const adminAuth = {
   },
 
   isAdmin(user: any) {
-    return user?.email === 'tanmay365210@gmail.com';
+    return user?.email === 'tanmay365210mogabbera@gmail.com';
   }
 };
 
