@@ -1,5 +1,6 @@
 import React from 'react';
 import { ExternalLink, Award, Handshake, Star, Globe, Users } from 'lucide-react';
+import Navigation from './Navigation';
 
 interface Sponsor {
   id: string;
@@ -20,6 +21,17 @@ interface Partner {
   description: string;
   website: string;
   collaboration: string;
+}
+
+interface SponsorsPartnersPageProps {
+  isAuthenticated?: boolean;
+  user?: any;
+  onLogin?: () => void;
+  onLogout?: () => void;
+  onShowBlog?: () => void;
+  onShowEvents?: () => void;
+  onShowSpeakers?: () => void;
+  onShowDashboard?: () => void;
 }
 
 const sponsors: Sponsor[] = [
@@ -145,7 +157,16 @@ const partnerTypeColors = {
   venue: 'bg-orange-100 text-orange-800'
 };
 
-const SponsorsPartnersPage: React.FC = () => {
+const SponsorsPartnersPage: React.FC<SponsorsPartnersPageProps> = ({
+  isAuthenticated = false,
+  user = null,
+  onLogin = () => {},
+  onLogout = () => {},
+  onShowBlog = () => {},
+  onShowEvents = () => {},
+  onShowSpeakers = () => {},
+  onShowDashboard = () => {}
+}) => {
   const platinumSponsors = sponsors.filter(s => s.tier === 'platinum');
   const goldSponsors = sponsors.filter(s => s.tier === 'gold');
   const silverSponsors = sponsors.filter(s => s.tier === 'silver');
@@ -153,6 +174,17 @@ const SponsorsPartnersPage: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-gray-50">
+      <Navigation 
+        isAuthenticated={isAuthenticated}
+        user={user}
+        onLogin={onLogin}
+        onLogout={onLogout}
+        onShowBlog={onShowBlog}
+        onShowEvents={onShowEvents}
+        onShowSpeakers={onShowSpeakers}
+        onShowDashboard={onShowDashboard}
+        currentPage="other"
+      />
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20">
         {/* Header */}
         <div className="text-center mb-16">

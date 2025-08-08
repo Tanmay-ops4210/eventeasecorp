@@ -1,10 +1,31 @@
 import React, { useState } from 'react';
+import Navigation from '../Navigation';
 import SpeakerDirectory from './SpeakerDirectory';
 import SpeakerProfile from './SpeakerProfile';
 
 type SpeakerView = 'directory' | 'profile';
 
-const SpeakerContainer: React.FC = () => {
+interface SpeakerContainerProps {
+  isAuthenticated?: boolean;
+  user?: any;
+  onLogin?: () => void;
+  onLogout?: () => void;
+  onShowBlog?: () => void;
+  onShowEvents?: () => void;
+  onShowSponsors?: () => void;
+  onShowDashboard?: () => void;
+}
+
+const SpeakerContainer: React.FC<SpeakerContainerProps> = ({
+  isAuthenticated = false,
+  user = null,
+  onLogin = () => {},
+  onLogout = () => {},
+  onShowBlog = () => {},
+  onShowEvents = () => {},
+  onShowSponsors = () => {},
+  onShowDashboard = () => {}
+}) => {
   const [currentView, setCurrentView] = useState<SpeakerView>('directory');
   const [selectedSpeakerId, setSelectedSpeakerId] = useState<string>('');
 
@@ -24,6 +45,17 @@ const SpeakerContainer: React.FC = () => {
 
   return (
     <>
+      <Navigation 
+        isAuthenticated={isAuthenticated}
+        user={user}
+        onLogin={onLogin}
+        onLogout={onLogout}
+        onShowBlog={onShowBlog}
+        onShowEvents={onShowEvents}
+        onShowSponsors={onShowSponsors}
+        onShowDashboard={onShowDashboard}
+        currentPage="other"
+      />
       {currentView === 'directory' ? (
         <SpeakerDirectory onSpeakerClick={handleSpeakerClick} />
       ) : (

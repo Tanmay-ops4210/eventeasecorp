@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { Menu, X, User } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { Menu, X, User, Home, Phone, Calendar } from 'lucide-react';
 
 interface NavigationProps {
   isAuthenticated: boolean;
@@ -11,6 +11,7 @@ interface NavigationProps {
   onShowSpeakers?: () => void;
   onShowSponsors?: () => void;
   onShowDashboard?: () => void;
+  currentPage?: 'home' | 'other';
 }
 
 const Navigation: React.FC<NavigationProps> = ({ 
@@ -22,9 +23,25 @@ const Navigation: React.FC<NavigationProps> = ({
   onShowEvents,
   onShowSpeakers,
   onShowSponsors,
-  onShowDashboard
+  onShowDashboard,
+  currentPage = 'home'
 }) => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [isCollapsibleMenuOpen, setIsCollapsibleMenuOpen] = useState(false);
+
+  // Close menus when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      const target = event.target as Element;
+      if (!target.closest('.navigation-container')) {
+        setIsMobileMenuOpen(false);
+        setIsCollapsibleMenuOpen(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
 
   const scrollToSection = (sectionId: string) => {
     const element = document.getElementById(sectionId);
@@ -32,76 +49,146 @@ const Navigation: React.FC<NavigationProps> = ({
       element.scrollIntoView({ behavior: 'smooth' });
     }
     setIsMobileMenuOpen(false);
+    setIsCollapsibleMenuOpen(false);
   };
 
+  const handleNavigation = (action: () => void) => {
+    action();
+    setIsMobileMenuOpen(false);
+    setIsCollapsibleMenuOpen(false);
+  };
+
+  // Navigation items that appear in collapsible menu on non-home pages
+  const collapsibleMenuItems = [
+    { label: 'SPEAKERS', action: () => scrollToSection('speakers'), icon: User },
+    { label: 'SPEAKER DIRECTORY', action: () => onShowSpeakers?.(), icon: User },
+    { label: 'SCHEDULE', action: () => scrollToSection('schedule'), icon: Calendar },
+    { label: 'ANALYTICS', action: () => scrollToSection('analytics'), icon: Calendar },
+    { label: 'PLAN EVENT', action: () => scrollToSection('plan-event'), icon: Calendar },
+    { label: 'BLOG', action: () => onShowBlog?.(), icon: Calendar },
+    { label: 'SPONSORS', action: () => onShowSponsors?.(), icon: Calendar },
+  ];
+
+  const isHomePage = currentPage === 'home';
+
   return (
-    <nav className="fixed top-0 left-0 right-0 z-50 bg-gradient-to-r from-indigo-600 to-purple-600 backdrop-blur-md bg-opacity-90">
+    <nav className="navigation-container fixed top-0 left-0 right-0 z-50 bg-gradient-to-r from-indigo-600 to-purple-600 backdrop-blur-md bg-opacity-90 shadow-lg">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-16">
           {/* Logo */}
           <div className="flex-shrink-0">
-            <div className="w-8 h-8 bg-white rounded-full flex items-center justify-center">
+            <div className="w-8 h-8 bg-white rounded-full flex items-center justify-center cursor-pointer hover:scale-110 transition-transform duration-200">
               <div className="w-4 h-4 bg-indigo-600 rounded-full"></div>
             </div>
           </div>
 
           {/* Desktop Navigation */}
           <div className="hidden md:block">
-            <div className="ml-10 flex items-baseline space-x-8">
-              <button
-                onClick={() => scrollToSection('speakers')}
-                className="text-white hover:text-indigo-200 px-3 py-2 text-sm font-medium transition-colors duration-200"
-              >
-                SPEAKERS
-              </button>
-              <button
-                onClick={onShowSpeakers}
-                className="text-white hover:text-indigo-200 px-3 py-2 text-sm font-medium transition-colors duration-200"
-              >
-                SPEAKER DIRECTORY
-              </button>
-              <button
-                onClick={() => scrollToSection('schedule')}
-                className="text-white hover:text-indigo-200 px-3 py-2 text-sm font-medium transition-colors duration-200"
-              >
-                SCHEDULE
-              </button>
-              <button
-                onClick={() => scrollToSection('analytics')}
-                className="text-white hover:text-indigo-200 px-3 py-2 text-sm font-medium transition-colors duration-200"
-              >
-                ANALYTICS
-              </button>
-              <button
-                onClick={onShowEvents}
-                className="text-white hover:text-indigo-200 px-3 py-2 text-sm font-medium transition-colors duration-200"
-              >
-                EVENTS
-              </button>
-              <button
-                onClick={() => scrollToSection('plan-event')}
-                className="text-white hover:text-indigo-200 px-3 py-2 text-sm font-medium transition-colors duration-200"
-              >
-                PLAN EVENT
-              </button>
-              <button
-                onClick={onShowBlog}
-                className="text-white hover:text-indigo-200 px-3 py-2 text-sm font-medium transition-colors duration-200"
-              >
-                BLOG
-              </button>
-              <button
-                onClick={onShowSponsors}
-                className="text-white hover:text-indigo-200 px-3 py-2 text-sm font-medium transition-colors duration-200"
-              >
-                SPONSORS
-              </button>
-              <button
-                onClick={() => scrollToSection('contact')}
-                className="text-white hover:text-indigo-200 px-3 py-2 text-sm font-medium transition-colors duration-200"
-              >
-                CONTACT
-              </button>
+            <div className="ml-10 flex items-baseline space-x-6">
+              {isHomePage ? (
+                // Full navigation for home page
+                <>
+                  <button
+                    onClick={() => scrollToSection('home')}
+                    className="nav-item flex items-center space-x-2 text-white hover:text-indigo-200 px-3 py-2 text-sm font-medium transition-all duration-200 hover:bg-white/10 rounded-lg"
+                  >
+                    <Home className="w-4 h-4" />
+                    <span>HOME</span>
+                  </button>
+                  <button
+                    onClick={() => scrollToSection('contact')}
+                    className="nav-item flex items-center space-x-2 text-white hover:text-indigo-200 px-3 py-2 text-sm font-medium transition-all duration-200 hover:bg-white/10 rounded-lg"
+                  >
+                    <Phone className="w-4 h-4" />
+                    <span>CONTACTS</span>
+                  </button>
+                  <button
+                    onClick={() => handleNavigation(() => onShowEvents?.())}
+                    className="nav-item flex items-center space-x-2 text-white hover:text-indigo-200 px-3 py-2 text-sm font-medium transition-all duration-200 hover:bg-white/10 rounded-lg"
+                  >
+                    <Calendar className="w-4 h-4" />
+                    <span>EVENTS</span>
+                  </button>
+                  <button
+                    onClick={() => scrollToSection('speakers')}
+                    className="nav-item text-white hover:text-indigo-200 px-3 py-2 text-sm font-medium transition-all duration-200 hover:bg-white/10 rounded-lg"
+                  >
+                    SPEAKERS
+                  </button>
+                  <button
+                    onClick={() => handleNavigation(() => onShowSpeakers?.())}
+                    className="nav-item text-white hover:text-indigo-200 px-3 py-2 text-sm font-medium transition-all duration-200 hover:bg-white/10 rounded-lg"
+                  >
+                    SPEAKER DIRECTORY
+                  </button>
+                  <button
+                    onClick={() => scrollToSection('schedule')}
+                    className="nav-item text-white hover:text-indigo-200 px-3 py-2 text-sm font-medium transition-all duration-200 hover:bg-white/10 rounded-lg"
+                  >
+                    SCHEDULE
+                  </button>
+                  <button
+                    onClick={() => scrollToSection('analytics')}
+                    className="nav-item text-white hover:text-indigo-200 px-3 py-2 text-sm font-medium transition-all duration-200 hover:bg-white/10 rounded-lg"
+                  >
+                    ANALYTICS
+                  </button>
+                  <button
+                    onClick={() => scrollToSection('plan-event')}
+                    className="nav-item text-white hover:text-indigo-200 px-3 py-2 text-sm font-medium transition-all duration-200 hover:bg-white/10 rounded-lg"
+                  >
+                    PLAN EVENT
+                  </button>
+                  <button
+                    onClick={() => handleNavigation(() => onShowBlog?.())}
+                    className="nav-item text-white hover:text-indigo-200 px-3 py-2 text-sm font-medium transition-all duration-200 hover:bg-white/10 rounded-lg"
+                  >
+                    BLOG
+                  </button>
+                  <button
+                    onClick={() => handleNavigation(() => onShowSponsors?.())}
+                    className="nav-item text-white hover:text-indigo-200 px-3 py-2 text-sm font-medium transition-all duration-200 hover:bg-white/10 rounded-lg"
+                  >
+                    SPONSORS
+                  </button>
+                </>
+              ) : (
+                // Collapsible menu for other pages
+                <div className="relative">
+                  <button
+                    onClick={() => setIsCollapsibleMenuOpen(!isCollapsibleMenuOpen)}
+                    className="flex items-center space-x-2 text-white hover:text-indigo-200 px-4 py-2 text-sm font-medium transition-all duration-200 hover:bg-white/10 rounded-lg border border-white/20"
+                    aria-expanded={isCollapsibleMenuOpen}
+                    aria-haspopup="true"
+                  >
+                    <Menu className="w-4 h-4" />
+                    <span>MENU</span>
+                  </button>
+
+                  {/* Collapsible Menu Dropdown */}
+                  <div className={`absolute top-full left-0 mt-2 w-64 bg-white rounded-xl shadow-2xl border border-gray-200 transform transition-all duration-300 origin-top-left ${
+                    isCollapsibleMenuOpen 
+                      ? 'opacity-100 scale-100 translate-y-0' 
+                      : 'opacity-0 scale-95 -translate-y-2 pointer-events-none'
+                  }`}>
+                    <div className="py-2">
+                      {collapsibleMenuItems.map((item, index) => {
+                        const IconComponent = item.icon;
+                        return (
+                          <button
+                            key={index}
+                            onClick={() => handleNavigation(item.action)}
+                            className="w-full flex items-center space-x-3 px-4 py-3 text-left text-gray-700 hover:bg-indigo-50 hover:text-indigo-600 transition-colors duration-200"
+                          >
+                            <IconComponent className="w-4 h-4" />
+                            <span className="font-medium">{item.label}</span>
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+                </div>
+              )}
             </div>
           </div>
 
@@ -114,14 +201,14 @@ const Navigation: React.FC<NavigationProps> = ({
                   <span className="text-sm">{user?.name}</span>
                 </div>
                 <button
-                  onClick={onShowDashboard}
-                  className="text-white hover:text-indigo-200 text-sm font-medium transition-colors duration-200"
+                  onClick={() => handleNavigation(() => onShowDashboard?.())}
+                  className="text-white hover:text-indigo-200 text-sm font-medium transition-colors duration-200 px-3 py-2 hover:bg-white/10 rounded-lg"
                 >
                   Dashboard
                 </button>
                 <button
                   onClick={onLogout}
-                  className="text-white hover:text-indigo-200 text-sm font-medium transition-colors duration-200"
+                  className="text-white hover:text-indigo-200 text-sm font-medium transition-colors duration-200 px-3 py-2 hover:bg-white/10 rounded-lg"
                 >
                   Logout
                 </button>
@@ -129,7 +216,7 @@ const Navigation: React.FC<NavigationProps> = ({
             ) : (
               <button
                 onClick={onLogin}
-                className="text-white hover:text-indigo-200 text-sm font-medium transition-colors duration-200"
+                className="text-white hover:text-indigo-200 text-sm font-medium transition-colors duration-200 px-4 py-2 border border-white/20 rounded-lg hover:bg-white/10"
               >
                 Login
               </button>
@@ -140,7 +227,9 @@ const Navigation: React.FC<NavigationProps> = ({
           <div className="md:hidden">
             <button
               onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-              className="text-white hover:text-indigo-200 p-2"
+              className="text-white hover:text-indigo-200 p-2 rounded-lg hover:bg-white/10 transition-colors duration-200"
+              aria-expanded={isMobileMenuOpen}
+              aria-label="Toggle mobile menu"
             >
               {isMobileMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
             </button>
@@ -148,96 +237,128 @@ const Navigation: React.FC<NavigationProps> = ({
         </div>
 
         {/* Mobile Navigation */}
-        {isMobileMenuOpen && (
-          <div className="md:hidden">
-            <div className="px-2 pt-2 pb-3 space-y-1 bg-indigo-700 bg-opacity-50 backdrop-blur-md">
-              <button
-                onClick={() => scrollToSection('speakers')}
-                className="text-white hover:text-indigo-200 block px-3 py-2 text-base font-medium w-full text-left"
-              >
-                SPEAKERS
-              </button>
-              <button
-                onClick={onShowSpeakers}
-                className="text-white hover:text-indigo-200 block px-3 py-2 text-base font-medium w-full text-left"
-              >
-                SPEAKER DIRECTORY
-              </button>
-              <button
-                onClick={() => scrollToSection('schedule')}
-                className="text-white hover:text-indigo-200 block px-3 py-2 text-base font-medium w-full text-left"
-              >
-                SCHEDULE
-              </button>
-              <button
-                onClick={() => scrollToSection('analytics')}
-                className="text-white hover:text-indigo-200 block px-3 py-2 text-base font-medium w-full text-left"
-              >
-                ANALYTICS
-              </button>
-              <button
-                onClick={onShowEvents}
-                className="text-white hover:text-indigo-200 block px-3 py-2 text-base font-medium w-full text-left"
-              >
-                EVENTS
-              </button>
-              <button
-                onClick={() => scrollToSection('plan-event')}
-                className="text-white hover:text-indigo-200 block px-3 py-2 text-base font-medium w-full text-left"
-              >
-                PLAN EVENT
-              </button>
-              <button
-                onClick={onShowBlog}
-                className="text-white hover:text-indigo-200 block px-3 py-2 text-base font-medium w-full text-left"
-              >
-                BLOG
-              </button>
-              <button
-                onClick={onShowSponsors}
-                className="text-white hover:text-indigo-200 block px-3 py-2 text-base font-medium w-full text-left"
-              >
-                SPONSORS
-              </button>
-              <button
-                onClick={() => scrollToSection('contact')}
-                className="text-white hover:text-indigo-200 block px-3 py-2 text-base font-medium w-full text-left"
-              >
-                CONTACT
-              </button>
-              
-              {isAuthenticated ? (
-                <div className="border-t border-indigo-500 pt-3">
-                  <div className="flex items-center space-x-2 text-white px-3 py-2">
-                    <User className="w-4 h-4" />
-                    <span>{user?.name}</span>
-                  </div>
+        <div className={`md:hidden transition-all duration-300 ease-in-out ${
+          isMobileMenuOpen 
+            ? 'max-h-screen opacity-100' 
+            : 'max-h-0 opacity-0 overflow-hidden'
+        }`}>
+          <div className="px-2 pt-2 pb-3 space-y-1 bg-indigo-700 bg-opacity-50 backdrop-blur-md rounded-lg mt-2">
+            {isHomePage ? (
+              // Full mobile navigation for home page
+              <>
+                <button
+                  onClick={() => scrollToSection('home')}
+                  className="mobile-nav-item flex items-center space-x-3 text-white hover:text-indigo-200 block px-3 py-2 text-base font-medium w-full text-left rounded-lg hover:bg-white/10 transition-colors duration-200"
+                >
+                  <Home className="w-5 h-5" />
+                  <span>HOME</span>
+                </button>
+                <button
+                  onClick={() => scrollToSection('contact')}
+                  className="mobile-nav-item flex items-center space-x-3 text-white hover:text-indigo-200 block px-3 py-2 text-base font-medium w-full text-left rounded-lg hover:bg-white/10 transition-colors duration-200"
+                >
+                  <Phone className="w-5 h-5" />
+                  <span>CONTACTS</span>
+                </button>
+                <button
+                  onClick={() => handleNavigation(() => onShowEvents?.())}
+                  className="mobile-nav-item flex items-center space-x-3 text-white hover:text-indigo-200 block px-3 py-2 text-base font-medium w-full text-left rounded-lg hover:bg-white/10 transition-colors duration-200"
+                >
+                  <Calendar className="w-5 h-5" />
+                  <span>EVENTS</span>
+                </button>
+                <button
+                  onClick={() => scrollToSection('speakers')}
+                  className="mobile-nav-item text-white hover:text-indigo-200 block px-3 py-2 text-base font-medium w-full text-left rounded-lg hover:bg-white/10 transition-colors duration-200"
+                >
+                  SPEAKERS
+                </button>
+                <button
+                  onClick={() => handleNavigation(() => onShowSpeakers?.())}
+                  className="mobile-nav-item text-white hover:text-indigo-200 block px-3 py-2 text-base font-medium w-full text-left rounded-lg hover:bg-white/10 transition-colors duration-200"
+                >
+                  SPEAKER DIRECTORY
+                </button>
+                <button
+                  onClick={() => scrollToSection('schedule')}
+                  className="mobile-nav-item text-white hover:text-indigo-200 block px-3 py-2 text-base font-medium w-full text-left rounded-lg hover:bg-white/10 transition-colors duration-200"
+                >
+                  SCHEDULE
+                </button>
+                <button
+                  onClick={() => scrollToSection('analytics')}
+                  className="mobile-nav-item text-white hover:text-indigo-200 block px-3 py-2 text-base font-medium w-full text-left rounded-lg hover:bg-white/10 transition-colors duration-200"
+                >
+                  ANALYTICS
+                </button>
+                <button
+                  onClick={() => scrollToSection('plan-event')}
+                  className="mobile-nav-item text-white hover:text-indigo-200 block px-3 py-2 text-base font-medium w-full text-left rounded-lg hover:bg-white/10 transition-colors duration-200"
+                >
+                  PLAN EVENT
+                </button>
+                <button
+                  onClick={() => handleNavigation(() => onShowBlog?.())}
+                  className="mobile-nav-item text-white hover:text-indigo-200 block px-3 py-2 text-base font-medium w-full text-left rounded-lg hover:bg-white/10 transition-colors duration-200"
+                >
+                  BLOG
+                </button>
+                <button
+                  onClick={() => handleNavigation(() => onShowSponsors?.())}
+                  className="mobile-nav-item text-white hover:text-indigo-200 block px-3 py-2 text-base font-medium w-full text-left rounded-lg hover:bg-white/10 transition-colors duration-200"
+                >
+                  SPONSORS
+                </button>
+              </>
+            ) : (
+              // Collapsible mobile navigation for other pages
+              collapsibleMenuItems.map((item, index) => {
+                const IconComponent = item.icon;
+                return (
                   <button
-                    onClick={onShowDashboard}
-                    className="text-white hover:text-indigo-200 block px-3 py-2 text-base font-medium w-full text-left"
+                    key={index}
+                    onClick={() => handleNavigation(item.action)}
+                    className="mobile-nav-item flex items-center space-x-3 text-white hover:text-indigo-200 block px-3 py-2 text-base font-medium w-full text-left rounded-lg hover:bg-white/10 transition-colors duration-200"
                   >
-                    Dashboard
+                    <IconComponent className="w-5 h-5" />
+                    <span>{item.label}</span>
                   </button>
-                  <button
-                    onClick={onLogout}
-                    className="text-white hover:text-indigo-200 block px-3 py-2 text-base font-medium w-full text-left"
-                  >
-                    Logout
-                  </button>
+                );
+              })
+            )}
+            
+            {/* Mobile Auth Section */}
+            {isAuthenticated ? (
+              <div className="border-t border-indigo-500 pt-3 mt-3">
+                <div className="flex items-center space-x-2 text-white px-3 py-2">
+                  <User className="w-4 h-4" />
+                  <span>{user?.name}</span>
                 </div>
-              ) : (
-                <div className="border-t border-indigo-500 pt-3">
-                  <button
-                    onClick={onLogin}
-                    className="text-white hover:text-indigo-200 block px-3 py-2 text-base font-medium w-full text-left"
-                  >
-                    Login
-                  </button>
-                </div>
-              )}
-            </div>
+                <button
+                  onClick={() => handleNavigation(() => onShowDashboard?.())}
+                  className="mobile-nav-item text-white hover:text-indigo-200 block px-3 py-2 text-base font-medium w-full text-left rounded-lg hover:bg-white/10 transition-colors duration-200"
+                >
+                  Dashboard
+                </button>
+                <button
+                  onClick={onLogout}
+                  className="mobile-nav-item text-white hover:text-indigo-200 block px-3 py-2 text-base font-medium w-full text-left rounded-lg hover:bg-white/10 transition-colors duration-200"
+                >
+                  Logout
+                </button>
+              </div>
+            ) : (
+              <div className="border-t border-indigo-500 pt-3 mt-3">
+                <button
+                  onClick={onLogin}
+                  className="mobile-nav-item text-white hover:text-indigo-200 block px-3 py-2 text-base font-medium w-full text-left rounded-lg hover:bg-white/10 transition-colors duration-200"
+                >
+                  Login
+                </button>
+              </div>
+            )}
           </div>
-        )}
+        </div>
       </div>
     </nav>
   );

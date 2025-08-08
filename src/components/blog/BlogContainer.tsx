@@ -1,10 +1,31 @@
 import React, { useState } from 'react';
+import Navigation from '../Navigation';
 import BlogList from './BlogList';
 import BlogArticle from './BlogArticle';
 
 type BlogView = 'list' | 'article';
 
-const BlogContainer: React.FC = () => {
+interface BlogContainerProps {
+  isAuthenticated?: boolean;
+  user?: any;
+  onLogin?: () => void;
+  onLogout?: () => void;
+  onShowEvents?: () => void;
+  onShowSpeakers?: () => void;
+  onShowSponsors?: () => void;
+  onShowDashboard?: () => void;
+}
+
+const BlogContainer: React.FC<BlogContainerProps> = ({
+  isAuthenticated = false,
+  user = null,
+  onLogin = () => {},
+  onLogout = () => {},
+  onShowEvents = () => {},
+  onShowSpeakers = () => {},
+  onShowSponsors = () => {},
+  onShowDashboard = () => {}
+}) => {
   const [currentView, setCurrentView] = useState<BlogView>('list');
   const [selectedArticleSlug, setSelectedArticleSlug] = useState<string>('');
 
@@ -24,8 +45,19 @@ const BlogContainer: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-gray-50">
+      <Navigation 
+        isAuthenticated={isAuthenticated}
+        user={user}
+        onLogin={onLogin}
+        onLogout={onLogout}
+        onShowEvents={onShowEvents}
+        onShowSpeakers={onShowSpeakers}
+        onShowSponsors={onShowSponsors}
+        onShowDashboard={onShowDashboard}
+        currentPage="other"
+      />
       {currentView === 'list' ? (
-        <div className="py-20">
+        <div className="pt-20 pb-8">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="text-center mb-16">
               <h1 className="text-5xl md:text-6xl font-bold text-indigo-900 mb-4">

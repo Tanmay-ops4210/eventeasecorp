@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Search, Filter, Calendar, MapPin, Loader2 } from 'lucide-react';
+import Navigation from '../Navigation';
 import EventCard from './EventCard';
 
 interface Event {
@@ -22,6 +23,14 @@ interface EventsSectionProps {
   onBookEvent: (eventId: string) => void;
   isAuthenticated: boolean;
   onLoginRequired: () => void;
+  isStandalone?: boolean;
+  user?: any;
+  onLogin?: () => void;
+  onLogout?: () => void;
+  onShowBlog?: () => void;
+  onShowSpeakers?: () => void;
+  onShowSponsors?: () => void;
+  onShowDashboard?: () => void;
 }
 
 // Mock events data
@@ -116,7 +125,19 @@ const mockEvents: Event[] = [
 
 const categories = ['All', 'Technology', 'Marketing', 'Sustainability', 'Business', 'Design', 'Networking'];
 
-const EventsSection: React.FC<EventsSectionProps> = ({ onBookEvent, isAuthenticated, onLoginRequired }) => {
+const EventsSection: React.FC<EventsSectionProps> = ({ 
+  onBookEvent, 
+  isAuthenticated, 
+  onLoginRequired,
+  isStandalone = false,
+  user = null,
+  onLogin = () => {},
+  onLogout = () => {},
+  onShowBlog = () => {},
+  onShowSpeakers = () => {},
+  onShowSponsors = () => {},
+  onShowDashboard = () => {}
+}) => {
   const [events, setEvents] = useState<Event[]>([]);
   const [filteredEvents, setFilteredEvents] = useState<Event[]>([]);
   const [selectedCategory, setSelectedCategory] = useState('All');
@@ -196,7 +217,21 @@ const EventsSection: React.FC<EventsSectionProps> = ({ onBookEvent, isAuthentica
   }
 
   return (
-    <section className="py-20 bg-gray-50">
+    <>
+      {isStandalone && (
+        <Navigation 
+          isAuthenticated={isAuthenticated}
+          user={user}
+          onLogin={onLogin}
+          onLogout={onLogout}
+          onShowBlog={onShowBlog}
+          onShowSpeakers={onShowSpeakers}
+          onShowSponsors={onShowSponsors}
+          onShowDashboard={onShowDashboard}
+          currentPage="other"
+        />
+      )}
+      <section className={`${isStandalone ? 'pt-20 pb-8' : 'py-20'} bg-gray-50`}>
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="text-center mb-16">
           <h2 className="text-5xl md:text-6xl font-bold text-indigo-900 mb-4">
@@ -296,6 +331,7 @@ const EventsSection: React.FC<EventsSectionProps> = ({ onBookEvent, isAuthentica
         )}
       </div>
     </section>
+    </>
   );
 };
 

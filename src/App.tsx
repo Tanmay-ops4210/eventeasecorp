@@ -37,6 +37,11 @@ function App() {
   const [locationData, setLocationData] = useState<{ lat: number; lng: number; address: string } | null>(null);
   const [selectedEventId, setSelectedEventId] = useState<string>('');
 
+  // Determine current page for navigation
+  const getCurrentPage = (): 'home' | 'other' => {
+    return appState === 'home' ? 'home' : 'other';
+  };
+
   useEffect(() => {
     // Check for saved user data
     const savedUser = localStorage.getItem('eventUser');
@@ -214,17 +219,50 @@ function App() {
 
   // Blog state
   if (appState === 'blog') {
-    return <BlogContainer />;
+    return (
+      <BlogContainer 
+        isAuthenticated={isAuthenticated}
+        user={user}
+        onLogin={() => setIsAuthModalOpen(true)}
+        onLogout={handleLogout}
+        onShowEvents={handleShowEvents}
+        onShowSpeakers={handleShowSpeakers}
+        onShowSponsors={handleShowSponsors}
+        onShowDashboard={handleShowDashboard}
+      />
+    );
   }
 
   // Speakers state
   if (appState === 'speakers') {
-    return <SpeakerContainer />;
+    return (
+      <SpeakerContainer 
+        isAuthenticated={isAuthenticated}
+        user={user}
+        onLogin={() => setIsAuthModalOpen(true)}
+        onLogout={handleLogout}
+        onShowBlog={handleShowBlog}
+        onShowEvents={handleShowEvents}
+        onShowSponsors={handleShowSponsors}
+        onShowDashboard={handleShowDashboard}
+      />
+    );
   }
 
   // Sponsors & Partners state
   if (appState === 'sponsors') {
-    return <SponsorsPartnersPage />;
+    return (
+      <SponsorsPartnersPage 
+        isAuthenticated={isAuthenticated}
+        user={user}
+        onLogin={() => setIsAuthModalOpen(true)}
+        onLogout={handleLogout}
+        onShowBlog={handleShowBlog}
+        onShowEvents={handleShowEvents}
+        onShowSpeakers={handleShowSpeakers}
+        onShowDashboard={handleShowDashboard}
+      />
+    );
   }
 
   // Attendee Dashboard state
@@ -247,6 +285,14 @@ function App() {
         onBookEvent={handleBookEvent}
         isAuthenticated={isAuthenticated}
         onLoginRequired={handleLoginRequired}
+        isStandalone={true}
+        user={user}
+        onLogin={() => setIsAuthModalOpen(true)}
+        onLogout={handleLogout}
+        onShowBlog={handleShowBlog}
+        onShowSpeakers={handleShowSpeakers}
+        onShowSponsors={handleShowSponsors}
+        onShowDashboard={handleShowDashboard}
       />
     );
   }
@@ -313,6 +359,7 @@ function App() {
         onShowSpeakers={handleShowSpeakers}
         onShowSponsors={handleShowSponsors}
         onShowDashboard={handleShowDashboard}
+        currentPage={getCurrentPage()}
       />
       
       {/* Admin Access Button (for development) */}
@@ -357,7 +404,12 @@ function App() {
 
       {/* Events Section */}
       <div id="events">
-        <EventsSection onBookEvent={handleBookEvent} isAuthenticated={isAuthenticated} onLoginRequired={handleLoginRequired} />
+        <EventsSection 
+          onBookEvent={handleBookEvent} 
+          isAuthenticated={isAuthenticated} 
+          onLoginRequired={handleLoginRequired}
+          isStandalone={false}
+        />
       </div>
     </div>
   );
