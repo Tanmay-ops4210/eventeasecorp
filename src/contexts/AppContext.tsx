@@ -1,0 +1,101 @@
+import React, { createContext, useContext, useState, ReactNode } from 'react';
+
+type AppView = 
+  // Public Module
+  | 'home' 
+  | 'event-discovery' 
+  | 'speaker-directory' 
+  | 'sponsor-directory' 
+  | 'organizer-directory'
+  | 'blog' 
+  | 'resources' 
+  | 'press' 
+  | 'about' 
+  | 'pricing' 
+  | 'contact'
+  | 'terms'
+  | 'privacy'
+  // Attendee Module
+  | 'attendee-dashboard'
+  | 'my-events'
+  | 'my-network'
+  | 'notifications'
+  | 'attendee-profile'
+  | 'event-page'
+  | 'agenda-builder'
+  | 'networking-hub'
+  | 'live-event'
+  | 'session-room'
+  | 'expo-hall'
+  | 'resource-library'
+  // Organizer Module
+  | 'organizer-dashboard'
+  | 'event-builder'
+  | 'event-settings'
+  | 'landing-customizer'
+  | 'agenda-manager'
+  | 'venue-manager'
+  | 'ticketing'
+  | 'discount-codes'
+  | 'email-campaigns'
+  | 'attendee-management'
+  | 'speaker-portal'
+  | 'staff-roles'
+  | 'analytics'
+  | 'organizer-settings'
+  // Sponsor Module
+  | 'sponsor-dashboard'
+  | 'booth-customization'
+  | 'lead-capture'
+  | 'sponsor-tools'
+  // Admin Module
+  | 'admin-dashboard'
+  | 'user-management'
+  | 'event-oversight'
+  | 'monetization'
+  | 'content-management'
+  | 'system-health';
+
+interface AppContextType {
+  currentView: AppView;
+  setCurrentView: (view: AppView) => void;
+  selectedEventId: string | null;
+  setSelectedEventId: (id: string | null) => void;
+  breadcrumbs: string[];
+  setBreadcrumbs: (breadcrumbs: string[]) => void;
+}
+
+const AppContext = createContext<AppContextType | undefined>(undefined);
+
+export const useApp = () => {
+  const context = useContext(AppContext);
+  if (context === undefined) {
+    throw new Error('useApp must be used within an AppProvider');
+  }
+  return context;
+};
+
+interface AppProviderProps {
+  children: ReactNode;
+}
+
+export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
+  const [currentView, setCurrentView] = useState<AppView>('home');
+  const [selectedEventId, setSelectedEventId] = useState<string | null>(null);
+  const [breadcrumbs, setBreadcrumbs] = useState<string[]>([]);
+
+  return (
+    <AppContext.Provider
+      value={{
+        currentView,
+        setCurrentView,
+        selectedEventId,
+        setSelectedEventId,
+        breadcrumbs,
+        setBreadcrumbs,
+      }}
+    >
+      {children}
+    </AppContext.Provider>
+  );
+};

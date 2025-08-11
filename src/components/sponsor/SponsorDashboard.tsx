@@ -2,12 +2,12 @@ import React from 'react';
 import { useApp } from '../../contexts/AppContext';
 import { useAuth } from '../../contexts/AuthContext';
 
-const AdminDashboard: React.FC = () => {
+const SponsorDashboard: React.FC = () => {
   const { setBreadcrumbs } = useApp();
   const { user } = useAuth();
 
   React.useEffect(() => {
-    setBreadcrumbs(['Admin Dashboard']);
+    setBreadcrumbs(['Dashboard']);
   }, [setBreadcrumbs]);
 
   return (
@@ -17,11 +17,11 @@ const AdminDashboard: React.FC = () => {
           <h1 className="text-4xl font-bold text-gray-900 mb-4">
             Welcome, {user?.name}!
           </h1>
-          <p className="text-xl text-gray-600">Super Admin Dashboard - Coming soon...</p>
+          <p className="text-xl text-gray-600">Sponsor Dashboard - Coming soon...</p>
         </div>
       </div>
     </div>
   );
 };
 
-export default AdminDashboard;
+export default SponsorDashboard;
