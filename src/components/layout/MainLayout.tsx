@@ -28,11 +28,9 @@ const MainLayout: React.FC<MainLayoutProps> = ({ children }) => {
         case 'admin':
           return <AdminNavigation />;
         default:
-          // Fallback to public navigation if role is unknown, but it will now have the correct user menu.
           return <PublicNavigation />;
       }
     }
-    // Default to public navigation if not authenticated
     return <PublicNavigation />;
   };
 
