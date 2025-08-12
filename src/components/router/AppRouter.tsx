@@ -66,7 +66,7 @@ import ContentManagementPage from '../admin/ContentManagementPage';
 import SystemHealthPage from '../admin/SystemHealthPage';
 
 const AppRouter: React.FC = () => {
-  const { currentView } = useApp();
+  const { currentView, selectedEventId } = useApp();
   const { user, isAuthenticated } = useAuth();
 
   // Route protection helper
