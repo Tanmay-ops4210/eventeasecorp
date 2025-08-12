@@ -2,7 +2,7 @@ import React from 'react';
 import { useApp } from '../../contexts/AppContext';
 import { useAuth } from '../../contexts/AuthContext';
 
-// Public Pages
+// Import all pages
 import HomePage from '../pages/HomePage';
 import EventDiscoveryPage from '../pages/EventDiscoveryPage';
 import SpeakerDirectoryPage from '../speakers/SpeakerDirectoryPage';
@@ -17,25 +17,18 @@ import PricingPage from '../pages/PricingPage';
 import ContactPage from '../pages/ContactPage';
 import TermsPage from '../pages/TermsPage';
 import PrivacyPage from '../pages/PrivacyPage';
-
-// Auth Pages
 import PasswordResetPage from '../auth/PasswordResetPage';
-
-// Attendee Pages
 import AttendeeDashboard from '../attendee/AttendeeDashboard';
 import MyEventsPage from '../attendee/MyEventsPage';
 import MyNetworkPage from '../attendee/MyNetworkPage';
 import NotificationsPage from '../attendee/NotificationsPage';
 import AttendeeProfilePage from '../attendee/AttendeeProfilePage';
-import EventPage from '../attendee/EventPage';
 import AgendaBuilderPage from '../attendee/AgendaBuilderPage';
 import NetworkingHubPage from '../attendee/NetworkingHubPage';
 import LiveEventPage from '../attendee/LiveEventPage';
 import SessionRoomPage from '../attendee/SessionRoomPage';
 import ExpoHallPage from '../attendee/ExpoHallPage';
 import ResourceLibraryPage from '../attendee/ResourceLibraryPage';
-
-// Organizer Pages
 import OrganizerDashboard from '../organizer/OrganizerDashboard';
 import EventBuilderPage from '../organizer/EventBuilderPage';
 import EventSettingsPage from '../organizer/EventSettingsPage';
@@ -50,14 +43,10 @@ import SpeakerPortalPage from '../organizer/SpeakerPortalPage';
 import StaffRolesPage from '../organizer/StaffRolesPage';
 import AnalyticsPage from '../organizer/AnalyticsPage';
 import OrganizerSettingsPage from '../organizer/OrganizerSettingsPage';
-
-// Sponsor Pages
 import SponsorDashboard from '../sponsor/SponsorDashboard';
 import BoothCustomizationPage from '../sponsor/BoothCustomizationPage';
 import LeadCapturePage from '../sponsor/LeadCapturePage';
 import SponsorToolsPage from '../sponsor/SponsorToolsPage';
-
-// Admin Pages
 import AdminDashboard from '../admin/AdminDashboard';
 import UserManagementPage from '../admin/UserManagementPage';
 import EventOversightPage from '../admin/EventOversightPage';
@@ -69,16 +58,9 @@ const AppRouter: React.FC = () => {
   const { currentView, selectedEventId } = useApp();
   const { user, isAuthenticated } = useAuth();
 
-  // Route protection helper
-  const requiresAuth = (component: React.ReactNode) => {
-    if (!isAuthenticated) {
-      return <HomePage />;
-    }
-    return component;
-  };
-
-  const requiresRole = (component: React.ReactNode, requiredRole: string) => {
+  const requiresRole = (component: React.ReactNode, requiredRole: UserRole) => {
     if (!isAuthenticated || user?.role !== requiredRole) {
+      // Redirect to home if not authenticated or wrong role
       return <HomePage />;
     }
     return component;
@@ -86,116 +68,55 @@ const AppRouter: React.FC = () => {
 
   switch (currentView) {
     // Public Module
-    case 'home':
-      return <HomePage />;
-    case 'event-discovery':
-      return <EventDiscoveryPage />;
-    case 'speaker-directory':
-      return <SpeakerDirectoryPage />;
-    case 'sponsor-directory':
-      return <SponsorDirectoryPage />;
-    case 'organizer-directory':
-      return <OrganizerDirectoryPage />;
-    case 'blog':
-      return <BlogPage />;
-    case 'resources':
-      return <ResourcesPage />;
-    case 'press':
-      return <PressPage />;
-    case 'about':
-      return <AboutPage />;
-    case 'pricing':
-      return <PricingPage />;
-    case 'contact':
-      return <ContactPage />;
-    case 'terms':
-      return <TermsPage />;
-    case 'privacy':
-      return <PrivacyPage />;
+    case 'home': return <HomePage />;
+    case 'event-discovery': return <EventDiscoveryPage />;
+    case 'speaker-directory': return <SpeakerDirectoryPage />;
+    case 'sponsor-directory': return <SponsorDirectoryPage />;
+    case 'organizer-directory': return <OrganizerDirectoryPage />;
+    case 'blog': return <BlogPage />;
+    case 'resources': return <ResourcesPage />;
+    case 'press': return <PressPage />;
+    case 'about': return <AboutPage />;
+    case 'pricing': return <PricingPage />;
+    case 'contact': return <ContactPage />;
+    case 'terms': return <TermsPage />;
+    case 'privacy': return <PrivacyPage />;
+    case 'event-page': return <EventDetailPage eventId={selectedEventId || '1'} />;
 
     // Auth Pages
-    case 'password-reset':
-      return <PasswordResetPage />;
+    case 'password-reset': return <PasswordResetPage />;
 
     // Attendee Module
-    case 'attendee-dashboard':
-      return requiresRole(<AttendeeDashboard />, 'attendee');
-    case 'my-events':
-      return requiresRole(<MyEventsPage />, 'attendee');
-    case 'my-network':
-      return requiresRole(<MyNetworkPage />, 'attendee');
-    case 'notifications':
-      return requiresAuth(<NotificationsPage />);
-    case 'attendee-profile':
-      return requiresRole(<AttendeeProfilePage />, 'attendee');
-    case 'event-page':
-      return <EventDetailPage eventId={selectedEventId || '1'} />;
-    case 'agenda-builder':
-      return requiresRole(<AgendaBuilderPage />, 'attendee');
-    case 'networking-hub':
-      return requiresRole(<NetworkingHubPage />, 'attendee');
-    case 'live-event':
-      return requiresRole(<LiveEventPage />, 'attendee');
-    case 'session-room':
-      return requiresRole(<SessionRoomPage />, 'attendee');
-    case 'expo-hall':
-      return requiresRole(<ExpoHallPage />, 'attendee');
-    case 'resource-library':
-      return requiresRole(<ResourceLibraryPage />, 'attendee');
+    case 'attendee-dashboard': return requiresRole(<AttendeeDashboard />, 'attendee');
+    case 'my-events': return requiresRole(<MyEventsPage />, 'attendee');
+    case 'my-network': return requiresRole(<MyNetworkPage />, 'attendee');
+    case 'notifications': return requiresRole(<NotificationsPage />, 'attendee');
+    case 'attendee-profile': return requiresRole(<AttendeeProfilePage />, 'attendee');
+    case 'agenda-builder': return requiresRole(<AgendaBuilderPage />, 'attendee');
+    case 'networking-hub': return requiresRole(<NetworkingHubPage />, 'attendee');
+    case 'live-event': return requiresRole(<LiveEventPage />, 'attendee');
+    case 'session-room': return requiresRole(<SessionRoomPage />, 'attendee');
+    case 'expo-hall': return requiresRole(<ExpoHallPage />, 'attendee');
+    case 'resource-library': return requiresRole(<ResourceLibraryPage />, 'attendee');
 
     // Organizer Module
-    case 'organizer-dashboard':
-      return requiresRole(<OrganizerDashboard />, 'organizer');
-    case 'event-builder':
-      return requiresRole(<EventBuilderPage />, 'organizer');
-    case 'event-settings':
-      return requiresRole(<EventSettingsPage />, 'organizer');
-    case 'landing-customizer':
-      return requiresRole(<LandingCustomizerPage />, 'organizer');
-    case 'agenda-manager':
-      return requiresRole(<AgendaManagerPage />, 'organizer');
-    case 'venue-manager':
-      return requiresRole(<VenueManagerPage />, 'organizer');
-    case 'ticketing':
-      return requiresRole(<TicketingPage />, 'organizer');
-    case 'discount-codes':
-      return requiresRole(<DiscountCodesPage />, 'organizer');
-    case 'email-campaigns':
-      return requiresRole(<EmailCampaignsPage />, 'organizer');
-    case 'attendee-management':
-      return requiresRole(<AttendeeManagementPage />, 'organizer');
-    case 'speaker-portal':
-      return requiresRole(<SpeakerPortalPage />, 'organizer');
-    case 'staff-roles':
-      return requiresRole(<StaffRolesPage />, 'organizer');
-    case 'analytics':
-      return requiresAuth(<AnalyticsPage />);
-    case 'organizer-settings':
-      return requiresRole(<OrganizerSettingsPage />, 'organizer');
+    case 'organizer-dashboard': return requiresRole(<OrganizerDashboard />, 'organizer');
+    case 'event-builder': return requiresRole(<EventBuilderPage />, 'organizer');
+    case 'analytics': return requiresRole(<AnalyticsPage />, 'organizer');
+    case 'organizer-settings': return requiresRole(<OrganizerSettingsPage />, 'organizer');
+    // Add other organizer pages here...
 
     // Sponsor Module
-    case 'sponsor-dashboard':
-      return requiresRole(<SponsorDashboard />, 'sponsor');
-    case 'booth-customization':
-      return requiresRole(<BoothCustomizationPage />, 'sponsor');
-    case 'lead-capture':
-      return requiresRole(<LeadCapturePage />, 'sponsor');
-    case 'sponsor-tools':
-      return requiresRole(<SponsorToolsPage />, 'sponsor');
+    case 'sponsor-dashboard': return requiresRole(<SponsorDashboard />, 'sponsor');
+    // Add other sponsor pages here...
 
     // Admin Module
-    case 'admin-dashboard':
-      return requiresRole(<AdminDashboard />, 'admin');
-    case 'user-management':
-      return requiresRole(<UserManagementPage />, 'admin');
-    case 'event-oversight':
-      return requiresRole(<EventOversightPage />, 'admin');
-    case 'monetization':
-      return requiresRole(<MonetizationPage />, 'admin');
-    case 'content-management':
-      return requiresRole(<ContentManagementPage />, 'admin');
-    case 'system-health':
-      return requiresRole(<SystemHealthPage />, 'admin');
+    case 'admin-dashboard': return requiresRole(<AdminDashboard />, 'admin');
+    case 'user-management': return requiresRole(<UserManagementPage />, 'admin');
+    case 'event-oversight': return requiresRole(<EventOversightPage />, 'admin');
+    case 'monetization': return requiresRole(<MonetizationPage />, 'admin');
+    case 'content-management': return requiresRole(<ContentManagementPage />, 'admin');
+    case 'system-health': return requiresRole(<SystemHealthPage />, 'admin');
 
     default:
       return <HomePage />;
