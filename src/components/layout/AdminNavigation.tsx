@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { 
   Home, Users, Calendar, DollarSign, FileText, Activity, Settings, 
   LogOut, Menu, X, User, Bell, Shield
@@ -8,8 +8,10 @@ import { useAuth } from '../../contexts/AuthContext';
 
 const AdminNavigation: React.FC = () => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const { setCurrentView } = useApp();
   const { user, logout } = useAuth();
+  const dropdownRef = useRef<HTMLDivElement>(null);
 
   const navigationItems = [
     { label: 'Dashboard', view: 'admin-dashboard' as const, icon: Home },
@@ -20,9 +22,23 @@ const AdminNavigation: React.FC = () => {
     { label: 'System Health', view: 'system-health' as const, icon: Activity },
   ];
 
+  // Close dropdown when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+        setIsDropdownOpen(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, [dropdownRef]);
+
   const handleNavigation = (view: any) => {
     setCurrentView(view);
     setIsMobileMenuOpen(false);
+    setIsDropdownOpen(false);
   };
 
   const handleLogout = () => {
@@ -69,7 +85,7 @@ const AdminNavigation: React.FC = () => {
             </div>
           </div>
 
-          {/* User Section */}
+          {/* User Section with Dropdown */}
           <div className="hidden md:flex items-center space-x-4">
             <button
               onClick={() => handleNavigation('notifications')}
@@ -79,29 +95,40 @@ const AdminNavigation: React.FC = () => {
               <span className="absolute -top-1 -right-1 w-3 h-3 bg-yellow-400 rounded-full"></span>
             </button>
             
-            <div className="flex items-center space-x-3">
-              <div className="w-8 h-8 bg-red-800 rounded-full flex items-center justify-center">
-                <User className="w-5 h-5 text-white" />
-              </div>
-              <div className="text-sm">
-                <p className="font-medium text-white">{user?.name}</p>
-                <p className="text-red-200 capitalize">{user?.role}</p>
-              </div>
+            <div className="relative" ref={dropdownRef}>
+              <button
+                onClick={() => setIsDropdownOpen(!isDropdownOpen)}
+                className="flex items-center space-x-3 p-2 rounded-lg hover:bg-white/10 transition-colors duration-200"
+              >
+                <div className="w-8 h-8 bg-red-800 rounded-full flex items-center justify-center">
+                  <User className="w-5 h-5 text-white" />
+                </div>
+                <div className="text-sm text-left">
+                  <p className="font-medium text-white">{user?.name}</p>
+                  <p className="text-red-200 capitalize">{user?.role}</p>
+                </div>
+              </button>
+              
+              {/* Dropdown Menu */}
+              {isDropdownOpen && (
+                <div className="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg py-1 z-50">
+                  <button
+                    onClick={() => handleNavigation('organizer-settings')}
+                    className="w-full text-left flex items-center space-x-2 px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                  >
+                    <Settings className="w-4 h-4" />
+                    <span>Settings</span>
+                  </button>
+                  <button
+                    onClick={handleLogout}
+                    className="w-full text-left flex items-center space-x-2 px-4 py-2 text-sm text-red-600 hover:bg-red-50"
+                  >
+                    <LogOut className="w-4 h-4" />
+                    <span>Logout</span>
+                  </button>
+                </div>
+              )}
             </div>
-
-            <button
-              onClick={() => handleNavigation('organizer-settings')}
-              className="p-2 text-white hover:text-red-200 transition-colors duration-200"
-            >
-              <Settings className="w-5 h-5" />
-            </button>
-
-            <button
-              onClick={handleLogout}
-              className="p-2 text-white hover:text-red-200 transition-colors duration-200"
-            >
-              <LogOut className="w-5 h-5" />
-            </button>
           </div>
 
           {/* Mobile menu button */}
