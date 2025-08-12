@@ -176,6 +176,14 @@ const PublicNavigation: React.FC = () => {
                 >
                   {isAuthenticated ? 'Dashboard' : 'Sign In'}
                 </button>
+                {isAuthenticated && (
+                  <button
+                    onClick={logout}
+                    className="flex items-center space-x-3 text-white hover:text-indigo-200 block px-3 py-2 text-base font-medium w-full text-left rounded-lg hover:bg-white/10 transition-colors duration-200"
+                  >
+                    <span>Logout</span>
+                  </button>
+                )}
               </div>
             </div>
           </div>
