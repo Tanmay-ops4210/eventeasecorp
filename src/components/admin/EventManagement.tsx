@@ -1,8 +1,8 @@
 import React, { useState } from 'react';
-import { 
-  Calendar, 
-  Search, 
-  Filter, 
+import {
+  Calendar,
+  Search,
+  Filter,
   Plus,
   Edit,
   Trash2,
@@ -24,6 +24,7 @@ const EventManagement: React.FC<EventManagementProps> = ({ events, users, onRefr
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [showAddEventModal, setShowAddEventModal] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  // States for other modals (view, edit) would go here
 
   const filteredEvents = events.filter(event => {
     const eventName = event.event_name || '';
