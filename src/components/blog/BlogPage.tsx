@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Calendar, User, ArrowRight, Clock, Search, Filter, Loader2, MessageCircle, Share2, ThumbsUp, Tag } from 'lucide-react';
+import { Calendar, User, ArrowRight, ArrowLeft, Clock, Search, Filter, Loader2, MessageCircle, Share2, ThumbsUp, Tag } from 'lucide-react';
 import { useApp } from '../../contexts/AppContext';
 import { BlogArticle, BlogListResponse } from '../../types/blog';
 import { blogService } from '../../services/blogService';
