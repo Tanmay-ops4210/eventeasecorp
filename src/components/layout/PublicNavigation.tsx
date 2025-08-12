@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Menu, X, Calendar, Users, Building, BookOpen, Info, Phone } from 'lucide-react';
+import { Menu, X, Calendar, Users, Building, BookOpen, Info, Phone, User } from 'lucide-react';
 import { useApp } from '../../contexts/AppContext';
 import { useAuth } from '../../contexts/AuthContext';
 import AuthModal from '../auth/AuthModal';
@@ -8,7 +8,7 @@ const PublicNavigation: React.FC = () => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
   const { setCurrentView } = useApp();
-  const { isAuthenticated, user } = useAuth();
+  const { isAuthenticated, user, logout } = useAuth();
 
   React.useEffect(() => {
     const handlePasswordResetNavigation = () => {
@@ -63,7 +63,7 @@ const PublicNavigation: React.FC = () => {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-16">
             {/* Logo */}
-            <div 
+            <div
               className="flex-shrink-0 cursor-pointer"
               onClick={() => handleNavigation('home')}
             >
@@ -102,12 +102,33 @@ const PublicNavigation: React.FC = () => {
               >
                 Pricing
               </button>
-              <button
-                onClick={handleAuthAction}
-                className="bg-white text-indigo-600 hover:bg-gray-100 text-sm font-medium transition-colors duration-200 px-4 py-2 rounded-lg"
-              >
-                {isAuthenticated ? 'Dashboard' : 'Sign In'}
-              </button>
+              {isAuthenticated && user ? (
+                <div className="flex items-center space-x-3">
+                  <div className="flex items-center space-x-2 text-white">
+                    <User className="w-4 h-4" />
+                    <span className="text-sm">{user.name}</span>
+                  </div>
+                  <button
+                    onClick={handleAuthAction}
+                    className="text-white hover:text-indigo-200 text-sm font-medium transition-colors duration-200 px-3 py-2 hover:bg-white/10 rounded-lg"
+                  >
+                    Dashboard
+                  </button>
+                  <button
+                    onClick={logout}
+                    className="text-white hover:text-indigo-200 text-sm font-medium transition-colors duration-200 px-3 py-2 hover:bg-white/10 rounded-lg"
+                  >
+                    Logout
+                  </button>
+                </div>
+              ) : (
+                <button
+                  onClick={handleAuthAction}
+                  className="bg-white text-indigo-600 hover:bg-gray-100 text-sm font-medium transition-colors duration-200 px-4 py-2 rounded-lg"
+                >
+                  Sign In
+                </button>
+              )}
             </div>
 
             {/* Mobile menu button */}
@@ -123,8 +144,8 @@ const PublicNavigation: React.FC = () => {
 
           {/* Mobile Navigation */}
           <div className={`md:hidden transition-all duration-300 ease-in-out ${
-            isMobileMenuOpen 
-              ? 'max-h-screen opacity-100' 
+            isMobileMenuOpen
+              ? 'max-h-screen opacity-100'
               : 'max-h-0 opacity-0 overflow-hidden'
           }`}>
             <div className="px-2 pt-2 pb-3 space-y-1 bg-indigo-700 bg-opacity-50 backdrop-blur-md rounded-lg mt-2">
@@ -141,7 +162,7 @@ const PublicNavigation: React.FC = () => {
                   </button>
                 );
               })}
-              
+
               <div className="border-t border-indigo-500 pt-3 mt-3">
                 <button
                   onClick={() => handleNavigation('pricing')}
@@ -161,7 +182,7 @@ const PublicNavigation: React.FC = () => {
         </div>
       </nav>
 
-      <AuthModal 
+      <AuthModal
         isOpen={isAuthModalOpen}
         onClose={() => setIsAuthModalOpen(false)}
       />
