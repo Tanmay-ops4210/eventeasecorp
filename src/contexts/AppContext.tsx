@@ -15,6 +15,7 @@ type AppView =
   | 'contact'
   | 'terms'
   | 'privacy'
+  | 'password-reset'
   // Attendee Module
   | 'attendee-dashboard'
   | 'my-events'

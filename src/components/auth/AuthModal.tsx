@@ -266,6 +266,21 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
                 {isLoginMode ? 'Sign Up' : 'Sign In'}
               </button>
             </p>
+            {isLoginMode && (
+              <div className="mt-3">
+                <button
+                  type="button"
+                  onClick={() => {
+                    onClose();
+                    // Navigate to password reset page
+                    window.dispatchEvent(new CustomEvent('navigate-to-password-reset'));
+                  }}
+                  className="text-sm text-indigo-600 hover:text-indigo-700 transition-colors duration-200"
+                >
+                  Forgot your password?
+                </button>
+              </div>
+            )}
           </div>
         </div>
       </div>

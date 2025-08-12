@@ -17,6 +17,9 @@ import ContactPage from '../pages/ContactPage';
 import TermsPage from '../pages/TermsPage';
 import PrivacyPage from '../pages/PrivacyPage';
 
+// Auth Pages
+import PasswordResetPage from '../auth/PasswordResetPage';
+
 // Attendee Pages
 import AttendeeDashboard from '../attendee/AttendeeDashboard';
 import MyEventsPage from '../attendee/MyEventsPage';
@@ -108,6 +111,10 @@ const AppRouter: React.FC = () => {
       return <TermsPage />;
     case 'privacy':
       return <PrivacyPage />;
+
+    // Auth Pages
+    case 'password-reset':
+      return <PasswordResetPage />;
 
     // Attendee Module
     case 'attendee-dashboard':

@@ -10,6 +10,15 @@ const PublicNavigation: React.FC = () => {
   const { setCurrentView } = useApp();
   const { isAuthenticated, user } = useAuth();
 
+  React.useEffect(() => {
+    const handlePasswordResetNavigation = () => {
+      setCurrentView('password-reset');
+    };
+
+    window.addEventListener('navigate-to-password-reset', handlePasswordResetNavigation);
+    return () => window.removeEventListener('navigate-to-password-reset', handlePasswordResetNavigation);
+  }, [setCurrentView]);
+
   const navigationItems = [
     { label: 'Events', view: 'event-discovery' as const, icon: Calendar },
     { label: 'Speakers', view: 'speaker-directory' as const, icon: Users },
