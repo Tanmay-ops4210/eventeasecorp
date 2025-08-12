@@ -20,13 +20,15 @@ interface EventCardProps {
   onBookNow: (eventId: string) => void;
   isAuthenticated: boolean;
   onLoginRequired: () => void;
+  onEventClick?: (eventId: string) => void;
 }
 
 const EventCard: React.FC<EventCardProps> = ({ 
   event, 
   onBookNow, 
   isAuthenticated, 
-  onLoginRequired 
+  onLoginRequired,
+  onEventClick
 }) => {
   const handleBookClick = () => {
     if (!isAuthenticated) {
@@ -40,8 +42,17 @@ const EventCard: React.FC<EventCardProps> = ({
   const isAlmostFull = availableSpots <= 10;
   const isFull = availableSpots <= 0;
 
+  const handleCardClick = () => {
+    if (onEventClick) {
+      onEventClick(event.id);
+    }
+  };
+
   return (
-    <div className="group bg-white rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-300 transform hover:scale-105 overflow-hidden">
+    <div 
+      className="group bg-white rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-300 transform hover:scale-105 overflow-hidden cursor-pointer"
+      onClick={handleCardClick}
+    >
       {/* Event Image */}
       <div className="relative overflow-hidden">
         <img
@@ -144,6 +155,10 @@ const EventCard: React.FC<EventCardProps> = ({
         {/* Book Now Button */}
         <button
           onClick={handleBookClick}
+          onClick={(e) => {
+            e.stopPropagation();
+            handleBookClick();
+          }}
           disabled={isFull}
           className={`w-full flex items-center justify-center space-x-2 px-6 py-3 rounded-lg font-medium transition-all duration-200 transform hover:scale-105 ${
             isFull

@@ -303,6 +303,7 @@ const EventsSection: React.FC<EventsSectionProps> = ({
                   onBookNow={onBookEvent}
                   isAuthenticated={isAuthenticated}
                   onLoginRequired={onLoginRequired}
+                  onEventClick={onBookEvent}
                 />
               </div>
             ))}

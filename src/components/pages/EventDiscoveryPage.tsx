@@ -190,6 +190,7 @@ const EventDiscoveryPage: React.FC = () => {
                 onClick={() => handleEventClick(event.id)}
                 style={{ animationDelay: `${index * 0.1}s` }}
               >
+                {/* Make the entire card clickable */}
                 <div className="relative overflow-hidden">
                   <img
                     src={event.image}

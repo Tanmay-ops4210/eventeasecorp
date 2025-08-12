@@ -5,10 +5,11 @@ import { useAuth } from '../../contexts/AuthContext';
 // Public Pages
 import HomePage from '../pages/HomePage';
 import EventDiscoveryPage from '../pages/EventDiscoveryPage';
-import SpeakerDirectoryPage from '../pages/SpeakerDirectoryPage';
-import SponsorDirectoryPage from '../pages/SponsorDirectoryPage';
+import SpeakerDirectoryPage from '../speakers/SpeakerDirectoryPage';
+import SponsorDirectoryPage from '../sponsors/SponsorDirectoryPage';
 import OrganizerDirectoryPage from '../pages/OrganizerDirectoryPage';
-import BlogPage from '../pages/BlogPage';
+import BlogPage from '../blog/BlogPage';
+import EventDetailPage from '../events/EventDetailPage';
 import ResourcesPage from '../pages/ResourcesPage';
 import PressPage from '../pages/PressPage';
 import AboutPage from '../pages/AboutPage';
@@ -128,7 +129,7 @@ const AppRouter: React.FC = () => {
     case 'attendee-profile':
       return requiresRole(<AttendeeProfilePage />, 'attendee');
     case 'event-page':
-      return <EventPage />;
+      return <EventDetailPage eventId={selectedEventId || '1'} />;
     case 'agenda-builder':
       return requiresRole(<AgendaBuilderPage />, 'attendee');
     case 'networking-hub':
