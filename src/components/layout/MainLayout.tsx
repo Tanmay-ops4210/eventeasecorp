@@ -17,25 +17,25 @@ const MainLayout: React.FC<MainLayoutProps> = ({ children }) => {
   const { currentView } = useApp();
 
   const renderNavigation = () => {
-    if (!isAuthenticated || !user) {
-      return <PublicNavigation />;
+    if (isAuthenticated && user) {
+      switch (user.role) {
+        case 'attendee':
+          return <AttendeeNavigation />;
+        case 'organizer':
+          return <OrganizerNavigation />;
+        case 'sponsor':
+          return <SponsorNavigation />;
+        case 'admin':
+          return <AdminNavigation />;
+        default:
+          // Fallback to public navigation if role is unknown
+          return <PublicNavigation />;
+      }
     }
-
-    switch (user.role) {
-      case 'attendee':
-        return <AttendeeNavigation />;
-      case 'organizer':
-        return <OrganizerNavigation />;
-      case 'sponsor':
-        return <SponsorNavigation />;
-      case 'admin':
-        return <AdminNavigation />;
-      default:
-        return <PublicNavigation />;
-    }
+    // Default to public navigation if not authenticated
+    return <PublicNavigation />;
   };
 
-  // Determines if the view is a public-facing page that doesn't need breadcrumbs or top padding.
   const isPublicView = [
     'home', 'event-discovery', 'speaker-directory', 'sponsor-directory',
     'organizer-directory', 'blog', 'resources', 'press', 'about',
@@ -45,7 +45,6 @@ const MainLayout: React.FC<MainLayoutProps> = ({ children }) => {
   return (
     <div className="min-h-screen bg-gray-50">
       {renderNavigation()}
-      {/* Only show breadcrumbs for non-public (dashboard) views */}
       {!isPublicView && <Breadcrumbs />}
       <main>
         {children}
