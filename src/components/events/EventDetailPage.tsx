@@ -9,6 +9,14 @@ import { useAuth } from '../../contexts/AuthContext';
 import { EventDetail } from '../../types/eventDetail';
 import { eventDetailService } from '../../services/eventDetailService';
 
+// Tier colors for sponsor badges
+const tierColors = {
+  platinum: 'from-gray-400 to-gray-600',
+  gold: 'from-yellow-400 to-yellow-600',
+  silver: 'from-gray-300 to-gray-500',
+  bronze: 'from-orange-400 to-orange-600'
+};
+
 interface EventDetailPageProps {
   eventId: string;
 }
