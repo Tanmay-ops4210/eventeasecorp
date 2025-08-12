@@ -35,7 +35,6 @@ const PublicNavigation: React.FC = () => {
 
   const handleAuthAction = () => {
     if (isAuthenticated && user) {
-      // Navigate to appropriate dashboard based on role
       switch (user.role) {
         case 'attendee':
           setCurrentView('attendee-dashboard');
