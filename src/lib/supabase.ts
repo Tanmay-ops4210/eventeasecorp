@@ -1,22 +1,4 @@
-// TEMPORARILY REMOVED SUPABASE - Commented out for temporary removal
-// import { createClient } from '@supabase/supabase-js';
-
-// const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
-// const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
-
-// if (!supabaseUrl || !supabaseAnonKey) {
-//   throw new Error('Missing Supabase environment variables');
-// }
-
-// export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
-//   auth: {
-//     autoRefreshToken: true,
-//     persistSession: true,
-//     detectSessionInUrl: true
-//   }
-// });
-
-// MOCK SUPABASE CLIENT - Temporary replacement
+// MOCK SUPABASE CLIENT - Temporary replacement with more data
 export const supabase = {
   auth: {
     signInWithPassword: async () => ({ data: null, error: new Error('Supabase temporarily disabled') }),
@@ -75,54 +57,31 @@ export interface Event {
   app_users?: AppUser;
 }
 
+// Mock Data
+const mockUsers: AppUser[] = [
+  { id: '1', email: 'user1@example.com', username: 'Alice Johnson', created_at: '2025-07-15T10:00:00Z', updated_at: '2025-07-15T10:00:00Z' },
+  { id: '2', email: 'user2@example.com', username: 'Bob Williams', created_at: '2025-07-18T11:30:00Z', updated_at: '2025-07-18T11:30:00Z' },
+  { id: '3', email: 'user3@example.com', username: 'Charlie Brown', created_at: '2025-07-22T14:00:00Z', updated_at: '2025-07-22T14:00:00Z' },
+];
+
+const mockEvents: Event[] = [
+  { id: 'evt1', user_id: '1', event_name: 'Tech Conference 2025', event_type: 'conference', expected_attendees: 500, event_date: '2025-10-20', budget: '50000+', description: 'Annual tech conference.', location_address: 'SF Convention Center', created_at: '2025-07-16T09:00:00Z', updated_at: '2025-07-16T09:00:00Z' },
+  { id: 'evt2', user_id: '2', event_name: 'Marketing Workshop', event_type: 'workshop', expected_attendees: 50, event_date: '2025-11-05', budget: '5000-10000', description: 'Digital marketing deep dive.', location_address: 'Online', created_at: '2025-07-19T13:00:00Z', updated_at: '2025-07-19T13:00:00Z' },
+  { id: 'evt3', user_id: '1', event_name: 'AI in Healthcare Seminar', event_type: 'seminar', expected_attendees: 150, event_date: '2025-11-12', budget: '10000-25000', description: 'Exploring AI applications.', location_address: 'City Hospital Auditorium', created_at: '2025-07-20T18:00:00Z', updated_at: '2025-07-20T18:00:00Z' },
+  { id: 'evt4', user_id: '3', event_name: 'Startup Networking Night', event_type: 'networking', expected_attendees: 100, event_date: '2025-09-30', budget: '5000-10000', description: 'Meet and greet for startups.', location_address: 'The Innovation Hub', created_at: '2025-07-23T10:00:00Z', updated_at: '2025-07-23T10:00:00Z' },
+];
+
 // Admin authentication functions
 export const adminAuth = {
   async signIn(email: string, password: string) {
-    // TEMPORARILY REMOVED SUPABASE - Mock authentication
-    // const { data, error } = await supabase.auth.signInWithPassword({
-    //   email,
-    //   password
-    // });
-    // return { data, error };
-    
-    // Mock admin authentication - only allow specific admin email
     if (email === 'tanmay365210mogabbera@gmail.com' && password === 'TAM123***') {
-      return { 
-        data: { 
-          user: { 
-            id: 'mock-admin-id', 
-            email: email,
-            aud: 'authenticated',
-            role: 'authenticated'
-          } 
-        }, 
-        error: null 
-      };
+      return { data: { user: { id: 'mock-admin-id', email: email, aud: 'authenticated', role: 'authenticated' } }, error: null };
     }
     return { data: null, error: new Error('Invalid credentials') };
   },
-
-  async signOut() {
-    // TEMPORARILY REMOVED SUPABASE
-    // const { error } = await supabase.auth.signOut();
-    // return { error };
-    return { error: null };
-  },
-
-  async getCurrentUser() {
-    // TEMPORARILY REMOVED SUPABASE
-    // const { data: { user } } = await supabase.auth.getUser();
-    // return user;
-    return null;
-  },
-
-  async getCurrentSession() {
-    // TEMPORARILY REMOVED SUPABASE
-    // const { data: { session } } = await supabase.auth.getSession();
-    // return session;
-    return null;
-  },
-
+  async signOut() { return { error: null }; },
+  async getCurrentUser() { return null; },
+  async getCurrentSession() { return null; },
   isAdmin(user: any) {
     return user?.email === 'tanmay365210mogabbera@gmail.com';
   }
@@ -130,160 +89,26 @@ export const adminAuth = {
 
 // Database functions
 export const db = {
-  // Users
-  async getAllUsers() {
-    // TEMPORARILY REMOVED SUPABASE - Return mock data
-    // const { data, error } = await supabase
-    //   .from('app_users')
-    //   .select('*')
-    //   .order('created_at', { ascending: false });
-    // return { data, error };
-    
-    const mockUsers: AppUser[] = [
-      {
-        id: '1',
-        email: 'user1@example.com',
-        username: 'User One',
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString()
-      },
-      {
-        id: '2',
-        email: 'user2@example.com',
-        username: 'User Two',
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString()
-      }
-    ];
-    return { data: mockUsers, error: null };
-  },
-
+  async getAllUsers() { return { data: mockUsers, error: null }; },
   async createUser(userData: Partial<AppUser>) {
-    // TEMPORARILY REMOVED SUPABASE
-    // const { data, error } = await supabase
-    //   .from('app_users')
-    //   .insert([userData])
-    //   .select()
-    //   .single();
-    // return { data, error };
-    
-    const mockUser: AppUser = {
-      id: Date.now().toString(),
-      email: userData.email || '',
-      username: userData.username || '',
-      created_at: new Date().toISOString(),
-      updated_at: new Date().toISOString()
-    };
+    const mockUser: AppUser = { id: Date.now().toString(), email: userData.email || '', username: userData.username || '', created_at: new Date().toISOString(), updated_at: new Date().toISOString() };
+    mockUsers.push(mockUser);
     return { data: mockUser, error: null };
   },
-
-  // Events
-  async getAllEvents() {
-    // TEMPORARILY REMOVED SUPABASE - Return mock data
-    // const { data, error } = await supabase
-    //   .from('events')
-    //   .select(`
-    //     *,
-    //     app_users (
-    //       id,
-    //       email,
-    //       username
-    //     )
-    //   `)
-    //   .order('created_at', { ascending: false });
-    // return { data, error };
-    
-    const mockEvents: Event[] = [
-      {
-        id: '1',
-        user_id: '1',
-        event_name: 'Tech Conference 2024',
-        event_type: 'conference',
-        expected_attendees: 200,
-        event_date: '2024-03-15',
-        budget: '10000-25000',
-        description: 'Annual technology conference',
-        location_address: 'Convention Center, City',
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString()
-      }
-    ];
-    return { data: mockEvents, error: null };
-  },
-
+  async getAllEvents() { return { data: mockEvents.map(e => ({...e, app_users: mockUsers.find(u => u.id === e.user_id)})), error: null }; },
   async getEventById(id: string) {
-    // TEMPORARILY REMOVED SUPABASE
-    // const { data, error } = await supabase
-    //   .from('events')
-    //   .select(`
-    //     *,
-    //     app_users (
-    //       id,
-    //       email,
-    //       username
-    //     )
-    //   `)
-    //   .eq('id', id)
-    //   .single();
-    // return { data, error };
-    return { data: null, error: null };
+    const event = mockEvents.find(e => e.id === id);
+    return { data: event ? {...event, app_users: mockUsers.find(u => u.id === event.user_id)} : null, error: null };
   },
-
   async createEvent(eventData: Partial<Event>) {
-    // TEMPORARILY REMOVED SUPABASE
-    // const { data, error } = await supabase
-    //   .from('events')
-    //   .insert([eventData])
-    //   .select()
-    //   .single();
-    // return { data, error };
-    
-    const mockEvent: Event = {
-      id: Date.now().toString(),
-      user_id: eventData.user_id || '',
-      event_name: eventData.event_name || '',
-      event_type: eventData.event_type || 'conference',
-      expected_attendees: eventData.expected_attendees || 50,
-      event_date: eventData.event_date,
-      budget: eventData.budget,
-      description: eventData.description,
-      location_address: eventData.location_address,
-      created_at: new Date().toISOString(),
-      updated_at: new Date().toISOString()
-    };
+    const mockEvent: Event = { id: Date.now().toString(), user_id: eventData.user_id || '', event_name: eventData.event_name || '', event_type: eventData.event_type || 'conference', expected_attendees: eventData.expected_attendees || 50, event_date: eventData.event_date, budget: eventData.budget, description: eventData.description, location_address: eventData.location_address, created_at: new Date().toISOString(), updated_at: new Date().toISOString() };
+    mockEvents.push(mockEvent);
     return { data: mockEvent, error: null };
   },
-
-  async updateEvent(id: string, eventData: Partial<Event>) {
-    // TEMPORARILY REMOVED SUPABASE
-    // const { data, error } = await supabase
-    //   .from('events')
-    //   .update(eventData)
-    //   .eq('id', id)
-    //   .select()
-    //   .single();
-    // return { data, error };
-    return { data: null, error: null };
-  },
-
-  async deleteEvent(id: string) {
-    // TEMPORARILY REMOVED SUPABASE
-    // const { error } = await supabase
-    //   .from('events')
-    //   .delete()
-    //   .eq('id', id);
-    // return { error };
-    return { error: null };
-  },
-
+  async updateEvent(id: string, eventData: Partial<Event>) { return { data: null, error: null }; },
+  async deleteEvent(id: string) { return { error: null }; },
   async getEventsByUser(userId: string) {
-    // TEMPORARILY REMOVED SUPABASE
-    // const { data, error } = await supabase
-    //   .from('events')
-    //   .select('*')
-    //   .eq('user_id', userId)
-    //   .order('created_at', { ascending: false });
-    // return { data, error };
-    return { data: [], error: null };
+    const userEvents = mockEvents.filter(e => e.user_id === userId);
+    return { data: userEvents, error: null };
   }
 };
