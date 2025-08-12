@@ -1,13 +1,13 @@
 import React, { useState } from 'react';
-import {
-  Calendar,
-  Search,
-  Filter,
+import { 
+  Calendar, 
+  Search, 
+  Filter, 
   Plus,
   Edit,
   Trash2,
   Eye,
-  AlertTriangle,
+  AlertTriangle
 } from 'lucide-react';
 import { Event, AppUser, db } from '../../lib/supabase';
 
@@ -22,12 +22,15 @@ const EventManagement: React.FC<EventManagementProps> = ({ events, users, onRefr
   const [selectedFilter, setSelectedFilter] = useState('all');
   const [selectedEvent, setSelectedEvent] = useState<Event | null>(null);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
-  const [showAddEventModal, setShowAddEventModal] = useState(false); // State for Add Event modal
+  const [showAddEventModal, setShowAddEventModal] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
-  // States for other modals (view, edit) would go here
 
   const filteredEvents = events.filter(event => {
-    const matchesSearch = event.event_name.toLowerCase().includes(searchTerm.toLowerCase());
+    const eventName = event.event_name || '';
+    const eventType = event.event_type || '';
+    const matchesSearch = eventName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                         eventType.toLowerCase().includes(searchTerm.toLowerCase());
+    
     if (selectedFilter === 'all') return matchesSearch;
     return matchesSearch && event.event_type === selectedFilter;
   });
@@ -51,7 +54,6 @@ const EventManagement: React.FC<EventManagementProps> = ({ events, users, onRefr
     onRefresh();
     alert('Event deleted successfully!');
   };
-
 
   // Add Event Modal Component
   const AddEventModal = () => {
@@ -164,7 +166,7 @@ const EventManagement: React.FC<EventManagementProps> = ({ events, users, onRefr
           <p className="text-gray-600 mt-1">Manage all events created by members</p>
         </div>
         <button
-          onClick={() => setShowAddEventModal(true)} // This button now opens the modal
+          onClick={() => setShowAddEventModal(true)}
           className="flex items-center space-x-2 px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors duration-200"
         >
           <Plus className="w-4 h-4" />
@@ -172,8 +174,6 @@ const EventManagement: React.FC<EventManagementProps> = ({ events, users, onRefr
         </button>
       </div>
 
-       {/* Search and Filter */}
-      {/* ... (rest of the component remains the same) ... */}
       <div className="bg-white rounded-xl shadow-lg p-6">
         <div className="flex flex-col sm:flex-row gap-4">
           <div className="flex-1 relative">
@@ -209,24 +209,12 @@ const EventManagement: React.FC<EventManagementProps> = ({ events, users, onRefr
           <table className="min-w-full divide-y divide-gray-200">
             <thead className="bg-gray-50">
               <tr>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Event
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Organizer
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Attendees
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Date
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Created
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Actions
-                </th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Event</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Organizer</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Attendees</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Created</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
               </tr>
             </thead>
             <tbody className="bg-white divide-y divide-gray-200">
@@ -241,10 +229,7 @@ const EventManagement: React.FC<EventManagementProps> = ({ events, users, onRefr
                     </div>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
-                    <div>
-                      <div className="text-sm font-medium text-gray-900">{getUserName(event.user_id)}</div>
-                     
-                    </div>
+                    <div className="text-sm font-medium text-gray-900">{getUserName(event.user_id)}</div>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
                     <div className="text-sm text-gray-900">{event.expected_attendees}</div>
@@ -260,18 +245,9 @@ const EventManagement: React.FC<EventManagementProps> = ({ events, users, onRefr
                     </div>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                    <button className="text-indigo-600 hover:text-indigo-900 mr-3">
-                      <Eye className="w-4 h-4" />
-                    </button>
-                    <button className="text-gray-600 hover:text-gray-900 mr-3">
-                      <Edit className="w-4 h-4" />
-                    </button>
-                    <button
-                      onClick={() => handleDeleteEvent(event)}
-                      className="text-red-600 hover:text-red-900"
-                    >
-                      <Trash2 className="w-4 h-4" />
-                    </button>
+                    <button className="text-indigo-600 hover:text-indigo-900 mr-3"><Eye className="w-4 h-4" /></button>
+                    <button className="text-gray-600 hover:text-gray-900 mr-3"><Edit className="w-4 h-4" /></button>
+                    <button onClick={() => handleDeleteEvent(event)} className="text-red-600 hover:text-red-900"><Trash2 className="w-4 h-4" /></button>
                   </td>
                 </tr>
               ))}
