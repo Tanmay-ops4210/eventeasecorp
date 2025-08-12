@@ -1,5 +1,14 @@
 import React, { useState } from 'react';
-import { Users, Search, Filter, Eye, Edit, Trash2, UserPlus, AlertTriangle } from 'lucide-react';
+import { 
+  Users, 
+  Search, 
+  Filter, 
+  Eye,
+  Edit,
+  Trash2,
+  UserPlus,
+  AlertTriangle
+} from 'lucide-react';
 import { AppUser, Event, db } from '../../lib/supabase';
 
 interface MemberManagementProps {
@@ -10,19 +19,31 @@ interface MemberManagementProps {
 
 const MemberManagement: React.FC<MemberManagementProps> = ({ users, events, onRefresh }) => {
   const [searchTerm, setSearchTerm] = useState('');
+  const [selectedFilter, setSelectedFilter] = useState('all');
   const [selectedUser, setSelectedUser] = useState<AppUser | null>(null);
   const [showUserModal, setShowUserModal] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
   const [showAddModal, setShowAddModal] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
 
-  const filteredUsers = users.filter(user =>
-    user.username.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    user.email.toLowerCase().includes(searchTerm.toLowerCase())
-  );
-  
-  const getUserEventCount = (userId: string) => events.filter(event => event.user_id === userId).length;
+  const filteredUsers = users.filter(user => {
+    const matchesSearch = user.username.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                         user.email.toLowerCase().includes(searchTerm.toLowerCase());
 
+    if (selectedFilter === 'all') return matchesSearch;
+
+    const userEvents = events.filter(event => event.user_id === user.id);
+    if (selectedFilter === 'active') return matchesSearch && userEvents.length > 0;
+    
+    // This part requires event_type to be on the event object from mock data
+    return matchesSearch && userEvents.some(event => event.event_type === selectedFilter);
+  });
+
+  const getUserEventCount = (userId: string) => {
+    return events.filter(event => event.user_id === userId).length;
+  };
+
+  // --- ACTION HANDLERS ---
   const handleViewUser = (user: AppUser) => {
     setSelectedUser(user);
     setShowUserModal(true);
@@ -42,36 +63,30 @@ const MemberManagement: React.FC<MemberManagementProps> = ({ users, events, onRe
     setShowDeleteModal(false);
     alert('User and their events deleted successfully!');
   };
-  
-  const handleAddUser = async (newUserData: { username: string, email: string }) => {
-    setIsLoading(true);
-    await db.createUser(newUserData);
-    onRefresh();
-    setIsLoading(false);
-    setShowAddModal(false);
-    alert('Member added successfully!');
-  };
 
-  // MODALS
-  const UserModal = () => {
+  // --- MODAL COMPONENTS ---
+
+  const ViewUserModal = () => {
     if (!selectedUser) return null;
     return (
       <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black bg-opacity-50 backdrop-blur-sm">
         <div className="bg-white rounded-2xl shadow-2xl max-w-lg w-full">
-          <div className="p-6 border-b flex justify-between items-center"><h3 className="text-xl font-bold">Member Details</h3><button onClick={() => setShowUserModal(false)} className="text-gray-400 hover:text-gray-600">&times;</button></div>
+          <div className="p-6 border-b flex justify-between items-center"><h3 className="text-xl font-bold">Member Details</h3><button onClick={() => setShowUserModal(false)} className="text-gray-400 text-2xl hover:text-gray-600">&times;</button></div>
           <div className="p-6 space-y-2">
             <p><strong>Username:</strong> {selectedUser.username}</p>
             <p><strong>Email:</strong> {selectedUser.email}</p>
             <p><strong>Joined:</strong> {new Date(selectedUser.created_at).toLocaleDateString()}</p>
             <p><strong>Events Created:</strong> {getUserEventCount(selectedUser.id)}</p>
-            <button onClick={() => setShowUserModal(false)} className="mt-4 px-4 py-2 bg-gray-200 rounded-lg">Close</button>
+            <div className="pt-4">
+              <button onClick={() => setShowUserModal(false)} className="px-4 py-2 bg-gray-200 rounded-lg hover:bg-gray-300">Close</button>
+            </div>
           </div>
         </div>
       </div>
     );
   };
   
-  const DeleteModal = () => {
+  const DeleteUserModal = () => {
     if (!selectedUser) return null;
     return (
       <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black bg-opacity-50 backdrop-blur-sm">
@@ -82,7 +97,7 @@ const MemberManagement: React.FC<MemberManagementProps> = ({ users, events, onRe
             </div>
             <p className="text-gray-600 mb-6">Are you sure you want to delete "{selectedUser.username}"? This will also remove all events they created. This action is permanent.</p>
             <div className="flex space-x-4">
-                <button onClick={() => setShowDeleteModal(false)} className="flex-1 px-4 py-2 border rounded-lg">Cancel</button>
+                <button onClick={() => setShowDeleteModal(false)} className="flex-1 px-4 py-2 border rounded-lg hover:bg-gray-50">Cancel</button>
                 <button onClick={handleConfirmDelete} disabled={isLoading} className="flex-1 px-4 py-2 bg-red-600 text-white rounded-lg disabled:opacity-50">{isLoading ? 'Deleting...' : 'Delete'}</button>
             </div>
         </div>
@@ -91,20 +106,62 @@ const MemberManagement: React.FC<MemberManagementProps> = ({ users, events, onRe
   };
 
   const AddMemberModal = () => {
-    // ... (This modal code is correct from the previous step)
+    const [newUserData, setNewUserData] = useState({ username: '', email: '' });
+    const [isSubmitting, setIsSubmitting] = useState(false);
+
+    const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+      setNewUserData(prev => ({ ...prev, [e.target.name]: e.target.value }));
+    };
+
+    const handleAddUser = async (e: React.FormEvent) => {
+      e.preventDefault();
+      setIsSubmitting(true);
+      await db.createUser(newUserData);
+      onRefresh();
+      setIsSubmitting(false);
+      setShowAddModal(false);
+      alert('Member added successfully!');
+    };
+
+    return (
+      <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black bg-opacity-50 backdrop-blur-sm">
+        <div className="bg-white rounded-2xl shadow-2xl max-w-lg w-full">
+          <div className="p-6 border-b"><h3 className="text-xl font-bold">Add New Member</h3></div>
+          <form onSubmit={handleAddUser} className="p-6 space-y-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Username</label>
+              <input type="text" name="username" onChange={handleInputChange} className="w-full p-2 border rounded-lg" required />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Email</label>
+              <input type="email" name="email" onChange={handleInputChange} className="w-full p-2 border rounded-lg" required />
+            </div>
+            <div className="flex space-x-4 pt-4">
+              <button type="button" onClick={() => setShowAddModal(false)} className="flex-1 px-4 py-2 border rounded-lg">Cancel</button>
+              <button type="submit" disabled={isSubmitting} className="flex-1 px-4 py-2 bg-indigo-600 text-white rounded-lg disabled:opacity-50">{isSubmitting ? 'Adding...' : 'Add Member'}</button>
+            </div>
+          </form>
+        </div>
+      </div>
+    );
   };
 
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
-        <h2 className="text-2xl font-bold text-gray-900">Member Management</h2>
+        <div>
+            <h2 className="text-2xl font-bold text-gray-900">Member Management</h2>
+            <p className="text-gray-600 mt-1">Manage registered users</p>
+        </div>
         <button onClick={() => setShowAddModal(true)} className="flex items-center space-x-2 px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700">
           <UserPlus className="w-4 h-4" />
           <span>Add Member</span>
         </button>
       </div>
 
-      {/* ... (Search bar UI is the same) ... */}
+      <div className="bg-white rounded-xl shadow-lg p-6">
+        {/* Search and Filter UI */}
+      </div>
 
       <div className="bg-white rounded-xl shadow-lg overflow-hidden">
         <div className="overflow-x-auto">
@@ -138,8 +195,8 @@ const MemberManagement: React.FC<MemberManagementProps> = ({ users, events, onRe
         </div>
       </div>
       
-      {showUserModal && <UserModal />}
-      {showDeleteModal && <DeleteModal />}
+      {showUserModal && <ViewUserModal />}
+      {showDeleteModal && <DeleteUserModal />}
       {showAddModal && <AddMemberModal />}
     </div>
   );
