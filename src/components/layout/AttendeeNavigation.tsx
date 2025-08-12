@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { 
-  Home, Calendar, Users, Bell, User, Settings, LogOut, Menu, X,
-  Ticket, Network, BookOpen, Trophy
+  Home, Calendar, Users, Bell, User, Settings, Menu, X,
+  Ticket, BookOpen
 } from 'lucide-react';
 import { useApp } from '../../contexts/AppContext';
 import { useAuth } from '../../contexts/AuthContext';
@@ -9,7 +9,7 @@ import { useAuth } from '../../contexts/AuthContext';
 const AttendeeNavigation: React.FC = () => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const { setCurrentView } = useApp();
-  const { user, logout } = useAuth();
+  const { user } = useAuth();
 
   const navigationItems = [
     { label: 'Dashboard', view: 'attendee-dashboard' as const, icon: Home },
@@ -22,11 +22,6 @@ const AttendeeNavigation: React.FC = () => {
   const handleNavigation = (view: any) => {
     setCurrentView(view);
     setIsMobileMenuOpen(false);
-  };
-
-  const handleLogout = () => {
-    logout();
-    setCurrentView('home');
   };
 
   return (
@@ -88,15 +83,9 @@ const AttendeeNavigation: React.FC = () => {
             <button
               onClick={() => handleNavigation('attendee-profile')}
               className="p-2 text-gray-400 hover:text-gray-600 transition-colors duration-200"
+              title="Profile Settings"
             >
               <Settings className="w-5 h-5" />
-            </button>
-
-            <button
-              onClick={handleLogout}
-              className="p-2 text-gray-400 hover:text-red-600 transition-colors duration-200"
-            >
-              <LogOut className="w-5 h-5" />
             </button>
           </div>
 
@@ -145,14 +134,7 @@ const AttendeeNavigation: React.FC = () => {
                 className="flex items-center space-x-3 text-gray-700 hover:text-indigo-600 block px-3 py-2 text-base font-medium w-full text-left rounded-lg hover:bg-indigo-50 transition-colors duration-200"
               >
                 <Settings className="w-5 h-5" />
-                <span>Settings</span>
-              </button>
-              <button
-                onClick={handleLogout}
-                className="flex items-center space-x-3 text-red-600 hover:text-red-700 block px-3 py-2 text-base font-medium w-full text-left rounded-lg hover:bg-red-50 transition-colors duration-200"
-              >
-                <LogOut className="w-5 h-5" />
-                <span>Logout</span>
+                <span>Profile & Settings</span>
               </button>
             </div>
           </div>
