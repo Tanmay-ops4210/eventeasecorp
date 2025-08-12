@@ -35,20 +35,19 @@ const MainLayout: React.FC<MainLayoutProps> = ({ children }) => {
     }
   };
 
-  const isPublicView = () => {
-    const publicViews = [
-      'home', 'event-discovery', 'speaker-directory', 'sponsor-directory', 
-      'organizer-directory', 'blog', 'resources', 'press', 'about', 
-      'pricing', 'contact', 'terms', 'privacy'
-    ];
-    return publicViews.includes(currentView);
-  };
+  // Determines if the view is a public-facing page that doesn't need breadcrumbs or top padding.
+  const isPublicView = [
+    'home', 'event-discovery', 'speaker-directory', 'sponsor-directory',
+    'organizer-directory', 'blog', 'resources', 'press', 'about',
+    'pricing', 'contact', 'terms', 'privacy', 'password-reset', 'event-page'
+  ].includes(currentView);
 
   return (
     <div className="min-h-screen bg-gray-50">
       {renderNavigation()}
-      {!isPublicView() && <Breadcrumbs />}
-      <main className={`${isPublicView() ? 'pt-0' : 'pt-20'}`}>
+      {/* Only show breadcrumbs for non-public (dashboard) views */}
+      {!isPublicView && <Breadcrumbs />}
+      <main>
         {children}
       </main>
     </div>
