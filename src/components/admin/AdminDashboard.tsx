@@ -4,6 +4,7 @@ import { useAuth } from '../../contexts/AuthContext';
 import { db, AppUser, Event } from '../../lib/supabase'; // Import db and types
 import MemberManagement from './MemberManagement';
 import EventManagement from './EventManagement';
+import { User } from '../../types/user';
 
 const AdminDashboard: React.FC = () => {
   const { setBreadcrumbs } = useApp();
@@ -62,9 +63,9 @@ const AdminDashboard: React.FC = () => {
                         </thead>
                         <tbody className="bg-white divide-y divide-gray-200">
                             {events.map((event: any) => (
-                                <tr key={event._id}>
+                                <tr key={event.id}>
                                     <td className="px-6 py-4 whitespace-nowrap">{event.summary?.name}</td>
-                                    <td className="px-6 py-4 whitespace-nowrap">{users.find(u => u._id === event.ownerId)?.name}</td>
+                                    <td className="px-6 py-4 whitespace-nowrap">{users.find(u => u.id === event.user_id)?.username}</td>
                                     <td className="px-6 py-4 whitespace-nowrap">{event.status}</td>
                                 </tr>
                             ))}
