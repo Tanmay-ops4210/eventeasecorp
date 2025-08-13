@@ -7,6 +7,7 @@ import Step4Verification from './wizard-steps/Step4_Verification';
 import Step5Maintenance from './wizard-steps/Step5_Maintenance';
 import { eventService } from '../../services/eventService';
 import UpgradeModal from '../common/UpgradeModal';
+import { useAuth } from '../../contexts/AuthContext';
 
 interface Props {
   onClose: () => void;
@@ -14,16 +15,23 @@ interface Props {
 }
 
 const EventCreationWizard: React.FC<Props> = ({ onClose, onSave }) => {
+  const { user } = useAuth();
   const [step, setStep] = useState(1);
   const [eventData, setEventData] = useState<Partial<Event>>({
-    waterfall: {
-      requirements: {},
-      design: {},
-      implementation: { ticketTypes: [] },
-      verification: { qaChecklist: [], approvals: [] },
-      maintenance: {},
+    status: "DRAFT",
+    ownerId: user?._id,
+    planSnapshot: {
+        tier: user?.plan || 'FREE',
+        constraints: {}
     },
-    summary: {},
+    waterfall: {
+      requirements: { title: '', goals: '', audience: '', scope: '', successCriteria: '' },
+      design: { venueType: 'on-site', location: '', schedule: '', brandingNotes: '' },
+      implementation: { ticketTypes: [], capacity: 0, staffNotes: '' },
+      verification: { qaChecklist: [], approvals: [] },
+      maintenance: { commsPlan: '', postEventActions: '' },
+    },
+    summary: { name: '', startDate: new Date(), endDate: new Date(), city: '', isPaid: false },
   });
   const [showUpgradeModal, setShowUpgradeModal] = useState(false);
 
@@ -36,7 +44,7 @@ const EventCreationWizard: React.FC<Props> = ({ onClose, onSave }) => {
       onSave();
       onClose();
     } else {
-      if (response.error === 'Upgrade required') {
+      if (response.message === 'Upgrade required') {
         setShowUpgradeModal(true);
       } else {
         alert(response.message);
@@ -45,12 +53,12 @@ const EventCreationWizard: React.FC<Props> = ({ onClose, onSave }) => {
   };
 
   const handlePublish = async () => {
-    const response = await eventService.publishEvent(eventData as Event);
+    const response = await eventService.publishEvent(eventData._id!);
     if (response.ok) {
         onSave();
         onClose();
     } else {
-        if (response.error === 'Upgrade required') {
+        if (response.message === 'Upgrade required') {
             setShowUpgradeModal(true);
         } else {
             alert(response.message);
