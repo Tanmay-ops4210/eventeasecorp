@@ -1,6 +1,7 @@
 import React from 'react';
 import { useApp } from '../../contexts/AppContext';
 import { useAuth } from '../../contexts/AuthContext';
+import { UserRole } from '../../types/user';
 
 // Import all pages
 import HomePage from '../pages/HomePage';
@@ -19,7 +20,7 @@ import TermsPage from '../pages/TermsPage';
 import PrivacyPage from '../pages/PrivacyPage';
 import PasswordResetPage from '../auth/PasswordResetPage';
 import AttendeeDashboard from '../attendee/AttendeeDashboard';
-import MyEventsPage from '../attendee/MyEventsPage';
+import MyEventsPage from '../organizer/MyEventsPage'; // <-- UPDATED PATH
 import MyNetworkPage from '../attendee/MyNetworkPage';
 import NotificationsPage from '../attendee/NotificationsPage';
 import AttendeeProfilePage from '../attendee/AttendeeProfilePage';
@@ -51,7 +52,6 @@ import AdminDashboard from '../admin/AdminDashboard';
 import UserManagementPage from '../admin/UserManagementPage';
 import EventOversightPage from '../admin/EventOversightPage';
 import ContentManagementPage from '../admin/ContentManagementPage';
-import { UserRole } from '../../types/user';
 
 const AppRouter: React.FC = () => {
   const { currentView, selectedEventId } = useApp();
@@ -87,7 +87,6 @@ const AppRouter: React.FC = () => {
 
     // Attendee Module
     case 'attendee-dashboard': return requiresRole(<AttendeeDashboard />, 'attendee');
-    case 'my-events': return requiresRole(<MyEventsPage />, 'attendee');
     case 'my-network': return requiresRole(<MyNetworkPage />, 'attendee');
     case 'notifications': return requiresRole(<NotificationsPage />, 'attendee');
     case 'attendee-profile': return requiresRole(<AttendeeProfilePage />, 'attendee');
@@ -100,6 +99,7 @@ const AppRouter: React.FC = () => {
 
     // Organizer Module
     case 'organizer-dashboard': return requiresRole(<OrganizerDashboard />, 'organizer');
+    case 'my-events': return requiresRole(<MyEventsPage />, 'organizer'); // <-- UPDATED ROLE
     case 'event-builder': return requiresRole(<EventBuilderPage />, 'organizer');
     case 'analytics': return requiresRole(<AnalyticsPage />, 'organizer');
     case 'organizer-settings': return requiresRole(<OrganizerSettingsPage />, 'organizer');
