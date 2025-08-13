@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { 
-  Home, Users, Calendar, DollarSign, FileText, Activity, Settings, 
+import {
+  Home, Users, Calendar, FileText, Settings,
   LogOut, Menu, X, User, Bell, Shield
 } from 'lucide-react';
 import { useApp } from '../../contexts/AppContext';
@@ -17,9 +17,7 @@ const AdminNavigation: React.FC = () => {
     { label: 'Dashboard', view: 'admin-dashboard' as const, icon: Home },
     { label: 'User Management', view: 'user-management' as const, icon: Users },
     { label: 'Event Oversight', view: 'event-oversight' as const, icon: Calendar },
-    { label: 'Monetization', view: 'monetization' as const, icon: DollarSign },
     { label: 'Content Management', view: 'content-management' as const, icon: FileText },
-    { label: 'System Health', view: 'system-health' as const, icon: Activity },
   ];
 
   // Close dropdown when clicking outside
@@ -51,7 +49,7 @@ const AdminNavigation: React.FC = () => {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-16">
           {/* Logo */}
-          <div 
+          <div
             className="flex-shrink-0 cursor-pointer"
             onClick={() => handleNavigation('admin-dashboard')}
           >
@@ -94,7 +92,7 @@ const AdminNavigation: React.FC = () => {
               <Bell className="w-5 h-5" />
               <span className="absolute -top-1 -right-1 w-3 h-3 bg-yellow-400 rounded-full"></span>
             </button>
-            
+
             <div className="relative" ref={dropdownRef}>
               <button
                 onClick={() => setIsDropdownOpen(!isDropdownOpen)}
@@ -108,7 +106,7 @@ const AdminNavigation: React.FC = () => {
                   <p className="text-red-200 capitalize">{user?.role}</p>
                 </div>
               </button>
-              
+
               {/* Dropdown Menu */}
               {isDropdownOpen && (
                 <div className="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg py-1 z-50">
@@ -144,8 +142,8 @@ const AdminNavigation: React.FC = () => {
 
         {/* Mobile Navigation */}
         <div className={`md:hidden transition-all duration-300 ease-in-out ${
-          isMobileMenuOpen 
-            ? 'max-h-screen opacity-100' 
+          isMobileMenuOpen
+            ? 'max-h-screen opacity-100'
             : 'max-h-0 opacity-0 overflow-hidden'
         }`}>
           <div className="px-2 pt-2 pb-3 space-y-1 bg-red-700 bg-opacity-50 backdrop-blur-md rounded-lg mt-2">
@@ -162,7 +160,7 @@ const AdminNavigation: React.FC = () => {
                 </button>
               );
             })}
-            
+
             <div className="border-t border-red-500 pt-3 mt-3">
               <button
                 onClick={() => handleNavigation('organizer-settings')}
