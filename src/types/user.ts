@@ -1,10 +1,11 @@
 export type UserRole = 'attendee' | 'organizer' | 'sponsor' | 'admin';
 
 export interface User {
-  id: string;
+  _id: string; // Changed from id to _id for consistency
   email: string;
   name: string;
   role: UserRole;
+  plan: "FREE" | "PAID" | "PRO"; // Added plan
   avatar?: string;
   createdAt: string;
   updatedAt: string;
