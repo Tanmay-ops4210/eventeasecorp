@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useApp } from '../../contexts/AppContext';
-import { Edit, Save, Plus, Trash2, FileText, Image, Video, AlertTriangle } from 'lucide-react';
+import { Edit, Save, Plus, Trash2, FileText, Image, Video, AlertTriangle, X } from 'lucide-react';
 
 interface ContentBlock {
   id: string;
@@ -22,6 +22,13 @@ const ContentManagementPage: React.FC = () => {
   const [content, setContent] = useState<ContentBlock[]>(mockContent);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editedContent, setEditedContent] = useState('');
+  const [showAddModal, setShowAddModal] = useState(false);
+  const [newContentData, setNewContentData] = useState<Omit<ContentBlock, 'id'>>({
+    page: '',
+    section: '',
+    content: '',
+    type: 'text',
+  });
 
   React.useEffect(() => {
     setBreadcrumbs(['Global Content Management']);
@@ -41,6 +48,18 @@ const ContentManagementPage: React.FC = () => {
     setEditingId(null);
   };
 
+  const handleAddNewContent = (e: React.FormEvent) => {
+    e.preventDefault();
+    const newBlock: ContentBlock = {
+      id: (content.length + 1).toString(),
+      ...newContentData,
+    };
+    setContent([...content, newBlock]);
+    setShowAddModal(false);
+    setNewContentData({ page: '', section: '', content: '', type: 'text' });
+  };
+
+
   const getIcon = (type: 'text' | 'image' | 'video') => {
     switch (type) {
       case 'image': return <Image className="w-5 h-5 text-gray-500" />;
@@ -54,7 +73,9 @@ const ContentManagementPage: React.FC = () => {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="flex items-center justify-between mb-8">
             <h1 className="text-3xl font-bold text-gray-900">Global Content Management</h1>
-            <button className="flex items-center space-x-2 px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700">
+            <button
+                onClick={() => setShowAddModal(true)}
+                className="flex items-center space-x-2 px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700">
                 <Plus className="w-4 h-4" />
                 <span>Add Content Block</span>
             </button>
@@ -118,6 +139,64 @@ const ContentManagementPage: React.FC = () => {
                 </table>
             </div>
         </div>
+        {showAddModal && (
+            <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black bg-opacity-50 backdrop-blur-sm">
+                <div className="bg-white rounded-2xl shadow-2xl max-w-lg w-full">
+                    <div className="p-6 border-b flex justify-between items-center">
+                        <h3 className="text-xl font-bold">Add New Content Block</h3>
+                        <button onClick={() => setShowAddModal(false)}><X className="w-5 h-5"/></button>
+                    </div>
+                    <form onSubmit={handleAddNewContent} className="p-6 space-y-4">
+                         <div>
+                            <label className="block text-sm font-medium">Page</label>
+                            <input
+                                type="text"
+                                value={newContentData.page}
+                                onChange={(e) => setNewContentData({...newContentData, page: e.target.value})}
+                                className="w-full mt-1 p-2 border rounded-lg"
+                                required
+                            />
+                        </div>
+                        <div>
+                            <label className="block text-sm font-medium">Section</label>
+                            <input
+                                type="text"
+                                value={newContentData.section}
+                                onChange={(e) => setNewContentData({...newContentData, section: e.target.value})}
+                                className="w-full mt-1 p-2 border rounded-lg"
+                                required
+                            />
+                        </div>
+                        <div>
+                            <label className="block text-sm font-medium">Type</label>
+                             <select
+                                value={newContentData.type}
+                                onChange={(e) => setNewContentData({...newContentData, type: e.target.value as any})}
+                                className="w-full mt-1 p-2 border rounded-lg"
+                            >
+                                <option value="text">Text</option>
+                                <option value="image">Image URL</option>
+                                <option value="video">Video URL</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label className="block text-sm font-medium">Content</label>
+                            <textarea
+                                value={newContentData.content}
+                                onChange={(e) => setNewContentData({...newContentData, content: e.target.value})}
+                                className="w-full mt-1 p-2 border rounded-lg"
+                                rows={4}
+                                required
+                            />
+                        </div>
+                        <div className="flex justify-end space-x-4 pt-4">
+                            <button type="button" onClick={() => setShowAddModal(false)} className="px-4 py-2 border rounded-lg">Cancel</button>
+                            <button type="submit" className="px-4 py-2 bg-indigo-600 text-white rounded-lg">Add Content</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        )}
       </div>
     </div>
   );
