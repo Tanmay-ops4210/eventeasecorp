@@ -1,8 +1,8 @@
 import React, { useState } from 'react';
-import { 
-  Calendar, 
-  Search, 
-  Filter, 
+import {
+  Calendar,
+  Search,
+  Filter,
   Plus,
   Edit,
   Trash2,
@@ -27,13 +27,20 @@ const EventManagement: React.FC<EventManagementProps> = ({ events, users, onRefr
   const [showAddEventModal, setShowAddEventModal] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [editFormData, setEditFormData] = useState<Partial<Event>>({});
+  const [addFormData, setAddFormData] = useState<Partial<Event>>({
+    event_name: '',
+    event_type: 'conference',
+    expected_attendees: 50,
+    user_id: ''
+  });
+
 
   const filteredEvents = events.filter(event => {
     const eventName = event.event_name || '';
     const eventType = event.event_type || '';
     const matchesSearch = eventName.toLowerCase().includes(searchTerm.toLowerCase()) ||
                          eventType.toLowerCase().includes(searchTerm.toLowerCase());
-    
+
     if (selectedFilter === 'all') return matchesSearch;
     return matchesSearch && event.event_type === selectedFilter;
   });
@@ -74,13 +81,20 @@ const EventManagement: React.FC<EventManagementProps> = ({ events, users, onRefr
     setIsLoading(false);
     setShowDeleteModal(false);
   };
-  
-  const handleAddEvent = async (newEventData: Partial<Event>) => {
+
+  const handleAddEvent = async (e: React.FormEvent) => {
+    e.preventDefault();
     setIsLoading(true);
-    await db.createEvent(newEventData);
+    await db.createEvent(addFormData);
     onRefresh();
     setIsLoading(false);
     setShowAddEventModal(false);
+    setAddFormData({
+        event_name: '',
+        event_type: 'conference',
+        expected_attendees: 50,
+        user_id: ''
+    });
   };
 
   // --- MODAL COMPONENTS ---
@@ -135,14 +149,72 @@ const EventManagement: React.FC<EventManagementProps> = ({ events, users, onRefr
       </div>
     );
   };
-  
+
   const DeleteModal = () => {
-    // ... same as before ...
+    if (!selectedEvent) return null;
+    return (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black bg-opacity-50 backdrop-blur-sm">
+            <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full p-6 text-center">
+                <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <AlertTriangle className="w-8 h-8 text-red-600"/>
+                </div>
+                <h3 className="text-xl font-bold mb-2">Delete Event</h3>
+                <p className="text-gray-600 mb-6">Are you sure you want to delete the event "{selectedEvent.event_name}"? This action cannot be undone.</p>
+                <div className="flex space-x-4">
+                    <button onClick={() => setShowDeleteModal(false)} className="flex-1 px-4 py-2 border rounded-lg hover:bg-gray-50">Cancel</button>
+                    <button onClick={handleConfirmDelete} disabled={isLoading} className="flex-1 px-4 py-2 bg-red-600 text-white rounded-lg disabled:opacity-50">{isLoading ? 'Deleting...' : 'Delete'}</button>
+                </div>
+            </div>
+        </div>
+    );
   };
-  
+
   const AddEventModal = () => {
-    // ... same as before ...
+    return (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black bg-opacity-50 backdrop-blur-sm">
+            <form onSubmit={handleAddEvent} className="bg-white rounded-2xl shadow-2xl max-w-lg w-full">
+                <div className="p-6 border-b"><h3 className="text-xl font-bold">Add New Event</h3></div>
+                <div className="p-6 space-y-4">
+                    <div>
+                        <label className="block text-sm font-medium text-gray-700">Event Name</label>
+                        <input type="text" value={addFormData.event_name || ''} onChange={(e) => setAddFormData(prev => ({ ...prev, event_name: e.target.value }))} className="w-full mt-1 p-2 border rounded-lg" required />
+                    </div>
+                    <div>
+                        <label className="block text-sm font-medium text-gray-700">Event Type</label>
+                        <select value={addFormData.event_type || ''} onChange={(e) => setAddFormData(prev => ({ ...prev, event_type: e.target.value }))} className="w-full mt-1 p-2 border rounded-lg">
+                            <option value="conference">Conference</option>
+                            <option value="workshop">Workshop</option>
+                            <option value="seminar">Seminar</option>
+                            <option value="networking">Networking</option>
+                        </select>
+                    </div>
+                     <div>
+                        <label className="block text-sm font-medium text-gray-700">Organizer</label>
+                        <select value={addFormData.user_id || ''} onChange={(e) => setAddFormData(prev => ({ ...prev, user_id: e.target.value }))} className="w-full mt-1 p-2 border rounded-lg" required>
+                            <option value="" disabled>Select an organizer</option>
+                            {users.map(user => (
+                                <option key={user.id} value={user.id}>{user.username}</option>
+                            ))}
+                        </select>
+                    </div>
+                    <div>
+                        <label className="block text-sm font-medium text-gray-700">Expected Attendees</label>
+                        <input type="number" value={addFormData.expected_attendees || ''} onChange={(e) => setAddFormData(prev => ({ ...prev, expected_attendees: parseInt(e.target.value, 10) }))} className="w-full mt-1 p-2 border rounded-lg" required/>
+                    </div>
+                     <div>
+                        <label className="block text-sm font-medium text-gray-700">Event Date</label>
+                        <input type="date" value={addFormData.event_date || ''} onChange={(e) => setAddFormData(prev => ({ ...prev, event_date: e.target.value }))} className="w-full mt-1 p-2 border rounded-lg"/>
+                    </div>
+                    <div className="flex space-x-4 pt-4">
+                        <button type="button" onClick={() => setShowAddEventModal(false)} className="flex-1 px-4 py-2 border rounded-lg">Cancel</button>
+                        <button type="submit" disabled={isLoading} className="flex-1 px-4 py-2 bg-indigo-600 text-white rounded-lg disabled:opacity-50">{isLoading ? 'Adding...' : 'Add Event'}</button>
+                    </div>
+                </div>
+            </form>
+        </div>
+    );
   };
+
 
   return (
     <div className="space-y-6">
@@ -189,7 +261,7 @@ const EventManagement: React.FC<EventManagementProps> = ({ events, users, onRefr
               </table>
           </div>
       </div>
-      
+
       {showViewModal && <ViewModal />}
       {showEditModal && <EditModal />}
       {showDeleteModal && <DeleteModal />}
