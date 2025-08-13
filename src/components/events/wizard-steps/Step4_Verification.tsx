@@ -12,7 +12,20 @@ const Step4Verification: React.FC<Props> = ({ eventData, setEventData, onNext, o
   return (
     <div>
       <h2 className="text-2xl font-bold mb-4">Step 4: Verification</h2>
-      {/* Form fields for Verification step */}
+       <div className="space-y-2">
+            <label className="flex items-center">
+                <input type="checkbox" className="mr-2"/>
+                <span>Venue Confirmed</span>
+            </label>
+            <label className="flex items-center">
+                <input type="checkbox" className="mr-2"/>
+                <span>Speakers Booked</span>
+            </label>
+            <label className="flex items-center">
+                <input type="checkbox" className="mr-2"/>
+                <span>Catering Finalized</span>
+            </label>
+       </div>
       <div className="flex justify-between mt-4">
         <button onClick={onBack} className="px-4 py-2 bg-gray-300 rounded">Back</button>
         <button onClick={onNext} className="px-4 py-2 bg-indigo-600 text-white rounded">Next</button>
