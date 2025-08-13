@@ -50,15 +50,13 @@ import SponsorToolsPage from '../sponsor/SponsorToolsPage';
 import AdminDashboard from '../admin/AdminDashboard';
 import UserManagementPage from '../admin/UserManagementPage';
 import EventOversightPage from '../admin/EventOversightPage';
-import MonetizationPage from '../admin/MonetizationPage';
 import ContentManagementPage from '../admin/ContentManagementPage';
-import SystemHealthPage from '../admin/SystemHealthPage';
 
 const AppRouter: React.FC = () => {
   const { currentView, selectedEventId } = useApp();
   const { user, isAuthenticated } = useAuth();
 
-  const requiresRole = (component: React.ReactNode, requiredRole: UserRole) => {
+  const requiresRole = (component: React.ReactNode, requiredRole: any) => {
     if (!isAuthenticated || user?.role !== requiredRole) {
       // Redirect to home if not authenticated or wrong role
       return <HomePage />;
@@ -114,9 +112,7 @@ const AppRouter: React.FC = () => {
     case 'admin-dashboard': return requiresRole(<AdminDashboard />, 'admin');
     case 'user-management': return requiresRole(<UserManagementPage />, 'admin');
     case 'event-oversight': return requiresRole(<EventOversightPage />, 'admin');
-    case 'monetization': return requiresRole(<MonetizationPage />, 'admin');
     case 'content-management': return requiresRole(<ContentManagementPage />, 'admin');
-    case 'system-health': return requiresRole(<SystemHealthPage />, 'admin');
 
     default:
       return <HomePage />;
