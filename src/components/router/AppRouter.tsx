@@ -51,12 +51,13 @@ import AdminDashboard from '../admin/AdminDashboard';
 import UserManagementPage from '../admin/UserManagementPage';
 import EventOversightPage from '../admin/EventOversightPage';
 import ContentManagementPage from '../admin/ContentManagementPage';
+import { UserRole } from '../../types/user';
 
 const AppRouter: React.FC = () => {
   const { currentView, selectedEventId } = useApp();
   const { user, isAuthenticated } = useAuth();
 
-  const requiresRole = (component: React.ReactNode, requiredRole: any) => {
+  const requiresRole = (component: React.ReactNode, requiredRole: UserRole) => {
     if (!isAuthenticated || user?.role !== requiredRole) {
       // Redirect to home if not authenticated or wrong role
       return <HomePage />;
