@@ -47,6 +47,31 @@ const AdminDashboard: React.FC = () => {
 
           <MemberManagement users={users} events={events} onRefresh={fetchData} />
           <EventManagement users={users} events={events} onRefresh={fetchData} />
+            
+          {/* New User Events Table */}
+           <div className="bg-white rounded-xl shadow-lg overflow-hidden">
+                <h2 className="text-2xl font-bold text-gray-900 p-6">User Events</h2>
+                <div className="overflow-x-auto">
+                    <table className="min-w-full divide-y divide-gray-200">
+                        <thead className="bg-gray-50">
+                            <tr>
+                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Event Name</th>
+                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Owner</th>
+                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Status</th>
+                            </tr>
+                        </thead>
+                        <tbody className="bg-white divide-y divide-gray-200">
+                            {events.map((event: any) => (
+                                <tr key={event._id}>
+                                    <td className="px-6 py-4 whitespace-nowrap">{event.summary?.name}</td>
+                                    <td className="px-6 py-4 whitespace-nowrap">{users.find(u => u._id === event.ownerId)?.name}</td>
+                                    <td className="px-6 py-4 whitespace-nowrap">{event.status}</td>
+                                </tr>
+                            ))}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
 
         </div>
       </div>
