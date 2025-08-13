@@ -55,7 +55,13 @@ const MyEventsPage: React.FC = () => {
                 {events.map((event) => (
                   <tr key={event._id}>
                     <td className="px-6 py-4 whitespace-nowrap">{event.summary.name}</td>
-                    <td className="px-6 py-4 whitespace-nowrap">{event.status}</td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                        <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
+                            event.status === 'PUBLISHED' ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'
+                        }`}>
+                            {event.status}
+                        </span>
+                    </td>
                     <td className="px-6 py-4 whitespace-nowrap">{new Date(event.summary.startDate).toLocaleDateString()}</td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm font-medium space-x-2">
                       <button className="text-indigo-600 hover:text-indigo-900"><Edit className="w-4 h-4" /></button>
