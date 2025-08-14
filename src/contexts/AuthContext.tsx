@@ -33,12 +33,18 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     // Check for saved user data
     const savedUser = localStorage.getItem('eventease_user');
     if (savedUser) {
-      const user = JSON.parse(savedUser);
-      setAuthState({
-        user,
-        isAuthenticated: true,
-        isLoading: false,
-      });
+      try {
+        const user = JSON.parse(savedUser);
+        setAuthState({
+          user,
+          isAuthenticated: true,
+          isLoading: false,
+        });
+      } catch (error) {
+        // Handle potential parsing error
+        localStorage.removeItem('eventease_user');
+        setAuthState(prev => ({ ...prev, isLoading: false }));
+      }
     } else {
       setAuthState(prev => ({ ...prev, isLoading: false }));
     }
@@ -47,20 +53,20 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const login = async (email: string, password: string) => {
     setAuthState(prev => ({ ...prev, isLoading: true }));
     
-    // Mock authentication - in real app, this would be an API call
+    // Mock authentication
     await new Promise(resolve => setTimeout(resolve, 1000));
     
-    // Determine role based on email for demo purposes
     let role: UserRole = 'attendee';
     if (email.includes('organizer')) role = 'organizer';
     else if (email.includes('sponsor')) role = 'sponsor';
     else if (email.includes('admin')) role = 'admin';
     
     const user: User = {
-      id: Date.now().toString(),
+      _id: `user_${Date.now()}`,
       email,
-      name: email.split('@')[0],
+      name: email.split('@')[0].replace(/\W/g, ''),
       role,
+      plan: 'FREE',
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
     };
@@ -80,10 +86,11 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     await new Promise(resolve => setTimeout(resolve, 1000));
     
     const user: User = {
-      id: Date.now().toString(),
+      _id: `user_${Date.now()}`,
       email,
       name,
       role,
+      plan: 'FREE',
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
     };
