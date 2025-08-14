@@ -20,7 +20,7 @@ import TermsPage from '../pages/TermsPage';
 import PrivacyPage from '../pages/PrivacyPage';
 import PasswordResetPage from '../auth/PasswordResetPage';
 import AttendeeDashboard from '../attendee/AttendeeDashboard';
-import MyEventsPage from '../organizer/MyEventsPage'; // <-- UPDATED PATH
+import MyEventsPage from '../organizer/MyEventsPage'; // <-- CORRECTED PATH
 import MyNetworkPage from '../attendee/MyNetworkPage';
 import NotificationsPage from '../attendee/NotificationsPage';
 import AttendeeProfilePage from '../attendee/AttendeeProfilePage';
@@ -57,10 +57,25 @@ const AppRouter: React.FC = () => {
   const { currentView, selectedEventId } = useApp();
   const { user, isAuthenticated } = useAuth();
 
-  const requiresRole = (component: React.ReactNode, requiredRole: UserRole) => {
-    if (!isAuthenticated || user?.role !== requiredRole) {
-      // Redirect to home if not authenticated or wrong role
+  const requiresRole = (component: React.ReactNode, requiredRole: UserRole | UserRole[]) => {
+    if (!isAuthenticated) {
       return <HomePage />;
+    }
+    const roles = Array.isArray(requiredRole) ? requiredRole : [requiredRole];
+    if (!user || !roles.includes(user.role)) {
+      // Redirect to a default dashboard or home if the role doesn't match
+      switch (user.role) {
+        case 'attendee':
+          return <AttendeeDashboard />;
+        case 'organizer':
+          return <OrganizerDashboard />;
+        case 'sponsor':
+          return <SponsorDashboard />;
+        case 'admin':
+          return <AdminDashboard />;
+        default:
+          return <HomePage />;
+      }
     }
     return component;
   };
@@ -88,7 +103,7 @@ const AppRouter: React.FC = () => {
     // Attendee Module
     case 'attendee-dashboard': return requiresRole(<AttendeeDashboard />, 'attendee');
     case 'my-network': return requiresRole(<MyNetworkPage />, 'attendee');
-    case 'notifications': return requiresRole(<NotificationsPage />, 'attendee');
+    case 'notifications': return requiresRole(<NotificationsPage />, ['attendee', 'organizer', 'sponsor', 'admin']);
     case 'attendee-profile': return requiresRole(<AttendeeProfilePage />, 'attendee');
     case 'agenda-builder': return requiresRole(<AgendaBuilderPage />, 'attendee');
     case 'networking-hub': return requiresRole(<NetworkingHubPage />, 'attendee');
@@ -99,15 +114,28 @@ const AppRouter: React.FC = () => {
 
     // Organizer Module
     case 'organizer-dashboard': return requiresRole(<OrganizerDashboard />, 'organizer');
-    case 'my-events': return requiresRole(<MyEventsPage />, 'organizer'); // <-- UPDATED ROLE
+    case 'my-events': return requiresRole(<MyEventsPage />, 'organizer');
     case 'event-builder': return requiresRole(<EventBuilderPage />, 'organizer');
     case 'analytics': return requiresRole(<AnalyticsPage />, 'organizer');
     case 'organizer-settings': return requiresRole(<OrganizerSettingsPage />, 'organizer');
-    // Add other organizer pages here...
+    case 'event-settings': return requiresRole(<EventSettingsPage />, 'organizer');
+    case 'landing-customizer': return requiresRole(<LandingCustomizerPage />, 'organizer');
+    case 'agenda-manager': return requiresRole(<AgendaManagerPage />, 'organizer');
+    case 'venue-manager': return requiresRole(<VenueManagerPage />, 'organizer');
+    case 'ticketing': return requiresRole(<TicketingPage />, 'organizer');
+    case 'discount-codes': return requiresRole(<DiscountCodesPage />, 'organizer');
+    case 'email-campaigns': return requiresRole(<EmailCampaignsPage />, 'organizer');
+    case 'attendee-management': return requiresRole(<AttendeeManagementPage />, 'organizer');
+    case 'speaker-portal': return requiresRole(<SpeakerPortalPage />, 'organizer');
+    case 'staff-roles': return requiresRole(<StaffRolesPage />, 'organizer');
+    
 
     // Sponsor Module
     case 'sponsor-dashboard': return requiresRole(<SponsorDashboard />, 'sponsor');
-    // Add other sponsor pages here...
+    case 'booth-customization': return requiresRole(<BoothCustomizationPage />, 'sponsor');
+    case 'lead-capture': return requiresRole(<LeadCapturePage />, 'sponsor');
+    case 'sponsor-tools': return requiresRole(<SponsorToolsPage />, 'sponsor');
+    
 
     // Admin Module
     case 'admin-dashboard': return requiresRole(<AdminDashboard />, 'admin');
