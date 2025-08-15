@@ -304,7 +304,6 @@ const AnalyticsPage: React.FC = () => {
         )}
         </div>
       </div>
-    </div>
   );
 };
 

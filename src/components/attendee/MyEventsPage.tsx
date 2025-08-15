@@ -421,7 +421,6 @@ const MyEventsPage: React.FC = () => {
         )}
         </div>
       </div>
-    </div>
   );
 };
 

@@ -406,7 +406,6 @@ const AttendeeManagementPage: React.FC = () => {
         )}
         </div>
       </div>
-    </div>
   );
 };
 
