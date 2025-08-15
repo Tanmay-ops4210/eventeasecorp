@@ -13,11 +13,12 @@ const OrganizerNavigation: React.FC = () => {
 
   const navigationItems = [
     { label: 'Dashboard', view: 'organizer-dashboard' as const, icon: Home },
-    { label: 'Event Builder', view: 'event-builder' as const, icon: Plus },
+    { label: 'My Events', view: 'my-events' as const, icon: Calendar },
+    { label: 'Create Event', view: 'event-builder' as const, icon: Plus },
     { label: 'Attendees', view: 'attendee-management' as const, icon: Users },
     { label: 'Analytics', view: 'analytics' as const, icon: BarChart3 },
-    { label: 'Marketing', view: 'email-campaigns' as const, icon: Mail },
     { label: 'Ticketing', view: 'ticketing' as const, icon: Ticket },
+    { label: 'Marketing', view: 'email-campaigns' as const, icon: Mail },
   ];
 
   const handleNavigation = (view: any) => {

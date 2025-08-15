@@ -114,7 +114,7 @@ const AppRouter: React.FC = () => {
 
     // Organizer Module
     case 'organizer-dashboard': return requiresRole(<OrganizerDashboard />, 'organizer');
-    case 'my-events': return requiresRole(<MyEventsPage />, 'organizer');
+    case 'my-events': return requiresRole(<MyEventsPage />, ['organizer', 'attendee']);
     case 'event-builder': return requiresRole(<EventBuilderPage />, 'organizer');
     case 'analytics': return requiresRole(<AnalyticsPage />, 'organizer');
     case 'organizer-settings': return requiresRole(<OrganizerSettingsPage />, 'organizer');
