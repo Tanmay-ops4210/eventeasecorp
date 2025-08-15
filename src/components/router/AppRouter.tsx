@@ -20,7 +20,7 @@ import TermsPage from '../pages/TermsPage';
 import PrivacyPage from '../pages/PrivacyPage';
 import PasswordResetPage from '../auth/PasswordResetPage';
 import AttendeeDashboard from '../attendee/AttendeeDashboard';
-import MyEventsPage from '../organizer/MyEventsPage'; // <-- CORRECTED PATH
+import MyEventsPage from '../attendee/MyEventsPage';
 import MyNetworkPage from '../attendee/MyNetworkPage';
 import NotificationsPage from '../attendee/NotificationsPage';
 import AttendeeProfilePage from '../attendee/AttendeeProfilePage';
