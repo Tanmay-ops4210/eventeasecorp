@@ -1347,7 +1347,7 @@ img {
 /* Enhanced Mobile Specific Component Fixes */
 @media (max-width: 480px) {
   /* Speaker cards */
-  .w-32.sm\\:w-40.h-32.sm\\:h-40 {
+  .w-32.sm\:w-40.h-32.sm\:h-40 {
     width: 6rem;
     height: 6rem;
   }
@@ -1405,7 +1405,7 @@ img {
     width: auto;
   }
   
-  .fixed.bottom-6.left-1\\/2 {
+  .fixed.bottom-6.left-1\/2 {
     bottom: 1rem;
     left: 1rem;
     right: 1rem;
