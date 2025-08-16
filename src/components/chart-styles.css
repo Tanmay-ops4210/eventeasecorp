@@ -82,7 +82,10 @@
 
 /* Header */
 .chart-header {
-  @apply flex items-center justify-between p-6;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 1.5rem;
   background: var(--chart-surface);
   border-bottom: 1px solid var(--chart-border);
 }

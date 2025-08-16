@@ -2062,20 +2062,24 @@ img {
 @media (max-width: 480px) {
   /* Safe area insets for modern mobile devices */
   .pt-20 {
-    padding-top: max(5rem, env(safe-area-inset-top, 5rem));
+    padding-top: 5rem;
+    padding-top: max(5rem, env(safe-area-inset-top));
   }
   
   .pb-8 {
-    padding-bottom: max(2rem, env(safe-area-inset-bottom, 2rem));
+    padding-bottom: 2rem;
+    padding-bottom: max(2rem, env(safe-area-inset-bottom));
   }
   
   /* Fixed elements safe area */
   .fixed.top-0 {
-    top: env(safe-area-inset-top, 0);
+    top: 0;
+    top: env(safe-area-inset-top);
   }
   
   .fixed.bottom-6 {
-    bottom: max(1.5rem, env(safe-area-inset-bottom, 1.5rem));
+    bottom: 1.5rem;
+    bottom: max(1.5rem, env(safe-area-inset-bottom));
   }
 }
 
