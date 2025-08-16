@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import {
   Home, Users, Calendar, FileText, Settings,
-  LogOut, Menu, X, User, Bell, Shield
+  LogOut, Menu, X, User, Bell, Shield, ChevronDown
 } from 'lucide-react';
 import { useApp } from '../../contexts/AppContext';
 import { useAuth } from '../../contexts/AuthContext';
@@ -37,11 +37,14 @@ const AdminNavigation: React.FC = () => {
     setCurrentView(view);
     setIsMobileMenuOpen(false);
     setIsDropdownOpen(false);
+    setIsDropdownOpen(false);
   };
 
   const handleLogout = () => {
     logout();
     setCurrentView('home');
+    setIsDropdownOpen(false);
+    setIsMobileMenuOpen(false);
   };
 
   return (
@@ -50,7 +53,7 @@ const AdminNavigation: React.FC = () => {
         <div className="flex items-center justify-between h-16">
           {/* Logo */}
           <div
-            className="flex-shrink-0 cursor-pointer"
+            className="flex-shrink-0 cursor-pointer order-1"
             onClick={() => handleNavigation('admin-dashboard')}
           >
             <div className="flex items-center space-x-3">
@@ -96,7 +99,7 @@ const AdminNavigation: React.FC = () => {
             <div className="relative" ref={dropdownRef}>
               <button
                 onClick={() => setIsDropdownOpen(!isDropdownOpen)}
-                className="flex items-center space-x-3 p-2 rounded-lg hover:bg-white/10 transition-colors duration-200"
+                className="flex items-center space-x-3 p-2 rounded-lg hover:bg-white/10 transition-all duration-200"
               >
                 <div className="w-8 h-8 bg-red-800 rounded-full flex items-center justify-center">
                   <User className="w-5 h-5 text-white" />
@@ -105,21 +108,22 @@ const AdminNavigation: React.FC = () => {
                   <p className="font-medium text-white">{user?.name}</p>
                   <p className="text-red-200 capitalize">{user?.role}</p>
                 </div>
+                <ChevronDown className="w-4 h-4 text-red-200" />
               </button>
 
               {/* Dropdown Menu */}
               {isDropdownOpen && (
-                <div className="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg py-1 z-50">
+                <div className="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg py-2 z-50 animate-fade-in border border-gray-200">
                   <button
                     onClick={() => handleNavigation('organizer-settings')}
-                    className="w-full text-left flex items-center space-x-2 px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                    className="w-full text-left flex items-center space-x-2 px-4 py-2 text-gray-700 hover:bg-gray-100 transition-colors duration-200"
                   >
                     <Settings className="w-4 h-4" />
                     <span>Settings</span>
                   </button>
                   <button
                     onClick={handleLogout}
-                    className="w-full text-left flex items-center space-x-2 px-4 py-2 text-sm text-red-600 hover:bg-red-50"
+                    className="w-full text-left flex items-center space-x-2 px-4 py-2 text-red-600 hover:bg-red-50 transition-colors duration-200"
                   >
                     <LogOut className="w-4 h-4" />
                     <span>Logout</span>
@@ -130,10 +134,10 @@ const AdminNavigation: React.FC = () => {
           </div>
 
           {/* Mobile menu button */}
-          <div className="md:hidden">
+          <div className="md:hidden order-3">
             <button
               onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-              className="text-white hover:text-red-200 p-2 rounded-lg hover:bg-white/10 transition-colors duration-200"
+              className="text-white hover:text-red-200 p-3 rounded-lg hover:bg-white/10 transition-all duration-300 transform hover:scale-105 touch-manipulation"
             >
               {isMobileMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
             </button>
@@ -143,17 +147,17 @@ const AdminNavigation: React.FC = () => {
         {/* Mobile Navigation */}
         <div className={`md:hidden transition-all duration-300 ease-in-out ${
           isMobileMenuOpen
-            ? 'max-h-screen opacity-100'
-            : 'max-h-0 opacity-0 overflow-hidden'
+            ? 'max-h-screen opacity-100 transform translate-y-0'
+            : 'max-h-0 opacity-0 overflow-hidden transform -translate-y-2'
         }`}>
-          <div className="px-2 pt-2 pb-3 space-y-1 bg-red-700 bg-opacity-50 backdrop-blur-md rounded-lg mt-2">
+          <div className="px-2 pt-2 pb-3 space-y-1 bg-red-700/80 backdrop-blur-md rounded-xl mt-2 shadow-xl border border-white/10">
             {navigationItems.map((item) => {
               const IconComponent = item.icon;
               return (
                 <button
                   key={item.view}
                   onClick={() => handleNavigation(item.view)}
-                  className="flex items-center space-x-3 text-white hover:text-red-200 block px-3 py-2 text-base font-medium w-full text-left rounded-lg hover:bg-white/10 transition-colors duration-200"
+                  className="mobile-nav-item flex items-center space-x-3 text-white hover:text-red-200 block px-4 py-3 text-base font-medium w-full text-left rounded-lg hover:bg-white/20 transition-all duration-300 transform hover:scale-105 touch-manipulation"
                 >
                   <IconComponent className="w-5 h-5" />
                   <span>{item.label}</span>
@@ -162,16 +166,27 @@ const AdminNavigation: React.FC = () => {
             })}
 
             <div className="border-t border-red-500 pt-3 mt-3">
+              <div className="mobile-nav-item flex items-center space-x-2 text-white px-4 py-3">
+                <User className="w-4 h-4" />
+                <span className="text-base font-medium">{user?.name}</span>
+              </div>
+              <button
+                onClick={() => handleNavigation('notifications')}
+                className="mobile-nav-item flex items-center space-x-3 text-white hover:text-red-200 block px-4 py-3 text-base font-medium w-full text-left rounded-lg hover:bg-white/20 transition-all duration-300 transform hover:scale-105 touch-manipulation"
+              >
+                <Bell className="w-5 h-5" />
+                <span>Notifications</span>
+              </button>
               <button
                 onClick={() => handleNavigation('organizer-settings')}
-                className="flex items-center space-x-3 text-white hover:text-red-200 block px-3 py-2 text-base font-medium w-full text-left rounded-lg hover:bg-white/10 transition-colors duration-200"
+                className="mobile-nav-item flex items-center space-x-3 text-white hover:text-red-200 block px-4 py-3 text-base font-medium w-full text-left rounded-lg hover:bg-white/20 transition-all duration-300 transform hover:scale-105 touch-manipulation"
               >
                 <Settings className="w-5 h-5" />
                 <span>Settings</span>
               </button>
               <button
                 onClick={handleLogout}
-                className="flex items-center space-x-3 text-white hover:text-red-200 block px-3 py-2 text-base font-medium w-full text-left rounded-lg hover:bg-white/10 transition-colors duration-200"
+                className="mobile-nav-item flex items-center space-x-3 text-white hover:text-red-200 block px-4 py-3 text-base font-medium w-full text-left rounded-lg hover:bg-white/20 transition-all duration-300 transform hover:scale-105 touch-manipulation"
               >
                 <LogOut className="w-5 h-5" />
                 <span>Logout</span>

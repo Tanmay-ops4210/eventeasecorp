@@ -1724,7 +1724,7 @@ img {
 .mobile-nav-item {
   transform: translateX(-10px);
   opacity: 0;
-  animation: slideInLeft 0.3s ease-out forwards;
+  animation: slideInLeft 0.4s cubic-bezier(0.4, 0, 0.2, 1) forwards;
 }
 
 .mobile-nav-item:nth-child(1) { animation-delay: 0.1s; }
@@ -1739,9 +1739,59 @@ img {
 .mobile-nav-item:nth-child(10) { animation-delay: 1.0s; }
 
 @keyframes slideInLeft {
+  from {
+    transform: translateX(-20px);
+    opacity: 0;
+  }
   to {
     transform: translateX(0);
     opacity: 1;
+  }
+}
+
+/* Profile dropdown animation */
+.animate-fade-in {
+  animation: fadeInScale 0.2s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+}
+
+@keyframes fadeInScale {
+  from {
+    opacity: 0;
+    transform: scale(0.95) translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+/* Enhanced mobile menu styling */
+@media (max-width: 768px) {
+  .mobile-nav-item {
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    margin-bottom: 0.5rem;
+  }
+  
+  .mobile-nav-item:hover {
+    backdrop-filter: blur(15px);
+    border-color: rgba(255, 255, 255, 0.2);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  }
+}
+
+/* Touch-friendly improvements */
+@media (max-width: 480px) {
+  .mobile-nav-item {
+    min-height: 52px;
+    padding: 1rem 1.25rem;
+    font-size: 1rem;
+    border-radius: 0.75rem;
+  }
+  
+  .mobile-nav-item:active {
+    transform: scale(0.98);
+    transition: transform 0.1s ease;
   }
 }
 
