@@ -339,25 +339,25 @@ const EnhancedChart: React.FC = () => {
   };
 
   return (
-    <div className="enhanced-chart-container">
+    <div className="enhanced-chart-container w-full">
       {/* Header */}
       <div className="chart-header">
-        <div className="flex items-center space-x-3">
+        <div className="flex items-center space-x-3 flex-shrink-0">
           <div className="chart-icon">
             {getChartIcon(currentChart.type)}
           </div>
-          <div>
+          <div className="min-w-0 flex-1">
             <h2 className="chart-title">
               {currentChart.title}
             </h2>
-            <p className="chart-subtitle">
+            <p className="chart-subtitle hidden sm:block">
               Interactive data visualization with smooth animations
             </p>
           </div>
         </div>
         
         {/* Page Indicator */}
-        <div className="page-indicator">
+        <div className="page-indicator flex-shrink-0">
           <span className="page-info">
             Page {currentPage + 1} of {totalPages}
           </span>
@@ -369,7 +369,7 @@ const EnhancedChart: React.FC = () => {
         {isLoading ? (
           <div className="chart-loading">
             <div className="loading-spinner"></div>
-            <p className="loading-text">Loading chart data...</p>
+            <p className="loading-text text-center">Loading chart data...</p>
           </div>
         ) : (
           <div className="chart-wrapper">
@@ -386,7 +386,8 @@ const EnhancedChart: React.FC = () => {
           className="pagination-btn pagination-prev"
         >
           <ChevronLeft className="w-4 h-4" />
-          <span>Previous</span>
+          <span className="hidden sm:inline">Previous</span>
+          <span className="sm:hidden">Prev</span>
         </button>
 
         <div className="pagination-dots">
@@ -409,7 +410,8 @@ const EnhancedChart: React.FC = () => {
           disabled={currentPage === totalPages - 1 || isLoading}
           className="pagination-btn pagination-next"
         >
-          <span>Next</span>
+          <span className="hidden sm:inline">Next</span>
+          <span className="sm:hidden">Next</span>
           <ChevronRight className="w-4 h-4" />
         </button>
       </div>

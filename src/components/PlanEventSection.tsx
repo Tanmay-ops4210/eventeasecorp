@@ -60,44 +60,44 @@ const PlanEventSection: React.FC<PlanEventSectionProps> = ({ onEventSubmitted })
   };
 
   return (
-    <section id="plan-event" className="py-20 bg-gradient-to-br from-slate-50 to-indigo-50">
+    <section id="plan-event" className="py-12 sm:py-16 lg:py-20 bg-gradient-to-br from-slate-50 to-indigo-50">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="text-center mb-16">
-          <h2 className="text-5xl md:text-6xl font-bold text-indigo-900 mb-4">
+        <div className="text-center mb-12 sm:mb-16">
+          <h2 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold text-indigo-900 mb-4">
             PLAN YOUR EVENT
           </h2>
-          <p className="text-xl text-gray-600 max-w-3xl mx-auto">
+          <p className="text-lg sm:text-xl text-gray-600 max-w-3xl mx-auto px-4">
             From intimate workshops to large-scale conferences, we help you create unforgettable experiences
           </p>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 items-start">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-16 items-start">
           {/* Left Side - Event Types & Features */}
-          <div className="space-y-12">
+          <div className="space-y-8 lg:space-y-12">
             {/* Event Types */}
             <div>
-              <h3 className="text-2xl font-bold text-indigo-900 mb-8">Event Types We Handle</h3>
-              <div className="grid grid-cols-2 gap-4">
+              <h3 className="text-xl sm:text-2xl font-bold text-indigo-900 mb-6 sm:mb-8">Event Types We Handle</h3>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 {eventTypes.map((type) => {
                   const IconComponent = type.icon;
                   return (
                     <div
                       key={type.id}
                       onClick={() => setSelectedType(type.id)}
-                      className={`p-6 rounded-2xl cursor-pointer transition-all duration-300 transform hover:scale-105 ${
+                      className={`p-4 sm:p-6 rounded-xl sm:rounded-2xl cursor-pointer transition-all duration-300 transform hover:scale-105 touch-manipulation ${
                         selectedType === type.id
                           ? 'bg-gradient-to-br from-indigo-600 to-purple-600 text-white shadow-2xl'
                           : 'bg-white text-gray-700 shadow-lg hover:shadow-xl'
                       }`}
                     >
-                      <div className={`w-12 h-12 rounded-xl flex items-center justify-center mb-4 ${
+                      <div className={`w-10 h-10 sm:w-12 sm:h-12 rounded-lg sm:rounded-xl flex items-center justify-center mb-3 sm:mb-4 ${
                         selectedType === type.id ? 'bg-white/20' : type.color
                       }`}>
-                        <IconComponent className={`w-6 h-6 ${
+                        <IconComponent className={`w-5 h-5 sm:w-6 sm:h-6 ${
                           selectedType === type.id ? 'text-white' : 'text-white'
                         }`} />
                       </div>
-                      <h4 className="font-semibold text-lg">{type.name}</h4>
+                      <h4 className="font-semibold text-base sm:text-lg">{type.name}</h4>
                     </div>
                   );
                 })}
@@ -106,18 +106,18 @@ const PlanEventSection: React.FC<PlanEventSectionProps> = ({ onEventSubmitted })
 
             {/* Features */}
             <div>
-              <h3 className="text-2xl font-bold text-indigo-900 mb-8">What We Provide</h3>
+              <h3 className="text-xl sm:text-2xl font-bold text-indigo-900 mb-6 sm:mb-8">What We Provide</h3>
               <div className="space-y-4">
                 {features.map((feature, index) => (
                   <div
                     key={index}
-                    className="flex items-center space-x-4 p-4 bg-white rounded-xl shadow-sm hover:shadow-md transition-shadow duration-200"
+                    className="flex items-center space-x-3 sm:space-x-4 p-3 sm:p-4 bg-white rounded-lg sm:rounded-xl shadow-sm hover:shadow-md transition-shadow duration-200"
                     style={{ animationDelay: `${index * 0.1}s` }}
                   >
                     <div className="flex-shrink-0">
-                      <CheckCircle className="w-6 h-6 text-green-500" />
+                      <CheckCircle className="w-5 h-5 sm:w-6 sm:h-6 text-green-500" />
                     </div>
-                    <p className="text-gray-700 font-medium">{feature}</p>
+                    <p className="text-gray-700 font-medium text-sm sm:text-base">{feature}</p>
                   </div>
                 ))}
               </div>
@@ -126,15 +126,15 @@ const PlanEventSection: React.FC<PlanEventSectionProps> = ({ onEventSubmitted })
 
           {/* Right Side - Planning Form */}
           <div className="relative">
-            <div className="bg-white rounded-3xl p-8 shadow-2xl transform hover:scale-105 transition-all duration-300">
+            <div className="bg-white rounded-2xl sm:rounded-3xl p-6 sm:p-8 shadow-2xl transform hover:scale-105 transition-all duration-300">
               {/* Decorative elements */}
-              <div className="absolute -top-6 -right-6 w-20 h-20 bg-gradient-to-br from-indigo-400 to-purple-500 rounded-2xl opacity-70 animate-pulse transform rotate-12" />
-              <div className="absolute -bottom-4 -left-4 w-16 h-16 bg-gradient-to-br from-purple-400 to-pink-500 rounded-full opacity-60 animate-bounce" style={{ animationDuration: '3s' }} />
+              <div className="absolute -top-6 -right-6 w-20 h-20 bg-gradient-to-br from-indigo-400 to-purple-500 rounded-2xl opacity-70 animate-pulse transform rotate-12 mobile-hidden" />
+              <div className="absolute -bottom-4 -left-4 w-16 h-16 bg-gradient-to-br from-purple-400 to-pink-500 rounded-full opacity-60 animate-bounce mobile-hidden" style={{ animationDuration: '3s' }} />
               
               <div className="relative z-10">
-                <h3 className="text-3xl font-bold text-indigo-900 mb-6">Start Planning</h3>
+                <h3 className="text-2xl sm:text-3xl font-bold text-indigo-900 mb-4 sm:mb-6">Start Planning</h3>
                 
-                <form onSubmit={handleSubmit} className="space-y-6">
+                <form onSubmit={handleSubmit} className="space-y-4 sm:space-y-6">
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">Event Name</label>
                     <input
@@ -142,7 +142,7 @@ const PlanEventSection: React.FC<PlanEventSectionProps> = ({ onEventSubmitted })
                       name="eventName"
                       value={formData.eventName}
                       onChange={handleInputChange}
-                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-colors duration-200"
+                      className="w-full px-4 py-3 sm:py-4 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-colors duration-200 text-base"
                       placeholder="Enter your event name"
                       required
                     />
@@ -154,7 +154,7 @@ const PlanEventSection: React.FC<PlanEventSectionProps> = ({ onEventSubmitted })
                       name="eventType"
                       value={formData.eventType}
                       onChange={handleInputChange}
-                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-colors duration-200"
+                      className="w-full px-4 py-3 sm:py-4 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-colors duration-200 text-base"
                     >
                       {eventTypes.map((type) => (
                         <option key={type.id} value={type.id}>{type.name}</option>
@@ -162,7 +162,7 @@ const PlanEventSection: React.FC<PlanEventSectionProps> = ({ onEventSubmitted })
                     </select>
                   </div>
 
-                  <div className="grid grid-cols-2 gap-4">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div>
                       <label className="block text-sm font-medium text-gray-700 mb-2">Expected Attendees</label>
                       <input
@@ -170,7 +170,7 @@ const PlanEventSection: React.FC<PlanEventSectionProps> = ({ onEventSubmitted })
                         name="expectedAttendees"
                         value={formData.expectedAttendees}
                         onChange={handleInputChange}
-                        className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-colors duration-200"
+                        className="w-full px-4 py-3 sm:py-4 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-colors duration-200 text-base"
                         placeholder="100"
                         required
                       />
@@ -182,7 +182,7 @@ const PlanEventSection: React.FC<PlanEventSectionProps> = ({ onEventSubmitted })
                         name="eventDate"
                         value={formData.eventDate}
                         onChange={handleInputChange}
-                        className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-colors duration-200"
+                        className="w-full px-4 py-3 sm:py-4 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-colors duration-200 text-base"
                         required
                       />
                     </div>
@@ -194,7 +194,7 @@ const PlanEventSection: React.FC<PlanEventSectionProps> = ({ onEventSubmitted })
                       name="budget"
                       value={formData.budget}
                       onChange={handleInputChange}
-                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-colors duration-200"
+                      className="w-full px-4 py-3 sm:py-4 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-colors duration-200 text-base"
                       required
                     >
                       <option value="">Select budget range</option>
@@ -212,7 +212,7 @@ const PlanEventSection: React.FC<PlanEventSectionProps> = ({ onEventSubmitted })
                       value={formData.description}
                       onChange={handleInputChange}
                       rows={4}
-                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-colors duration-200"
+                      className="w-full px-4 py-3 sm:py-4 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-colors duration-200 text-base resize-none"
                       placeholder="Tell us about your event vision..."
                       required
                     />
@@ -221,7 +221,7 @@ const PlanEventSection: React.FC<PlanEventSectionProps> = ({ onEventSubmitted })
                   <button
                     type="submit"
                     disabled={isSubmitting}
-                    className="w-full bg-gradient-to-r from-indigo-600 to-purple-600 text-white py-4 rounded-lg font-medium hover:from-indigo-700 hover:to-purple-700 transform hover:scale-105 transition-all duration-200 shadow-lg hover:shadow-xl disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center space-x-2"
+                    className="w-full bg-gradient-to-r from-indigo-600 to-purple-600 text-white py-3 sm:py-4 rounded-lg font-medium hover:from-indigo-700 hover:to-purple-700 transform hover:scale-105 transition-all duration-200 shadow-lg hover:shadow-xl disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center space-x-2 touch-manipulation text-base"
                   >
                     {isSubmitting ? (
                       <>
@@ -229,7 +229,7 @@ const PlanEventSection: React.FC<PlanEventSectionProps> = ({ onEventSubmitted })
                         <span>Processing...</span>
                       </>
                     ) : (
-                      <span>Request Planning Consultation</span>
+                      <span className="text-center">Request Planning Consultation</span>
                     )}
                   </button>
                 </form>

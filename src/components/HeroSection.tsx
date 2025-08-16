@@ -37,7 +37,7 @@ const HeroSection: React.FC<HeroSectionProps> = ({ onBookSpot }) => {
             ref={(el) => {
               if (el) sphereRefs.current[index] = el;
             }}
-            className={`absolute rounded-full blur-sm opacity-30 animate-pulse`}
+            className={`absolute rounded-full blur-sm opacity-30 animate-pulse mobile-hidden`}
             style={{
               width: `${80 + index * 40}px`,
               height: `${80 + index * 40}px`,
@@ -51,14 +51,14 @@ const HeroSection: React.FC<HeroSectionProps> = ({ onBookSpot }) => {
       </div>
 
       {/* Large Floating Spheres */}
-      <div className="absolute top-20 right-10 w-48 h-48 rounded-full bg-gradient-to-br from-blue-400 to-indigo-600 opacity-70 animate-bounce" style={{ animationDuration: '6s' }} />
-      <div className="absolute bottom-20 left-10 w-32 h-32 rounded-full bg-gradient-to-br from-purple-400 to-pink-600 opacity-60 animate-pulse" style={{ animationDuration: '4s' }} />
-      <div className="absolute top-1/2 right-1/4 w-20 h-20 rounded-full bg-gradient-to-br from-cyan-400 to-blue-600 opacity-50 animate-bounce" style={{ animationDuration: '3s' }} />
+      <div className="absolute top-20 right-10 w-48 h-48 rounded-full bg-gradient-to-br from-blue-400 to-indigo-600 opacity-70 animate-bounce mobile-hidden" style={{ animationDuration: '6s' }} />
+      <div className="absolute bottom-20 left-10 w-32 h-32 rounded-full bg-gradient-to-br from-purple-400 to-pink-600 opacity-60 animate-pulse mobile-hidden" style={{ animationDuration: '4s' }} />
+      <div className="absolute top-1/2 right-1/4 w-20 h-20 rounded-full bg-gradient-to-br from-cyan-400 to-blue-600 opacity-50 animate-bounce mobile-hidden" style={{ animationDuration: '3s' }} />
 
       {/* Content */}
-      <div className="relative z-10 flex items-center justify-center min-h-screen px-4">
+      <div className="relative z-10 flex items-center justify-center min-h-screen px-4 sm:px-6 lg:px-8">
         <div className="text-center max-w-4xl mx-auto">
-          <h1 className="text-6xl md:text-8xl lg:text-9xl font-bold text-white mb-8 leading-tight">
+          <h1 className="text-4xl sm:text-6xl md:text-7xl lg:text-8xl xl:text-9xl font-bold text-white mb-6 sm:mb-8 leading-tight">
             Event
             <br />
             <span className="bg-gradient-to-r from-white to-indigo-200 bg-clip-text text-transparent">
@@ -66,10 +66,10 @@ const HeroSection: React.FC<HeroSectionProps> = ({ onBookSpot }) => {
             </span>
           </h1>
           
-          <div className="mb-12">
+          <div className="mb-8 sm:mb-12">
             <button
               onClick={onBookSpot}
-              className="group relative inline-flex items-center justify-center px-8 py-4 text-lg font-medium text-white bg-transparent border-2 border-white rounded-full hover:bg-white hover:text-indigo-600 transition-all duration-300 transform hover:scale-105"
+              className="group relative inline-flex items-center justify-center px-6 sm:px-8 py-3 sm:py-4 text-base sm:text-lg font-medium text-white bg-transparent border-2 border-white rounded-full hover:bg-white hover:text-indigo-600 transition-all duration-300 transform hover:scale-105 touch-manipulation"
             >
               <span className="relative z-10">BOOK YOUR SPOT</span>
               <div className="absolute inset-0 rounded-full bg-white opacity-0 group-hover:opacity-20 transition-opacity duration-300" />
@@ -77,7 +77,7 @@ const HeroSection: React.FC<HeroSectionProps> = ({ onBookSpot }) => {
           </div>
 
           {/* Decorative Elements */}
-          <div className="absolute bottom-10 left-1/2 transform -translate-x-1/2">
+          <div className="absolute bottom-10 left-1/2 transform -translate-x-1/2 mobile-hidden">
             <div className="w-px h-16 bg-white opacity-50" />
             <div className="w-2 h-2 bg-white rounded-full mx-auto mt-2 animate-pulse" />
           </div>
