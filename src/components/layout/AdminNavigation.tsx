@@ -47,13 +47,17 @@ const AdminNavigation: React.FC = () => {
     setIsMobileMenuOpen(false);
   };
 
+  const toggleMobileMenu = () => {
+    setIsMobileMenuOpen(!isMobileMenuOpen);
+  };
+
   return (
     <nav className="fixed top-0 left-0 right-0 z-50 bg-gradient-to-r from-red-600 to-red-700 shadow-lg">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-16">
           {/* Logo */}
           <div
-            className="flex-shrink-0 cursor-pointer order-1"
+            className="flex-shrink-0 cursor-pointer md:order-1"
             onClick={() => handleNavigation('admin-dashboard')}
           >
             <div className="flex items-center space-x-3">
@@ -134,10 +138,11 @@ const AdminNavigation: React.FC = () => {
           </div>
 
           {/* Mobile menu button */}
-          <div className="md:hidden order-3">
+          <div className="md:hidden">
             <button
-              onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+              onClick={toggleMobileMenu}
               className="text-white hover:text-red-200 p-3 rounded-lg hover:bg-white/10 transition-all duration-300 transform hover:scale-105 touch-manipulation"
+              aria-label={isMobileMenuOpen ? 'Close menu' : 'Open menu'}
             >
               {isMobileMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
             </button>

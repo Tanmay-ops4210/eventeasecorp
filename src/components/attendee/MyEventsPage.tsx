@@ -3,10 +3,60 @@ import { useApp } from '../../contexts/AppContext';
 import { 
   Plus, Edit, Trash2, Eye, Copy, Filter, Search, Calendar,
   Users, DollarSign, MoreVertical, AlertTriangle, CheckCircle,
-  Clock, Globe, Loader2
+  Clock, Globe, Loader2, ArrowLeft, ArrowRight
 } from 'lucide-react';
 import { OrganizerEvent } from '../../types/organizerEvent';
 import { organizerEventService } from '../../services/organizerEventService';
+
+interface EventPageNavigationProps {
+  currentPage: number;
+  totalPages: number;
+  onPageChange: (page: number) => void;
+}
+
+const EventPageNavigation: React.FC<EventPageNavigationProps> = ({ 
+  currentPage, 
+  totalPages, 
+  onPageChange 
+}) => {
+  return (
+    <div className="flex items-center justify-between bg-white rounded-lg shadow-sm p-4 mb-6">
+      <button
+        onClick={() => onPageChange(currentPage - 1)}
+        disabled={currentPage === 1}
+        className="flex items-center space-x-2 px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors duration-200"
+      >
+        <ArrowLeft className="w-4 h-4" />
+        <span>Previous</span>
+      </button>
+      
+      <div className="flex items-center space-x-2">
+        {Array.from({ length: totalPages }, (_, index) => (
+          <button
+            key={index + 1}
+            onClick={() => onPageChange(index + 1)}
+            className={`w-8 h-8 rounded-lg font-medium transition-colors duration-200 ${
+              currentPage === index + 1
+                ? 'bg-indigo-600 text-white'
+                : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+            }`}
+          >
+            {index + 1}
+          </button>
+        ))}
+      </div>
+      
+      <button
+        onClick={() => onPageChange(currentPage + 1)}
+        disabled={currentPage === totalPages}
+        className="flex items-center space-x-2 px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors duration-200"
+      >
+        <span>Next</span>
+        <ArrowRight className="w-4 h-4" />
+      </button>
+    </div>
+  );
+};
 
 const MyEventsPage: React.FC = () => {
   const { setBreadcrumbs, setCurrentView } = useApp();
@@ -18,6 +68,8 @@ const MyEventsPage: React.FC = () => {
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [eventToDelete, setEventToDelete] = useState<string | null>(null);
   const [showBulkActions, setShowBulkActions] = useState(false);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [eventsPerPage] = useState(6);
 
   const fetchEvents = async () => {
     setIsLoading(true);
@@ -42,6 +94,24 @@ const MyEventsPage: React.FC = () => {
     return matchesSearch && matchesStatus;
   });
 
+  // Pagination logic
+  const totalPages = Math.ceil(filteredEvents.length / eventsPerPage);
+  const startIndex = (currentPage - 1) * eventsPerPage;
+  const endIndex = startIndex + eventsPerPage;
+  const currentEvents = filteredEvents.slice(startIndex, endIndex);
+
+  const handlePageChange = (page: number) => {
+    if (page >= 1 && page <= totalPages) {
+      setCurrentPage(page);
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+  };
+
+  // Reset to page 1 when filters change
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchTerm, statusFilter]);
+
   const handleSelectEvent = (eventId: string) => {
     setSelectedEvents(prev => 
       prev.includes(eventId) 
@@ -52,9 +122,9 @@ const MyEventsPage: React.FC = () => {
 
   const handleSelectAll = () => {
     setSelectedEvents(
-      selectedEvents.length === filteredEvents.length 
+      selectedEvents.length === currentEvents.length 
         ? [] 
-        : filteredEvents.map(event => event.id)
+        : currentEvents.map(event => event.id)
     );
   };
 
@@ -216,6 +286,15 @@ const MyEventsPage: React.FC = () => {
           )}
         </div>
 
+        {/* Page Navigation */}
+        {totalPages > 1 && (
+          <EventPageNavigation
+            currentPage={currentPage}
+            totalPages={totalPages}
+            onPageChange={handlePageChange}
+          />
+        )}
+
         {/* Events Grid */}
         {isLoading ? (
           <div className="flex items-center justify-center py-20">
@@ -224,9 +303,9 @@ const MyEventsPage: React.FC = () => {
               <p className="text-gray-600">Loading your events...</p>
             </div>
           </div>
-        ) : filteredEvents.length > 0 ? (
+        ) : currentEvents.length > 0 ? (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {filteredEvents.map((event, index) => (
+            {currentEvents.map((event, index) => (
               <div
                 key={event.id}
                 className="bg-white rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 overflow-hidden"
@@ -332,7 +411,7 @@ const MyEventsPage: React.FC = () => {
               </div>
             ))}
           </div>
-        ) : (
+        ) : filteredEvents.length === 0 && !isLoading ? (
           <div className="text-center py-20">
             <div className="bg-white rounded-2xl p-12 shadow-lg">
               <Calendar className="w-16 h-16 text-gray-400 mx-auto mb-4" />
@@ -352,6 +431,29 @@ const MyEventsPage: React.FC = () => {
                 Create Your First Event
               </button>
             </div>
+          </div>
+        ) : (
+          <div className="text-center py-20">
+            <div className="bg-white rounded-2xl p-12 shadow-lg">
+              <Calendar className="w-16 h-16 text-gray-400 mx-auto mb-4" />
+              <h3 className="text-xl font-semibold text-gray-900 mb-2">
+                No events on this page
+              </h3>
+              <p className="text-gray-600 mb-6">
+                Try navigating to a different page or adjusting your filters
+              </p>
+            </div>
+          </div>
+        )}
+
+        {/* Bottom Page Navigation */}
+        {totalPages > 1 && currentEvents.length > 0 && (
+          <div className="mt-8">
+            <EventPageNavigation
+              currentPage={currentPage}
+              totalPages={totalPages}
+              onPageChange={handlePageChange}
+            />
           </div>
         )}
 

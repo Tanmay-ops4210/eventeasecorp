@@ -35,13 +35,17 @@ const OrganizerNavigation: React.FC = () => {
     setIsMobileMenuOpen(false);
   };
 
+  const toggleMobileMenu = () => {
+    setIsMobileMenuOpen(!isMobileMenuOpen);
+  };
+
   return (
     <nav className="fixed top-0 left-0 right-0 z-50 bg-white shadow-lg border-b border-gray-200">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-16">
           {/* Logo */}
           <div 
-            className="flex-shrink-0 cursor-pointer order-1"
+            className="flex-shrink-0 cursor-pointer md:order-1"
             onClick={() => handleNavigation('organizer-dashboard')}
           >
             <div className="flex items-center space-x-3">
@@ -122,10 +126,11 @@ const OrganizerNavigation: React.FC = () => {
           </div>
 
           {/* Mobile menu button */}
-          <div className="md:hidden order-3">
+          <div className="md:hidden">
             <button
-              onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+              onClick={toggleMobileMenu}
               className="text-gray-700 hover:text-indigo-600 p-3 rounded-lg hover:bg-indigo-50 transition-all duration-300 transform hover:scale-105 touch-manipulation"
+              aria-label={isMobileMenuOpen ? 'Close menu' : 'Open menu'}
             >
               {isMobileMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
             </button>

@@ -273,6 +273,21 @@ img {
     height: 4rem;
   }
   
+  /* Mobile logo positioning - left side only on mobile */
+  .navigation-container .flex.items-center.justify-between {
+    justify-content: flex-start;
+  }
+  
+  .navigation-container .flex-shrink-0 {
+    order: 1;
+    margin-right: auto;
+  }
+  
+  .navigation-container .md\\:hidden {
+    order: 3;
+    margin-left: auto;
+  }
+  
   /* Mobile menu improvements */
   .mobile-nav-item {
     padding: 1rem 1.25rem;
@@ -286,6 +301,15 @@ img {
     width: 2.25rem;
     height: 2.25rem;
   }
+  
+  /* Mobile menu toggle improvements */
+  .navigation-container button[aria-label*="menu"] {
+    transition: transform 0.3s ease, background-color 0.2s ease;
+  }
+  
+  .navigation-container button[aria-label*="menu"]:active {
+    transform: scale(0.95);
+  }
 }
 
 /* Responsive Navigation Improvements */
@@ -296,6 +320,23 @@ img {
   
   .navigation-container .max-w-7xl {
     padding: 0;
+  }
+  
+  /* Ensure proper mobile menu behavior */
+  .navigation-container .lg\\:hidden button,
+  .navigation-container .md\\:hidden button {
+    min-height: 48px;
+    min-width: 48px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  
+  /* Mobile menu animation improvements */
+  .navigation-container .transition-all {
+    transition: max-height 0.3s cubic-bezier(0.4, 0, 0.2, 1),
+                opacity 0.3s cubic-bezier(0.4, 0, 0.2, 1),
+                transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   }
 }
 

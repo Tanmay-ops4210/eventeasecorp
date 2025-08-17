@@ -58,6 +58,10 @@ const Navigation: React.FC<NavigationProps> = ({
     setIsCollapsibleMenuOpen(false);
   };
 
+  const toggleMobileMenu = () => {
+    setIsMobileMenuOpen(!isMobileMenuOpen);
+  };
+
   // Navigation items that appear in collapsible menu on non-home pages
   const collapsibleMenuItems = [
     { label: 'SPEAKERS', action: () => scrollToSection('speakers'), icon: User },
@@ -76,7 +80,7 @@ const Navigation: React.FC<NavigationProps> = ({
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-16 relative">
           {/* Logo */}
-          <div className="flex-shrink-0">
+          <div className="flex-shrink-0 md:order-1">
             <div className="w-8 h-8 bg-white rounded-full flex items-center justify-center cursor-pointer hover:scale-110 transition-transform duration-200 touch-manipulation">
               <div className="w-4 h-4 bg-indigo-600 rounded-full"></div>
             </div>
@@ -224,12 +228,13 @@ const Navigation: React.FC<NavigationProps> = ({
           </div>
 
           {/* Mobile menu button */}
-          <div className="lg:hidden">
+          <div className="lg:hidden md:order-3">
             <button
-              onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+              onClick={toggleMobileMenu}
               className="text-white hover:text-indigo-200 p-3 rounded-lg hover:bg-white/10 transition-colors duration-200 touch-manipulation"
               aria-expanded={isMobileMenuOpen}
               aria-label="Toggle mobile menu"
+              aria-label={isMobileMenuOpen ? 'Close menu' : 'Open menu'}
             >
               {isMobileMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
             </button>
