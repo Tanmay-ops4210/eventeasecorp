@@ -47,6 +47,7 @@ import OrganizerSettingsPage from '../organizer/OrganizerSettingsPage';
 import SponsorDashboard from '../sponsor/SponsorDashboard';
 import BoothCustomizationPage from '../sponsor/BoothCustomizationPage';
 import LeadCapturePage from '../sponsor/LeadCapturePage';
+import SponsorAnalyticsPage from '../sponsor/SponsorAnalyticsPage';
 import SponsorToolsPage from '../sponsor/SponsorToolsPage';
 import AdminDashboard from '../admin/AdminDashboard';
 import UserManagementPage from '../admin/UserManagementPage';

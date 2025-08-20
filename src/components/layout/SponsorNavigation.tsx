@@ -16,7 +16,7 @@ const SponsorNavigation: React.FC = () => {
     { label: 'Dashboard', view: 'sponsor-dashboard' as const, icon: Home },
     { label: 'Virtual Booth', view: 'booth-customization' as const, icon: Store },
     { label: 'Lead Capture', view: 'lead-capture' as const, icon: Users },
-    { label: 'Analytics', view: 'analytics' as const, icon: BarChart3 },
+    { label: 'Analytics', view: 'sponsor-analytics' as const, icon: BarChart3 },
     { label: 'Attendee Tools', view: 'sponsor-tools' as const, icon: MessageCircle },
   ];
 

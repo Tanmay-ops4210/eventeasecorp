@@ -48,6 +48,7 @@ type AppView =
   | 'sponsor-dashboard'
   | 'booth-customization'
   | 'lead-capture'
+  | 'sponsor-analytics'
   | 'sponsor-tools'
   // Admin Module
   | 'admin-dashboard'
