@@ -135,6 +135,7 @@ const AppRouter: React.FC = () => {
     case 'sponsor-dashboard': return requiresRole(<SponsorDashboard />, 'sponsor');
     case 'booth-customization': return requiresRole(<BoothCustomizationPage />, 'sponsor');
     case 'lead-capture': return requiresRole(<LeadCapturePage />, 'sponsor');
+    case 'sponsor-analytics': return requiresRole(<SponsorAnalyticsPage />, 'sponsor'); // This line was missing
     case 'sponsor-tools': return requiresRole(<SponsorToolsPage />, 'sponsor');
     
 
