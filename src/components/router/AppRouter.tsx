@@ -1,153 +1,218 @@
-import React from 'react';
+import React, { Suspense, lazy } from 'react';
 import { useApp } from '../../contexts/AppContext';
 import { useAuth } from '../../contexts/AuthContext';
 import { UserRole } from '../../types/user';
+import { ShieldX, Loader2 } from 'lucide-react';
 
-// Import all pages
-import HomePage from '../pages/HomePage';
-import EventDiscoveryPage from '../pages/EventDiscoveryPage';
-import SpeakerDirectoryPage from '../speakers/SpeakerDirectoryPage';
-import SponsorDirectoryPage from '../sponsors/SponsorDirectoryPage';
-import OrganizerDirectoryPage from '../pages/OrganizerDirectoryPage';
-import BlogPage from '../blog/BlogPage';
-import EventDetailPage from '../events/EventDetailPage';
-import ResourcesPage from '../pages/ResourcesPage';
-import PressPage from '../pages/PressPage';
-import AboutPage from '../pages/AboutPage';
-import PricingPage from '../pages/PricingPage';
-import ContactPage from '../pages/ContactPage';
-import TermsPage from '../pages/TermsPage';
-import PrivacyPage from '../pages/PrivacyPage';
-import PasswordResetPage from '../auth/PasswordResetPage';
-import AttendeeDashboard from '../attendee/AttendeeDashboard';
-import MyEventsPage from '../attendee/MyEventsPage';
-import MyNetworkPage from '../attendee/MyNetworkPage';
-import NotificationsPage from '../attendee/NotificationsPage';
-import AttendeeProfilePage from '../attendee/AttendeeProfilePage';
-import AgendaBuilderPage from '../attendee/AgendaBuilderPage';
-import NetworkingHubPage from '../attendee/NetworkingHubPage';
-import LiveEventPage from '../attendee/LiveEventPage';
-import SessionRoomPage from '../attendee/SessionRoomPage';
-import ExpoHallPage from '../attendee/ExpoHallPage';
-import ResourceLibraryPage from '../attendee/ResourceLibraryPage';
-import OrganizerDashboard from '../organizer/OrganizerDashboard';
-import EventBuilderPage from '../organizer/EventBuilderPage';
-import EventSettingsPage from '../organizer/EventSettingsPage';
-import LandingCustomizerPage from '../organizer/LandingCustomizerPage';
-import AgendaManagerPage from '../organizer/AgendaManagerPage';
-import VenueManagerPage from '../organizer/VenueManagerPage';
-import TicketingPage from '../organizer/TicketingPage';
-import DiscountCodesPage from '../organizer/DiscountCodesPage';
-import EmailCampaignsPage from '../organizer/EmailCampaignsPage';
-import AttendeeManagementPage from '../organizer/AttendeeManagementPage';
-import SpeakerPortalPage from '../organizer/SpeakerPortalPage';
-import StaffRolesPage from '../organizer/StaffRolesPage';
-import AnalyticsPage from '../organizer/AnalyticsPage';
-import OrganizerSettingsPage from '../organizer/OrganizerSettingsPage';
-import SponsorDashboard from '../sponsor/SponsorDashboard';
-import BoothCustomizationPage from '../sponsor/BoothCustomizationPage';
-import LeadCapturePage from '../sponsor/LeadCapturePage';
-import SponsorAnalyticsPage from '../sponsor/SponsorAnalyticsPage';
-import SponsorToolsPage from '../sponsor/SponsorToolsPage';
-import AdminDashboard from '../admin/AdminDashboard';
-import UserManagementPage from '../admin/UserManagementPage';
-import EventOversightPage from '../admin/EventOversightPage';
-import ContentManagementPage from '../admin/ContentManagementPage';
+// --- Lazy-loaded Page Components ---
+// This technique, called lazy loading, splits your code into smaller chunks.
+// Pages are only downloaded by the user's browser when they are actually needed,
+// which can significantly speed up the initial load time of your application.
 
+// Public Module
+const HomePage = lazy(() => import('../pages/HomePage'));
+const EventDiscoveryPage = lazy(() => import('../pages/EventDiscoveryPage'));
+const SpeakerDirectoryPage = lazy(() => import('../speakers/SpeakerDirectoryPage'));
+const SponsorDirectoryPage = lazy(() => import('../sponsors/SponsorDirectoryPage'));
+const OrganizerDirectoryPage = lazy(() => import('../pages/OrganizerDirectoryPage'));
+const BlogPage = lazy(() => import('../blog/BlogPage'));
+const EventDetailPage = lazy(() => import('../events/EventDetailPage'));
+const ResourcesPage = lazy(() => import('../pages/ResourcesPage'));
+const PressPage = lazy(() => import('../pages/PressPage'));
+const AboutPage = lazy(() => import('../pages/AboutPage'));
+const PricingPage = lazy(() => import('../pages/PricingPage'));
+const ContactPage = lazy(() => import('../pages/ContactPage'));
+const TermsPage = lazy(() => import('../pages/TermsPage'));
+const PrivacyPage = lazy(() => import('../pages/PrivacyPage'));
+
+// Auth Module
+const PasswordResetPage = lazy(() => import('../auth/PasswordResetPage'));
+
+// Attendee Module
+const AttendeeDashboard = lazy(() => import('../attendee/AttendeeDashboard'));
+const MyEventsPage = lazy(() => import('../attendee/MyEventsPage'));
+const MyNetworkPage = lazy(() => import('../attendee/MyNetworkPage'));
+const NotificationsPage = lazy(() => import('../attendee/NotificationsPage'));
+const AttendeeProfilePage = lazy(() => import('../attendee/AttendeeProfilePage'));
+const AgendaBuilderPage = lazy(() => import('../attendee/AgendaBuilderPage'));
+const NetworkingHubPage = lazy(() => import('../attendee/NetworkingHubPage'));
+const LiveEventPage = lazy(() => import('../attendee/LiveEventPage'));
+const SessionRoomPage = lazy(() => import('../attendee/SessionRoomPage'));
+const ExpoHallPage = lazy(() => import('../attendee/ExpoHallPage'));
+const ResourceLibraryPage = lazy(() => import('../attendee/ResourceLibraryPage'));
+
+// Organizer Module
+const OrganizerDashboard = lazy(() => import('../organizer/OrganizerDashboard'));
+const EventBuilderPage = lazy(() => import('../organizer/EventBuilderPage'));
+const EventSettingsPage = lazy(() => import('../organizer/EventSettingsPage'));
+const LandingCustomizerPage = lazy(() => import('../organizer/LandingCustomizerPage'));
+const AgendaManagerPage = lazy(() => import('../organizer/AgendaManagerPage'));
+const VenueManagerPage = lazy(() => import('../organizer/VenueManagerPage'));
+const TicketingPage = lazy(() => import('../organizer/TicketingPage'));
+const DiscountCodesPage = lazy(() => import('../organizer/DiscountCodesPage'));
+const EmailCampaignsPage = lazy(() => import('../organizer/EmailCampaignsPage'));
+const AttendeeManagementPage = lazy(() => import('../organizer/AttendeeManagementPage'));
+const SpeakerPortalPage = lazy(() => import('../organizer/SpeakerPortalPage'));
+const StaffRolesPage = lazy(() => import('../organizer/StaffRolesPage'));
+const AnalyticsPage = lazy(() => import('../organizer/AnalyticsPage'));
+const OrganizerSettingsPage = lazy(() => import('../organizer/OrganizerSettingsPage'));
+
+// Sponsor Module
+const SponsorDashboard = lazy(() => import('../sponsor/SponsorDashboard'));
+const BoothCustomizationPage = lazy(() => import('../sponsor/BoothCustomizationPage'));
+const LeadCapturePage = lazy(() => import('../sponsor/LeadCapturePage'));
+const SponsorAnalyticsPage = lazy(() => import('../sponsor/SponsorAnalyticsPage'));
+const SponsorToolsPage = lazy(() => import('../sponsor/SponsorToolsPage'));
+
+// Admin Module
+const AdminDashboard = lazy(() => import('../admin/AdminDashboard'));
+const UserManagementPage = lazy(() => import('../admin/UserManagementPage'));
+const EventOversightPage = lazy(() => import('../admin/EventOversightPage'));
+const ContentManagementPage = lazy(() => import('../admin/ContentManagementPage'));
+
+
+// --- Route Configuration ---
+// Centralizing route definitions makes the router cleaner and easier to manage.
+// Each object defines a route's path, the component to render, and access control rules.
+const routes = [
+  // Public Routes
+  { path: 'home', component: HomePage, isPublic: true },
+  { path: 'event-discovery', component: EventDiscoveryPage, isPublic: true },
+  { path: 'speaker-directory', component: SpeakerDirectoryPage, isPublic: true },
+  { path: 'sponsor-directory', component: SponsorDirectoryPage, isPublic: true },
+  { path: 'organizer-directory', component: OrganizerDirectoryPage, isPublic: true },
+  { path: 'blog', component: BlogPage, isPublic: true },
+  { path: 'resources', component: ResourcesPage, isPublic: true },
+  { path: 'press', component: PressPage, isPublic: true },
+  { path: 'about', component: AboutPage, isPublic: true },
+  { path: 'pricing', component: PricingPage, isPublic: true },
+  { path: 'contact', component: ContactPage, isPublic: true },
+  { path: 'terms', component: TermsPage, isPublic: true },
+  { path: 'privacy', component: PrivacyPage, isPublic: true },
+  { path: 'event-page', component: EventDetailPage, isPublic: true, requiresId: true },
+  { path: 'password-reset', component: PasswordResetPage, isPublic: true },
+
+  // Attendee Routes
+  { path: 'attendee-dashboard', component: AttendeeDashboard, requiredRoles: ['attendee'] },
+  { path: 'my-network', component: MyNetworkPage, requiredRoles: ['attendee'] },
+  { path: 'attendee-profile', component: AttendeeProfilePage, requiredRoles: ['attendee'] },
+  { path: 'agenda-builder', component: AgendaBuilderPage, requiredRoles: ['attendee'] },
+  { path: 'networking-hub', component: NetworkingHubPage, requiredRoles: ['attendee'] },
+  { path: 'live-event', component: LiveEventPage, requiredRoles: ['attendee'] },
+  { path: 'session-room', component: SessionRoomPage, requiredRoles: ['attendee'] },
+  { path: 'expo-hall', component: ExpoHallPage, requiredRoles: ['attendee'] },
+  { path: 'resource-library', component: ResourceLibraryPage, requiredRoles: ['attendee'] },
+
+  // Organizer Routes
+  { path: 'organizer-dashboard', component: OrganizerDashboard, requiredRoles: ['organizer'] },
+  { path: 'event-builder', component: EventBuilderPage, requiredRoles: ['organizer'] },
+  { path: 'analytics', component: AnalyticsPage, requiredRoles: ['organizer'] },
+  { path: 'organizer-settings', component: OrganizerSettingsPage, requiredRoles: ['organizer'] },
+  { path: 'event-settings', component: EventSettingsPage, requiredRoles: ['organizer'] },
+  { path: 'landing-customizer', component: LandingCustomizerPage, requiredRoles: ['organizer'] },
+  { path: 'agenda-manager', component: AgendaManagerPage, requiredRoles: ['organizer'] },
+  { path: 'venue-manager', component: VenueManagerPage, requiredRoles: ['organizer'] },
+  { path: 'ticketing', component: TicketingPage, requiredRoles: ['organizer'] },
+  { path: 'discount-codes', component: DiscountCodesPage, requiredRoles: ['organizer'] },
+  { path: 'email-campaigns', component: EmailCampaignsPage, requiredRoles: ['organizer'] },
+  { path: 'attendee-management', component: AttendeeManagementPage, requiredRoles: ['organizer'] },
+  { path: 'speaker-portal', component: SpeakerPortalPage, requiredRoles: ['organizer'] },
+  { path: 'staff-roles', component: StaffRolesPage, requiredRoles: ['organizer'] },
+
+  // Sponsor Routes
+  { path: 'sponsor-dashboard', component: SponsorDashboard, requiredRoles: ['sponsor'] },
+  { path: 'booth-customization', component: BoothCustomizationPage, requiredRoles: ['sponsor'] },
+  { path: 'lead-capture', component: LeadCapturePage, requiredRoles: ['sponsor'] },
+  { path: 'sponsor-analytics', component: SponsorAnalyticsPage, requiredRoles: ['sponsor'] },
+  { path: 'sponsor-tools', component: SponsorToolsPage, requiredRoles: ['sponsor'] },
+
+  // Admin Routes
+  { path: 'admin-dashboard', component: AdminDashboard, requiredRoles: ['admin'] },
+  { path: 'user-management', component: UserManagementPage, requiredRoles: ['admin'] },
+  { path: 'event-oversight', component: EventOversightPage, requiredRoles: ['admin'] },
+  { path: 'content-management', component: ContentManagementPage, requiredRoles: ['admin'] },
+
+  // Shared Routes (accessible by multiple roles)
+  { path: 'my-events', component: MyEventsPage, requiredRoles: ['organizer', 'attendee'] },
+  { path: 'notifications', component: NotificationsPage, requiredRoles: ['attendee', 'organizer', 'sponsor', 'admin'] },
+];
+
+// --- Helper Components ---
+
+// A loading spinner component to show while pages are being lazy-loaded.
+const LoadingFallback: React.FC = () => (
+  <div className="flex items-center justify-center h-screen bg-gray-50">
+    <div className="text-center">
+      <Loader2 className="w-12 h-12 text-indigo-600 animate-spin mx-auto mb-4" />
+      <p className="text-lg text-gray-600">Loading Page...</p>
+    </div>
+  </div>
+);
+
+// A component to render when a user does not have the required role for a page.
+const AccessDenied: React.FC = () => (
+  <div className="flex items-center justify-center h-screen bg-gray-50">
+    <div className="text-center p-8 bg-white rounded-lg shadow-md">
+      <ShieldX className="w-16 h-16 text-red-500 mx-auto mb-4" />
+      <h1 className="text-2xl font-bold text-gray-800">Access Denied</h1>
+      <p className="text-gray-600 mt-2">You do not have permission to view this page.</p>
+    </div>
+  </div>
+);
+
+// --- Main Router Component ---
 const AppRouter: React.FC = () => {
   const { currentView, selectedEventId } = useApp();
   const { user, isAuthenticated } = useAuth();
 
-  const requiresRole = (component: React.ReactNode, requiredRole: UserRole | UserRole[]) => {
-    if (!isAuthenticated) {
-      return <HomePage />;
+  // Find the configuration for the current view
+  const currentRoute = routes.find(route => route.path === currentView);
+
+  // Determine the default dashboard based on user role
+  const getDefaultDashboard = (role: UserRole) => {
+    switch (role) {
+      case 'attendee': return <AttendeeDashboard />;
+      case 'organizer': return <OrganizerDashboard />;
+      case 'sponsor': return <SponsorDashboard />;
+      case 'admin': return <AdminDashboard />;
+      default: return <HomePage />;
     }
-    const roles = Array.isArray(requiredRole) ? requiredRole : [requiredRole];
-    if (!user || !roles.includes(user.role)) {
-      // Redirect to a default dashboard or home if the role doesn't match
-      switch (user.role) {
-        case 'attendee':
-          return <AttendeeDashboard />;
-        case 'organizer':
-          return <OrganizerDashboard />;
-        case 'sponsor':
-          return <SponsorDashboard />;
-        case 'admin':
-          return <AdminDashboard />;
-        default:
-          return <HomePage />;
-      }
-    }
-    return component;
   };
 
-  switch (currentView) {
-    // Public Module
-    case 'home': return <HomePage />;
-    case 'event-discovery': return <EventDiscoveryPage />;
-    case 'speaker-directory': return <SpeakerDirectoryPage />;
-    case 'sponsor-directory': return <SponsorDirectoryPage />;
-    case 'organizer-directory': return <OrganizerDirectoryPage />;
-    case 'blog': return <BlogPage />;
-    case 'resources': return <ResourcesPage />;
-    case 'press': return <PressPage />;
-    case 'about': return <AboutPage />;
-    case 'pricing': return <PricingPage />;
-    case 'contact': return <ContactPage />;
-    case 'terms': return <TermsPage />;
-    case 'privacy': return <PrivacyPage />;
-    case 'event-page': return <EventDetailPage eventId={selectedEventId || '1'} />;
+  // Render the appropriate component based on the route configuration
+  const renderComponent = () => {
+    if (!currentRoute) {
+      return <HomePage />; // Fallback for unknown routes
+    }
 
-    // Auth Pages
-    case 'password-reset': return <PasswordResetPage />;
+    const { component: Component, isPublic, requiredRoles, requiresId } = currentRoute;
 
-    // Attendee Module
-    case 'attendee-dashboard': return requiresRole(<AttendeeDashboard />, 'attendee');
-    case 'my-network': return requiresRole(<MyNetworkPage />, 'attendee');
-    case 'notifications': return requiresRole(<NotificationsPage />, ['attendee', 'organizer', 'sponsor', 'admin']);
-    case 'attendee-profile': return requiresRole(<AttendeeProfilePage />, 'attendee');
-    case 'agenda-builder': return requiresRole(<AgendaBuilderPage />, 'attendee');
-    case 'networking-hub': return requiresRole(<NetworkingHubPage />, 'attendee');
-    case 'live-event': return requiresRole(<LiveEventPage />, 'attendee');
-    case 'session-room': return requiresRole(<SessionRoomPage />, 'attendee');
-    case 'expo-hall': return requiresRole(<ExpoHallPage />, 'attendee');
-    case 'resource-library': return requiresRole(<ResourceLibraryPage />, 'attendee');
+    // Handle public routes
+    if (isPublic) {
+      return requiresId ? <Component eventId={selectedEventId || '1'} /> : <Component />;
+    }
 
-    // Organizer Module
-    case 'organizer-dashboard': return requiresRole(<OrganizerDashboard />, 'organizer');
-    case 'my-events': return requiresRole(<MyEventsPage />, ['organizer', 'attendee']);
-    case 'event-builder': return requiresRole(<EventBuilderPage />, 'organizer');
-    case 'analytics': return requiresRole(<AnalyticsPage />, 'organizer');
-    case 'organizer-settings': return requiresRole(<OrganizerSettingsPage />, 'organizer');
-    case 'event-settings': return requiresRole(<EventSettingsPage />, 'organizer');
-    case 'landing-customizer': return requiresRole(<LandingCustomizerPage />, 'organizer');
-    case 'agenda-manager': return requiresRole(<AgendaManagerPage />, 'organizer');
-    case 'venue-manager': return requiresRole(<VenueManagerPage />, 'organizer');
-    case 'ticketing': return requiresRole(<TicketingPage />, 'organizer');
-    case 'discount-codes': return requiresRole(<DiscountCodesPage />, 'organizer');
-    case 'email-campaigns': return requiresRole(<EmailCampaignsPage />, 'organizer');
-    case 'attendee-management': return requiresRole(<AttendeeManagementPage />, 'organizer');
-    case 'speaker-portal': return requiresRole(<SpeakerPortalPage />, 'organizer');
-    case 'staff-roles': return requiresRole(<StaffRolesPage />, 'organizer');
-    
+    // Handle protected routes
+    if (!isAuthenticated || !user) {
+      return <HomePage />; // Redirect unauthenticated users to home
+    }
 
-    // Sponsor Module
-    case 'sponsor-dashboard': return requiresRole(<SponsorDashboard />, 'sponsor');
-    case 'booth-customization': return requiresRole(<BoothCustomizationPage />, 'sponsor');
-    case 'lead-capture': return requiresRole(<LeadCapturePage />, 'sponsor');
-    case 'sponsor-analytics': return requiresRole(<SponsorAnalyticsPage />, 'sponsor'); // This line was missing
-    case 'sponsor-tools': return requiresRole(<SponsorToolsPage />, 'sponsor');
-    
+    // Check for role-based access
+    if (requiredRoles && !requiredRoles.includes(user.role)) {
+      // If the user's role is not permitted, show an access denied message
+      // or redirect to their default dashboard.
+      return <AccessDenied />;
+    }
 
-    // Admin Module
-    case 'admin-dashboard': return requiresRole(<AdminDashboard />, 'admin');
-    case 'user-management': return requiresRole(<UserManagementPage />, 'admin');
-    case 'event-oversight': return requiresRole(<EventOversightPage />, 'admin');
-    case 'content-management': return requiresRole(<ContentManagementPage />, 'admin');
+    // Render the component for authenticated users with the correct role
+    return <Component />;
+  };
 
-    default:
-      return <HomePage />;
-  }
+  return (
+    <Suspense fallback={<LoadingFallback />}>
+      {renderComponent()}
+    </Suspense>
+  );
 };
 
 export default AppRouter;
