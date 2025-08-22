@@ -568,7 +568,6 @@ const LeadCapturePage: React.FC = () => {
                     placeholder="Add any additional notes about this lead..."
                   />
                 </div>
-        </div>
       </div>
     </div>
   );

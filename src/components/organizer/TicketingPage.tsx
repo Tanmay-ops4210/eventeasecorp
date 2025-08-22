@@ -26,8 +26,8 @@ const TicketingPage: React.FC = () => {
     saleStart: '',
     saleEnd: '',
     isActive: true,
-    benefits: [] as string[],
-    restrictions: [] as string[]
+    benefits: '',
+    restrictions: ''
   });
   const [errors, setErrors] = useState<Record<string, string>>({});
 
@@ -76,8 +76,8 @@ const TicketingPage: React.FC = () => {
       saleStart: '',
       saleEnd: '',
       isActive: true,
-      benefits: [],
-      restrictions: []
+      benefits: '',
+      restrictions: ''
     });
     setEditingTicket(null);
     setErrors({});
@@ -98,8 +98,8 @@ const TicketingPage: React.FC = () => {
       saleStart: ticket.saleStart.split('T')[0],
       saleEnd: ticket.saleEnd.split('T')[0],
       isActive: ticket.isActive,
-      benefits: ticket.benefits,
-      restrictions: ticket.restrictions
+      benefits: ticket.benefits.join(', '),
+      restrictions: ticket.restrictions.join(', ')
     });
     setEditingTicket(ticket);
     setShowTicketModal(true);
@@ -129,6 +129,8 @@ const TicketingPage: React.FC = () => {
     try {
       const ticketData = {
         ...ticketFormData,
+        benefits: ticketFormData.benefits.split(',').map(b => b.trim()).filter(b => b),
+        restrictions: ticketFormData.restrictions.split(',').map(r => r.trim()).filter(r => r),
         saleStart: new Date(ticketFormData.saleStart).toISOString(),
         saleEnd: new Date(ticketFormData.saleEnd).toISOString()
       };
@@ -136,12 +138,50 @@ const TicketingPage: React.FC = () => {
       let result;
       if (editingTicket) {
         result = await organizerEventService.updateTicketType(currentEvent.id, editingTicket.id, ticketData);
+        if (result.success) {
+          // Update local state instead of refetching all data
+          const updatedTicket = { ...editingTicket, ...ticketData };
+          const updatedEvents = events.map(event => {
+            if (event.id === currentEvent.id) {
+              const updatedTicketTypes = event.ticketTypes.map(ticket =>
+                ticket.id === editingTicket.id ? updatedTicket : ticket
+              );
+              return { ...event, ticketTypes: updatedTicketTypes };
+            }
+            return event;
+          });
+          setEvents(updatedEvents);
+          setCurrentEvent(prev => prev ? {
+            ...prev,
+            ticketTypes: prev.ticketTypes.map(ticket =>
+              ticket.id === editingTicket.id ? updatedTicket : ticket
+            )
+          } : null);
+        }
       } else {
         result = await organizerEventService.createTicketType(currentEvent.id, ticketData);
+        if (result.success && result.ticket) {
+          // Update local state instead of refetching all data
+          const updatedEvents = events.map(event => {
+            if (event.id === currentEvent.id) {
+              return {
+                ...event,
+                ticketTypes: [...event.ticketTypes, result.ticket!],
+                totalTickets: event.totalTickets + result.ticket!.quantity
+              };
+            }
+            return event;
+          });
+          setEvents(updatedEvents);
+          setCurrentEvent(prev => prev ? {
+            ...prev,
+            ticketTypes: [...prev.ticketTypes, result.ticket!],
+            totalTickets: prev.totalTickets + result.ticket!.quantity
+          } : null);
+        }
       }
 
       if (result.success) {
-        await loadEvents();
         setShowTicketModal(false);
         resetTicketForm();
         alert(`Ticket type ${editingTicket ? 'updated' : 'created'} successfully!`);
@@ -160,7 +200,26 @@ const TicketingPage: React.FC = () => {
       try {
         const result = await organizerEventService.deleteTicketType(currentEvent.id, ticketId);
         if (result.success) {
-          await loadEvents();
+          // Update local state instead of refetching all data
+          const ticketToDelete = currentEvent.ticketTypes.find(t => t.id === ticketId);
+          if (ticketToDelete) {
+            const updatedEvents = events.map(event => {
+              if (event.id === currentEvent.id) {
+                return {
+                  ...event,
+                  ticketTypes: event.ticketTypes.filter(ticket => ticket.id !== ticketId),
+                  totalTickets: event.totalTickets - ticketToDelete.quantity
+                };
+              }
+              return event;
+            });
+            setEvents(updatedEvents);
+            setCurrentEvent(prev => prev ? {
+              ...prev,
+              ticketTypes: prev.ticketTypes.filter(ticket => ticket.id !== ticketId),
+              totalTickets: prev.totalTickets - ticketToDelete.quantity
+            } : null);
+          }
           alert('Ticket type deleted successfully!');
         } else {
           alert(result.error || 'Failed to delete ticket type');
@@ -444,7 +503,18 @@ const TicketingPage: React.FC = () => {
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">Price *</label>
                     <div className="relative">
-                      <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500">$</span>
+                      <select
+                        name="currency"
+                        value={ticketFormData.currency}
+                        onChange={(e) => setTicketFormData(prev => ({ ...prev, currency: e.target.value }))}
+                        className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500 bg-transparent border-none text-sm focus:ring-0 focus:outline-none"
+                      >
+                        <option value="USD">$</option>
+                        <option value="EUR">€</option>
+                        <option value="GBP">£</option>
+                        <option value="CAD">C$</option>
+                        <option value="AUD">A$</option>
+                      </select>
                       <input
                         type="number"
                         name="price"
@@ -452,7 +522,7 @@ const TicketingPage: React.FC = () => {
                         onChange={handleTicketFormChange}
                         min="0"
                         step="0.01"
-                        className={`w-full pl-8 pr-4 py-3 border rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 ${
+                        className={`w-full pl-12 pr-4 py-3 border rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 ${
                           errors.price ? 'border-red-500' : 'border-gray-300'
                         }`}
                         placeholder="0.00"
@@ -517,6 +587,32 @@ const TicketingPage: React.FC = () => {
                     />
                     {errors.saleEnd && <p className="text-red-500 text-sm mt-1">{errors.saleEnd}</p>}
                   </div>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Benefits</label>
+                  <textarea
+                    name="benefits"
+                    value={ticketFormData.benefits}
+                    onChange={(e) => setTicketFormData(prev => ({ ...prev, benefits: e.target.value }))}
+                    rows={3}
+                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                    placeholder="Enter benefits separated by commas (e.g., Early access, Welcome kit, Networking dinner)"
+                  />
+                  <p className="text-xs text-gray-500 mt-1">Separate multiple benefits with commas</p>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Restrictions</label>
+                  <textarea
+                    name="restrictions"
+                    value={ticketFormData.restrictions}
+                    onChange={(e) => setTicketFormData(prev => ({ ...prev, restrictions: e.target.value }))}
+                    rows={3}
+                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                    placeholder="Enter restrictions separated by commas (e.g., Non-refundable, Non-transferable)"
+                  />
+                  <p className="text-xs text-gray-500 mt-1">Separate multiple restrictions with commas</p>
                 </div>
 
                 <div>

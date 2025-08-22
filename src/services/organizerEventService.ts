@@ -163,6 +163,12 @@ class OrganizerEventService {
     try {
       await new Promise(resolve => setTimeout(resolve, 500));
 
+      // Get current user info from localStorage or context
+      const currentUser = JSON.parse(localStorage.getItem('currentUser') || '{}');
+      const userId = currentUser.id || `user_${Date.now()}`;
+      const userName = currentUser.name || 'Current User';
+      const userEmail = currentUser.email || 'user@example.com';
+
       const newEvent: OrganizerEvent = {
         id: `evt_${Date.now()}`,
         ...eventData,
@@ -173,9 +179,9 @@ class OrganizerEventService {
         revenue: 0,
         attendees: [],
         organizer: {
-          id: 'current_user_id',
-          name: 'Current User',
-          email: 'user@example.com'
+          id: userId,
+          name: userName,
+          email: userEmail
         },
         analytics: {
           views: 0,
