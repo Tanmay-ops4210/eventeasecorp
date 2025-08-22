@@ -1,8 +1,10 @@
 import React from 'react';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
 import { AppProvider, useApp } from './contexts/AppContext';
+import { UserRole } from './types/user';
 
-// Navigation Components
+// --- Layout Components ---
+// These components handle the main structure and navigation of the app.
 import PublicNavigation from './components/layout/PublicNavigation';
 import AttendeeNavigation from './components/layout/AttendeeNavigation';
 import OrganizerNavigation from './components/layout/OrganizerNavigation';
@@ -10,7 +12,9 @@ import SponsorNavigation from './components/layout/SponsorNavigation';
 import AdminNavigation from './components/layout/AdminNavigation';
 import Breadcrumbs from './components/layout/Breadcrumbs';
 
-// Page Components (Imported directly for debugging)
+// --- Page Components ---
+// These are the individual pages of your application.
+// For simplicity and to ensure functionality, we are importing them directly.
 import HomePage from './components/pages/HomePage';
 import EventDiscoveryPage from './components/pages/EventDiscoveryPage';
 import SpeakerDirectoryPage from './components/speakers/SpeakerDirectoryPage';
@@ -61,12 +65,20 @@ import UserManagementPage from './components/admin/UserManagementPage';
 import EventOversightPage from './components/admin/EventOversightPage';
 import ContentManagementPage from './components/admin/ContentManagementPage';
 
-// Main application content
+/**
+ * AppContent Component
+ * This component is the core of the application's UI. It determines which
+ * navigation bar and which page to display based on the user's authentication
+ * status and the current view selected in the application's state.
+ */
 const AppContent: React.FC = () => {
     const { user, isAuthenticated } = useAuth();
     const { currentView, selectedEventId } = useApp();
 
-    // Function to render the correct navigation bar based on user role
+    /**
+     * Renders the appropriate navigation component based on the user's role.
+     * @returns {React.ReactNode} The navigation component.
+     */
     const renderNavigation = () => {
         if (isAuthenticated && user) {
             switch (user.role) {
@@ -80,13 +92,16 @@ const AppContent: React.FC = () => {
         return <PublicNavigation />;
     };
 
-    // Function to render the current page based on the view state
+    /**
+     * Determines which page component to render based on the currentView state.
+     * It also handles role-based access control for protected routes.
+     * @returns {React.ReactNode} The page component to render.
+     */
     const renderPage = () => {
-        // Simple role check helper
-        const hasRole = (roles: string[]) => isAuthenticated && user && roles.includes(user.role);
+        const hasRole = (roles: UserRole[]) => isAuthenticated && user && roles.includes(user.role);
 
         switch (currentView) {
-            // Public Views
+            // --- Public Views ---
             case 'home': return <HomePage />;
             case 'event-discovery': return <EventDiscoveryPage />;
             case 'speaker-directory': return <SpeakerDirectoryPage />;
@@ -103,9 +118,9 @@ const AppContent: React.FC = () => {
             case 'event-page': return <EventDetailPage eventId={selectedEventId || '1'} />;
             case 'password-reset': return <PasswordResetPage />;
 
-            // Authenticated Views
+            // --- Authenticated Views ---
+            // Attendee
             case 'attendee-dashboard': return hasRole(['attendee']) ? <AttendeeDashboard /> : <HomePage />;
-            case 'my-events': return hasRole(['attendee', 'organizer']) ? <MyEventsPage /> : <HomePage />;
             case 'my-network': return hasRole(['attendee']) ? <MyNetworkPage /> : <HomePage />;
             case 'attendee-profile': return hasRole(['attendee']) ? <AttendeeProfilePage /> : <HomePage />;
             case 'agenda-builder': return hasRole(['attendee']) ? <AgendaBuilderPage /> : <HomePage />;
@@ -115,6 +130,7 @@ const AppContent: React.FC = () => {
             case 'expo-hall': return hasRole(['attendee']) ? <ExpoHallPage /> : <HomePage />;
             case 'resource-library': return hasRole(['attendee']) ? <ResourceLibraryPage /> : <HomePage />;
             
+            // Organizer
             case 'organizer-dashboard': return hasRole(['organizer']) ? <OrganizerDashboard /> : <HomePage />;
             case 'event-builder': return hasRole(['organizer']) ? <EventBuilderPage /> : <HomePage />;
             case 'analytics': return hasRole(['organizer']) ? <AnalyticsPage /> : <HomePage />;
@@ -130,25 +146,30 @@ const AppContent: React.FC = () => {
             case 'speaker-portal': return hasRole(['organizer']) ? <SpeakerPortalPage /> : <HomePage />;
             case 'staff-roles': return hasRole(['organizer']) ? <StaffRolesPage /> : <HomePage />;
 
+            // Sponsor
             case 'sponsor-dashboard': return hasRole(['sponsor']) ? <SponsorDashboard /> : <HomePage />;
             case 'booth-customization': return hasRole(['sponsor']) ? <BoothCustomizationPage /> : <HomePage />;
             case 'lead-capture': return hasRole(['sponsor']) ? <LeadCapturePage /> : <HomePage />;
             case 'sponsor-analytics': return hasRole(['sponsor']) ? <SponsorAnalyticsPage /> : <HomePage />;
             case 'sponsor-tools': return hasRole(['sponsor']) ? <SponsorToolsPage /> : <HomePage />;
 
+            // Admin
             case 'admin-dashboard': return hasRole(['admin']) ? <AdminDashboard /> : <HomePage />;
             case 'user-management': return hasRole(['admin']) ? <UserManagementPage /> : <HomePage />;
             case 'event-oversight': return hasRole(['admin']) ? <EventOversightPage /> : <HomePage />;
             case 'content-management': return hasRole(['admin']) ? <ContentManagementPage /> : <HomePage />;
 
-            // Shared authenticated views
+            // Shared (Multi-Role)
+            case 'my-events': return hasRole(['attendee', 'organizer']) ? <MyEventsPage /> : <HomePage />;
             case 'notifications': return hasRole(['attendee', 'organizer', 'sponsor', 'admin']) ? <NotificationsPage /> : <HomePage />;
 
+            // Default fallback
             default:
                 return <HomePage />;
         }
     };
 
+    // Determines if the current view is a public page to decide whether to show breadcrumbs.
     const isPublicView = [
         'home', 'event-discovery', 'speaker-directory', 'sponsor-directory',
         'organizer-directory', 'blog', 'resources', 'press', 'about',
@@ -166,7 +187,11 @@ const AppContent: React.FC = () => {
     );
 };
 
-// The main App component that wraps everything in context providers
+/**
+ * App Component (Root)
+ * This is the main entry point of the application. It wraps the entire
+ * app with the necessary context providers for state management.
+ */
 function App() {
     return (
         <AuthProvider>
