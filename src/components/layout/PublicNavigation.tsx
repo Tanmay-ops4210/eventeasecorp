@@ -15,9 +15,17 @@ const PublicNavigation: React.FC = () => {
     const handlePasswordResetNavigation = () => {
       setCurrentView('password-reset');
     };
+    const handleOpenAuthModal = () => {
+      setIsAuthModalOpen(true);
+    };
 
     window.addEventListener('navigate-to-password-reset', handlePasswordResetNavigation);
-    return () => window.removeEventListener('navigate-to-password-reset', handlePasswordResetNavigation);
+    window.addEventListener('open-auth-modal', handleOpenAuthModal);
+
+    return () => {
+      window.removeEventListener('navigate-to-password-reset', handlePasswordResetNavigation);
+      window.removeEventListener('open-auth-modal', handleOpenAuthModal);
+    };
   }, [setCurrentView]);
 
   const navigationItems = [
