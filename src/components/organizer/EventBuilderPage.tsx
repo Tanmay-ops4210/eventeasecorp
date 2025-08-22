@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useApp } from '../../contexts/AppContext';
-import { 
-  Plus, Save, Eye, Settings, Calendar, MapPin, Users, 
+import {
+  Plus, Save, Eye, Settings, Calendar, MapPin, Users,
   DollarSign, Image, Type, Palette, Layout, Clock,
   ArrowLeft, ArrowRight, Check, X, Upload, Link,
   Loader2, AlertTriangle
@@ -19,11 +19,28 @@ const EventBuilderPage: React.FC = () => {
     category: 'conference',
     date: '',
     time: '',
-    location: '',
+    venue: { name: '', address: '', capacity: 100, type: 'physical' },
     image: 'https://images.pexels.com/photos/2747449/pexels-photo-2747449.jpeg',
-    totalTickets: 100,
-    ticketPrice: 0,
-    status: 'draft'
+    status: 'draft',
+    ticketTypes: [],
+    totalTickets: 0,
+    soldTickets: 0,
+    revenue: 0,
+    attendees: [],
+    tags: [],
+    organizer: { id: '', name: '', email: '' },
+    settings: {
+      allowWaitlist: false,
+      requireApproval: false,
+      maxTicketsPerPerson: 10,
+      refundPolicy: 'No refunds',
+    },
+    analytics: {
+      views: 0,
+      registrations: 0,
+      conversionRate: 0,
+      topReferrers: [],
+    },
   });
 
   const steps = [
@@ -42,6 +59,13 @@ const EventBuilderPage: React.FC = () => {
     setEventData(prev => ({ ...prev, [field]: value }));
   };
 
+  const handleVenueChange = (field: string, value: any) => {
+    setEventData(prev => ({
+      ...prev,
+      venue: { ...prev.venue, [field]: value } as OrganizerEvent['venue'],
+    }));
+  };
+
   const handleNext = () => {
     if (currentStep < steps.length) {
       setCurrentStep(currentStep + 1);
@@ -57,13 +81,35 @@ const EventBuilderPage: React.FC = () => {
   const handleSave = async (status: 'draft' | 'published') => {
     setIsLoading(true);
     try {
-      const result = await organizerEventService.createEvent({
-        ...eventData,
-        status,
-        soldTickets: 0,
-        revenue: 0
-      } as OrganizerEvent);
-      
+      // Construct a valid OrganizerEvent object from the partial eventData
+      const finalEventData: OrganizerEvent = {
+        id: '', // The service will generate an ID
+        title: eventData.title || '',
+        description: eventData.description || '',
+        category: eventData.category || 'other',
+        date: eventData.date || '',
+        time: eventData.time || '',
+        endTime: '', // Add a default or handle this field in your form
+        venue: eventData.venue || { name: '', address: '', capacity: 0, type: 'physical' },
+        image: eventData.image || '',
+        gallery: [],
+        status: status,
+        visibility: 'public', // Add a default or handle this field in your form
+        ticketTypes: eventData.ticketTypes || [],
+        totalTickets: eventData.totalTickets || 0,
+        soldTickets: eventData.soldTickets || 0,
+        revenue: eventData.revenue || 0,
+        attendees: eventData.attendees || [],
+        tags: eventData.tags || [],
+        organizer: eventData.organizer || { id: '', name: '', email: '' },
+        settings: eventData.settings || { allowWaitlist: false, requireApproval: false, maxTicketsPerPerson: 10, refundPolicy: '' },
+        analytics: eventData.analytics || { views: 0, registrations: 0, conversionRate: 0, topReferrers: [] },
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+      };
+
+      const result = await organizerEventService.createEvent(finalEventData);
+
       if (result.success) {
         alert(`Event ${status === 'draft' ? 'saved as draft' : 'published'} successfully!`);
         setCurrentView('my-events');
@@ -154,8 +200,8 @@ const EventBuilderPage: React.FC = () => {
               <label className="block text-sm font-medium text-gray-700 mb-2">Location</label>
               <input
                 type="text"
-                value={eventData.location}
-                onChange={(e) => handleInputChange('location', e.target.value)}
+                value={eventData.venue?.name}
+                onChange={(e) => handleVenueChange('name', e.target.value)}
                 placeholder="Enter event location"
                 className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
               />
@@ -194,23 +240,12 @@ const EventBuilderPage: React.FC = () => {
                 <input
                   type="number"
                   value={eventData.totalTickets}
-                  onChange={(e) => handleInputChange('totalTickets', parseInt(e.target.value))}
+                  onChange={(e) => handleInputChange('totalTickets', parseInt(e.target.value, 10) || 0)}
                   min="1"
                   className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
                 />
               </div>
 
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Ticket Price ($)</label>
-                <input
-                  type="number"
-                  value={eventData.ticketPrice}
-                  onChange={(e) => handleInputChange('ticketPrice', parseFloat(e.target.value))}
-                  min="0"
-                  step="0.01"
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
-                />
-              </div>
             </div>
 
             <div className="bg-gray-50 rounded-lg p-6">
@@ -222,12 +257,12 @@ const EventBuilderPage: React.FC = () => {
                 </div>
                 <div className="flex justify-between">
                   <span>Price per Ticket:</span>
-                  <span className="font-medium">${eventData.ticketPrice}</span>
+                  <span className="font-medium">${eventData.ticketTypes?.[0]?.price || 0}</span>
                 </div>
                 <div className="flex justify-between border-t pt-2">
                   <span className="font-semibold">Potential Revenue:</span>
                   <span className="font-bold text-indigo-600">
-                    ${((eventData.totalTickets || 0) * (eventData.ticketPrice || 0)).toLocaleString()}
+                    ${((eventData.totalTickets || 0) * (eventData.ticketTypes?.[0]?.price || 0)).toLocaleString()}
                   </span>
                 </div>
               </div>
@@ -258,11 +293,11 @@ const EventBuilderPage: React.FC = () => {
                     </div>
                     <div className="flex items-center space-x-1">
                       <MapPin className="w-4 h-4" />
-                      <span>{eventData.location || 'Location TBD'}</span>
+                      <span>{eventData.venue?.name || 'Location TBD'}</span>
                     </div>
                     <div className="flex items-center space-x-1">
                       <DollarSign className="w-4 h-4" />
-                      <span>${eventData.ticketPrice || 0}</span>
+                      <span>${eventData.ticketTypes?.[0]?.price || 0}</span>
                     </div>
                   </div>
                 </div>
@@ -286,15 +321,15 @@ const EventBuilderPage: React.FC = () => {
                     <p><span className="font-medium">Category:</span> {eventData.category}</p>
                     <p><span className="font-medium">Date:</span> {eventData.date}</p>
                     <p><span className="font-medium">Time:</span> {eventData.time}</p>
-                    <p><span className="font-medium">Location:</span> {eventData.location}</p>
+                    <p><span className="font-medium">Location:</span> {eventData.venue?.name}</p>
                   </div>
                 </div>
                 <div>
                   <h4 className="font-medium text-gray-900 mb-2">Ticketing</h4>
                   <div className="space-y-1 text-sm text-gray-600">
                     <p><span className="font-medium">Total Tickets:</span> {eventData.totalTickets}</p>
-                    <p><span className="font-medium">Price:</span> ${eventData.ticketPrice}</p>
-                    <p><span className="font-medium">Potential Revenue:</span> ${((eventData.totalTickets || 0) * (eventData.ticketPrice || 0)).toLocaleString()}</p>
+                    <p><span className="font-medium">Price:</span> ${eventData.ticketTypes?.[0]?.price || 0}</p>
+                    <p><span className="font-medium">Potential Revenue:</span> ${((eventData.totalTickets || 0) * (eventData.ticketTypes?.[0]?.price || 0)).toLocaleString()}</p>
                   </div>
                 </div>
               </div>
