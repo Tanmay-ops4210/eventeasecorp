@@ -50,6 +50,7 @@ type AppView =
   | 'lead-capture'
   | 'sponsor-analytics'
   | 'sponsor-tools'
+  | 'sponsor-settings'
   // Admin Module
   | 'admin-dashboard'
   | 'user-management'
