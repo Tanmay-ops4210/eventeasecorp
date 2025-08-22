@@ -2,6 +2,8 @@ import React from 'react';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
 import { AppProvider, useApp } from './contexts/AppContext';
 import { UserRole } from './types/user';
+import './index.css';
+import './components/chart-styles.css';
 
 // --- Layout Components ---
 // These components handle the main structure and navigation of the app.
