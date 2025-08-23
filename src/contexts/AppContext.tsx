@@ -16,6 +16,8 @@ type AppView =
   | 'terms'
   | 'privacy'
   | 'password-reset'
+  | 'event-payment'
+  | 'event-payment-success'
   // Attendee Module
   | 'attendee-dashboard'
   | 'my-events'
@@ -66,6 +68,8 @@ interface AppContextType {
   setSelectedEventId: (id: string | null) => void;
   breadcrumbs: string[];
   setBreadcrumbs: (breadcrumbs: string[]) => void;
+  registrationData: any;
+  setRegistrationData: (data: any) => void;
 }
 
 const AppContext = createContext<AppContextType | undefined>(undefined);
@@ -86,6 +90,7 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
   const [currentView, setCurrentView] = useState<AppView>('home');
   const [selectedEventId, setSelectedEventId] = useState<string | null>(null);
   const [breadcrumbs, setBreadcrumbs] = useState<string[]>([]);
+  const [registrationData, setRegistrationData] = useState<any>(null);
 
   return (
     <AppContext.Provider
@@ -96,6 +101,8 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
         setSelectedEventId,
         breadcrumbs,
         setBreadcrumbs,
+        registrationData,
+        setRegistrationData,
       }}
     >
       {children}

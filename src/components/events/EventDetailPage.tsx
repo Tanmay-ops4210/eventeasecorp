@@ -8,6 +8,7 @@ import { useApp } from '../../contexts/AppContext';
 import { useAuth } from '../../contexts/AuthContext';
 import { EventDetail } from '../../types/eventDetail';
 import { eventDetailService } from '../../services/eventDetailService';
+import { attendeeEventService } from '../../services/attendeeEventService';
 
 // Tier colors for sponsor badges
 const tierColors = {
@@ -24,6 +25,7 @@ interface EventDetailPageProps {
 const EventDetailPage: React.FC<EventDetailPageProps> = ({ eventId }) => {
   const { setBreadcrumbs } = useApp();
   const { isAuthenticated } = useAuth();
+  const { setCurrentView, setRegistrationData } = useApp();
   const [event, setEvent] = useState<EventDetail | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -121,8 +123,25 @@ const EventDetailPage: React.FC<EventDetailPageProps> = ({ eventId }) => {
       return;
     }
     
-    if (event?.registrationUrl) {
-      window.open(event.registrationUrl, '_blank');
+    if (event) {
+      // Prepare registration data
+      const registrationInfo = {
+        eventId: event.id,
+        eventDetails: {
+          title: event.title,
+          description: event.description,
+          date: event.date,
+          time: event.time,
+          location: event.venue.name,
+          image: event.image,
+          category: event.category
+        },
+        ticketType: selectedTicketType,
+        price: getTicketPrice()
+      };
+      
+      setRegistrationData(registrationInfo);
+      setCurrentView('event-payment');
     }
   };
 
