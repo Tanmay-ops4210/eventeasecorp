@@ -62,7 +62,6 @@ import BoothCustomizationPage from './components/sponsor/BoothCustomizationPage'
 import LeadCapturePage from './components/sponsor/LeadCapturePage';
 import SponsorAnalyticsPage from './components/sponsor/SponsorAnalyticsPage';
 import SponsorToolsPage from './components/sponsor/SponsorToolsPage';
-import SponsorSettingsPage from './components/sponsor/SponsorSettingsPage';
 import AdminDashboard from './components/admin/AdminDashboard';
 import UserManagementPage from './components/admin/UserManagementPage';
 import EventOversightPage from './components/admin/EventOversightPage';
@@ -155,7 +154,6 @@ const AppContent: React.FC = () => {
             case 'lead-capture': return hasRole(['sponsor']) ? <LeadCapturePage /> : <HomePage />;
             case 'sponsor-analytics': return hasRole(['sponsor']) ? <SponsorAnalyticsPage /> : <HomePage />;
             case 'sponsor-tools': return hasRole(['sponsor']) ? <SponsorToolsPage /> : <HomePage />;
-            case 'sponsor-settings': return hasRole(['sponsor']) ? <SponsorSettingsPage /> : <HomePage />;
 
             // Admin
             case 'admin-dashboard': return hasRole(['admin']) ? <AdminDashboard /> : <HomePage />;

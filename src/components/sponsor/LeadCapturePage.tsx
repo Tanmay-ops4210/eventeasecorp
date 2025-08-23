@@ -4,7 +4,7 @@ import { useApp } from '../../contexts/AppContext';
 import { 
   Users, Search, Filter, Plus, Edit, Trash2, Eye, Mail, 
   Phone, Download, MoreVertical, CheckCircle, Clock, 
-  AlertTriangle, Star, Loader2, ArrowLeft, ArrowRight,
+  AlertTriangle, Star, Loader2, ArrowLeft, ArrowRight, X,
   Building, User, Calendar, Tag
 } from 'lucide-react';
 import { Lead } from '../../types/sponsorExhibitor';
@@ -568,10 +568,6 @@ const LeadCapturePage: React.FC = () => {
                     placeholder="Add any additional notes about this lead..."
                   />
                 </div>
-      </div>
-    </div>
-  );
-};
 
                 <div className="flex justify-end space-x-4 pt-4">
                   <button
@@ -589,9 +585,11 @@ const LeadCapturePage: React.FC = () => {
                   </button>
                 </div>
               </form>
-            </div>
-          </div>
-        )}
+      </div>
+    </div>
+  );
+};
+
 
         {/* Bulk Actions */}
         {selectedLeads.length > 0 && (
