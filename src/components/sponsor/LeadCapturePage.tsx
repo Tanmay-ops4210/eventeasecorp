@@ -4,8 +4,8 @@ import { useApp } from '../../contexts/AppContext';
 import { 
   Users, Search, Filter, Plus, Edit, Trash2, Eye, Mail, 
   Phone, Download, MoreVertical, CheckCircle, Clock, 
-  AlertTriangle, Star, Loader2, ArrowLeft, ArrowRight, X,
-  Building, User, Calendar, Tag
+  AlertTriangle, Star, Loader2, ArrowLeft, ArrowRight,
+  Building, User, Calendar, Tag, X
 } from 'lucide-react';
 import { Lead } from '../../types/sponsorExhibitor';
 import { sponsorExhibitorService } from '../../services/sponsorExhibitorService';
@@ -585,11 +585,9 @@ const LeadCapturePage: React.FC = () => {
                   </button>
                 </div>
               </form>
-      </div>
-    </div>
-  );
-};
-
+            </div>
+          </div>
+        )}
 
         {/* Bulk Actions */}
         {selectedLeads.length > 0 && (
@@ -621,4 +619,9 @@ const LeadCapturePage: React.FC = () => {
             </div>
           </div>
         )}
+      </div>
+    </div>
+  );
+};
+
 export default LeadCapturePage;
