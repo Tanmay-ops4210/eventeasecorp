@@ -24,6 +24,8 @@ import SponsorDirectoryPage from './components/sponsors/SponsorDirectoryPage';
 import OrganizerDirectoryPage from './components/pages/OrganizerDirectoryPage';
 import BlogPage from './components/blog/BlogPage';
 import EventDetailPage from './components/events/EventDetailPage';
+import EventPaymentPage from './components/events/EventPaymentPage';
+import EventPaymentSuccess from './components/events/EventPaymentSuccess';
 import ResourcesPage from './components/pages/ResourcesPage';
 import PressPage from './components/pages/PressPage';
 import AboutPage from './components/pages/AboutPage';
@@ -118,6 +120,8 @@ const AppContent: React.FC = () => {
             case 'terms': return <TermsPage />;
             case 'privacy': return <PrivacyPage />;
             case 'event-page': return <EventDetailPage eventId={selectedEventId || '1'} />;
+            case 'event-payment': return <EventPaymentPage />;
+            case 'event-payment-success': return <EventPaymentSuccess />;
             case 'password-reset': return <PasswordResetPage />;
 
             // --- Authenticated Views ---

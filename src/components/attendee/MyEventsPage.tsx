@@ -3,7 +3,7 @@ import { useApp } from '../../contexts/AppContext';
 import { 
   Plus, Edit, Trash2, Eye, Copy, Filter, Search, Calendar,
   Users, DollarSign, MoreVertical, AlertTriangle, CheckCircle,
-  Clock, Globe, Loader2, ArrowLeft, ArrowRight
+  Clock, Globe, Loader2, ArrowLeft, ArrowRight, MapPin
 } from 'lucide-react';
 import { OrganizerEvent } from '../../types/organizerEvent';
 import { organizerEventService } from '../../services/organizerEventService';
