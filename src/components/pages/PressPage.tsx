@@ -221,8 +221,8 @@ const PressPage: React.FC = () => {
                   <p className="text-sm text-gray-600">Head of Communications</p>
                 </div>
                 <div className="space-y-2 text-sm">
-                  <p className="text-gray-700">📧 press@eventease.com</p>
-                  <p className="text-gray-700">📞 +1 (555) 123-4567</p>
+                  <p className="text-gray-700">📧 tanmay365210mogabeera@gmail.com</p>
+                  <p className="text-gray-700">📞 +91 8652601487</p>
                   <p className="text-gray-700">🕒 Mon-Fri, 9 AM - 6 PM PST</p>
                 </div>
               </div>

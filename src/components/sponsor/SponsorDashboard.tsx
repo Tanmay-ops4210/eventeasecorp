@@ -251,14 +251,14 @@ const SponsorDashboard: React.FC = () => {
                   <Mail className="w-5 h-5 text-gray-400" />
                   <div>
                     <p className="text-sm text-gray-500">Email Support</p>
-                    <p className="font-medium text-gray-900">sponsor-support@eventease.com</p>
+                    <p className="font-medium text-gray-900">tanmay365210mogabeera@gmail.com</p>
                   </div>
                 </div>
                 <div className="flex items-center space-x-3">
                   <Phone className="w-5 h-5 text-gray-400" />
                   <div>
                     <p className="text-sm text-gray-500">Phone Support</p>
-                    <p className="font-medium text-gray-900">+1 (555) 123-4567</p>
+                    <p className="font-medium text-gray-900">+91 8652601487</p>
                   </div>
                 </div>
                 <div className="flex items-center space-x-3">

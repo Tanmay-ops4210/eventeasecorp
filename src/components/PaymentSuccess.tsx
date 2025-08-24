@@ -139,14 +139,14 @@ const PaymentSuccess: React.FC<PaymentSuccessProps> = ({ eventData, locationData
                   <Mail className="w-5 h-5 text-indigo-600" />
                   <div>
                     <p className="font-medium text-gray-900">Email Support</p>
-                    <p className="text-sm text-gray-600">support@eventwebsites.com</p>
+                    <p className="text-sm text-gray-600">tanmay365210mogabeera@gmail.com</p>
                   </div>
                 </div>
                 <div className="flex items-center space-x-3">
                   <Phone className="w-5 h-5 text-indigo-600" />
                   <div>
                     <p className="font-medium text-gray-900">Phone Support</p>
-                    <p className="text-sm text-gray-600">+1 (555) 123-4567</p>
+                    <p className="text-sm text-gray-600">+91 8652601487</p>
                   </div>
                 </div>
               </div>
