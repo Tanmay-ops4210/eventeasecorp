@@ -3,7 +3,7 @@ import { Calendar, Users, Star, ArrowRight, Play, CheckCircle } from 'lucide-rea
 import { useApp } from '../../contexts/AppContext';
 
 const HomePage: React.FC = () => {
-  const { setCurrentView } = useApp();
+  const { setCurrentView, setSelectedEventId } = useApp(); // <-- Add setSelectedEventId
 
   const featuredEvents = [
     {
@@ -117,6 +117,12 @@ const HomePage: React.FC = () => {
       avatar: 'https://images.pexels.com/photos/3184465/pexels-photo-3184465.jpeg?auto=compress&cs=tinysrgb&w=200'
     }
   ];
+  
+  // This new function handles the click event on a featured event card
+  const handleEventClick = (eventId: string) => {
+    setSelectedEventId(eventId);
+    setCurrentView('event-page');
+  };
 
   return (
     <div className="min-h-screen">
@@ -181,7 +187,7 @@ const HomePage: React.FC = () => {
               <div
                 key={event.id}
                 className="group bg-white rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-300 transform hover:scale-105 overflow-hidden cursor-pointer"
-                onClick={() => setCurrentView('event-discovery')}
+                onClick={() => handleEventClick(event.id)} // <-- Updated onClick handler
                 style={{ animationDelay: `${index * 0.1}s` }}
               >
                 <div className="relative overflow-hidden">
