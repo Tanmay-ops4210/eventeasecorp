@@ -33,6 +33,33 @@ const HomePage: React.FC = () => {
       image: 'https://images.pexels.com/photos/3184339/pexels-photo-3184339.jpeg?auto=compress&cs=tinysrgb&w=800',
       category: 'Sustainability'
     }
+    {
+      id: '4',
+      title: 'Mumbai Wedding Expo 2024',
+      date: 'March 28, 2024',
+      location: 'Bombay Exhibition Centre, Mumbai',
+      attendees: 5000,
+      image: 'https://images.pexels.com/photos/1024993/pexels-photo-1024993.jpeg?auto=compress&cs=tinysrgb&w=800',
+      category: 'Wedding'
+    },
+    {
+      id: '5',
+      title: 'Pune Corporate Leadership Summit',
+      date: 'April 12, 2024',
+      location: 'Pune International Centre, Pune',
+      attendees: 800,
+      image: 'https://images.pexels.com/photos/3184418/pexels-photo-3184418.jpeg?auto=compress&cs=tinysrgb&w=800',
+      category: 'Corporate'
+    },
+    {
+      id: '6',
+      title: 'Ganesh Festival Cultural Celebration',
+      date: 'September 7, 2024',
+      location: 'Shivaji Park, Mumbai',
+      attendees: 15000,
+      image: 'https://images.pexels.com/photos/3184360/pexels-photo-3184360.jpeg?auto=compress&cs=tinysrgb&w=800',
+      category: 'Cultural'
+    }
   ];
 
   const upcomingSpeakers = [
