@@ -5,21 +5,21 @@ const contactInfo = [
   {
     icon: Mail,
     title: 'Email Us',
-    details: 'hello@eventwebsites.com',
+    details: 'tanmay365210mogabeera@gmail.com',
     description: 'Send us an email anytime',
     color: 'bg-blue-500'
   },
   {
     icon: Phone,
     title: 'Call Us',
-    details: '+1 (555) 123-4567',
+    details: '+91 8652601487',
     description: 'Mon-Fri from 8am to 6pm',
     color: 'bg-green-500'
   },
   {
     icon: MapPin,
     title: 'Visit Us',
-    details: '123 Event Street, NY 10001',
+    details: 'MHB colony Ambernath (w), Thane, Maharashtra',
     description: 'Come say hello at our office',
     color: 'bg-purple-500'
   },
