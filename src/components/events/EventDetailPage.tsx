@@ -72,7 +72,7 @@ const EventDetailPage: React.FC<EventDetailPageProps> = ({ eventId }) => {
     try {
       setIsLoading(true);
       setError(null);
-      const eventData = await eventDetailService.getEventById(eventId);
+      const eventData = await eventDetailService.getEventDetail(eventId);
       
       if (!eventData) {
         setError('Event not found');
