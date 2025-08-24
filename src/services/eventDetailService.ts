@@ -9,15 +9,18 @@ export class EventDetailService {
       description: 'This is a sample event description',
       fullDescription: 'This is a comprehensive description of the sample event with all the details attendees need to know.',
       date: new Date().toISOString(),
+      time: '10:00 AM',
       endTime: new Date(Date.now() + 3 * 60 * 60 * 1000).toISOString(), // 3 hours later
       location: 'Sample Location',
+      category: 'Technology',
       organizer: {
         id: 'org-1',
         name: 'Sample Organizer',
         email: 'organizer@example.com',
         company: 'Sample Company',
         bio: 'Experienced event organizer',
-        avatar: 'https://images.pexels.com/photos/220453/pexels-photo-220453.jpeg'
+        avatar: 'https://images.pexels.com/photos/220453/pexels-photo-220453.jpeg',
+        contact: 'organizer@example.com'
       },
       venue: {
         id: 'venue-1',
@@ -34,9 +37,14 @@ export class EventDetailService {
       maxAttendees: 100,
       registeredCount: 45,
       currentAttendees: 45,
-      price: 99.99,
+      price: {
+        early: 79.99,
+        regular: 99.99,
+        vip: 149.99,
+        student: 49.99
+      },
       currency: 'USD',
-      status: 'active',
+      status: 'upcoming',
       tags: ['conference', 'technology'],
       image: 'https://images.pexels.com/photos/2774556/pexels-photo-2774556.jpeg',
       imageUrl: 'https://images.pexels.com/photos/2774556/pexels-photo-2774556.jpeg',
@@ -51,7 +59,8 @@ export class EventDetailService {
           title: 'Keynote Speaker',
           company: 'Tech Corp',
           bio: 'Industry expert with 10+ years experience',
-          avatar: 'https://images.pexels.com/photos/220453/pexels-photo-220453.jpeg',
+          image: 'https://images.pexels.com/photos/220453/pexels-photo-220453.jpeg',
+          sessions: ['Opening Keynote'],
           social: {
             twitter: '@johndoe',
             linkedin: 'johndoe'
@@ -74,7 +83,9 @@ export class EventDetailService {
           title: 'Opening Keynote',
           speaker: 'John Doe',
           duration: 60,
-          description: 'Welcome and opening remarks'
+          description: 'Welcome and opening remarks',
+          room: 'Main Hall',
+          type: 'keynote'
         },
         {
           id: 'session-2',
@@ -82,7 +93,9 @@ export class EventDetailService {
           title: 'Panel Discussion',
           speaker: 'Various Speakers',
           duration: 90,
-          description: 'Industry panel discussion'
+          description: 'Industry panel discussion',
+          room: 'Room A',
+          type: 'session'
         }
       ],
       agenda: [
