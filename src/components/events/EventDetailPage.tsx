@@ -407,7 +407,7 @@ const EventDetailPage: React.FC<EventDetailPageProps> = ({ eventId }) => {
               </div>
 
               <div className="space-y-4">
-                {event.schedule.map((item, index) => (
+                {(event.schedule || []).map((item, index) => (
                   <div
                     key={item.id}
                     className={`p-4 rounded-lg border-l-4 ${
