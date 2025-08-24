@@ -7,16 +7,84 @@ export class EventDetailService {
       id: eventId,
       title: 'Sample Event',
       description: 'This is a sample event description',
+      fullDescription: 'This is a comprehensive description of the sample event with all the details attendees need to know.',
       date: new Date().toISOString(),
+      endTime: new Date(Date.now() + 3 * 60 * 60 * 1000).toISOString(), // 3 hours later
       location: 'Sample Location',
-      organizer: 'Sample Organizer',
+      organizer: {
+        id: 'org-1',
+        name: 'Sample Organizer',
+        email: 'organizer@example.com',
+        company: 'Sample Company',
+        bio: 'Experienced event organizer',
+        avatar: 'https://images.pexels.com/photos/220453/pexels-photo-220453.jpeg'
+      },
+      venue: {
+        id: 'venue-1',
+        name: 'Sample Venue',
+        address: '123 Main St, City, State 12345',
+        capacity: 100,
+        amenities: ['WiFi', 'Parking', 'Catering'],
+        coordinates: {
+          lat: 40.7128,
+          lng: -74.0060
+        }
+      },
       capacity: 100,
+      maxAttendees: 100,
       registeredCount: 45,
+      currentAttendees: 45,
       price: 99.99,
       currency: 'USD',
       status: 'active',
       tags: ['conference', 'technology'],
+      image: 'https://images.pexels.com/photos/2774556/pexels-photo-2774556.jpeg',
       imageUrl: 'https://images.pexels.com/photos/2774556/pexels-photo-2774556.jpeg',
+      gallery: [
+        'https://images.pexels.com/photos/2774556/pexels-photo-2774556.jpeg',
+        'https://images.pexels.com/photos/1181406/pexels-photo-1181406.jpeg'
+      ],
+      speakers: [
+        {
+          id: 'speaker-1',
+          name: 'John Doe',
+          title: 'Keynote Speaker',
+          company: 'Tech Corp',
+          bio: 'Industry expert with 10+ years experience',
+          avatar: 'https://images.pexels.com/photos/220453/pexels-photo-220453.jpeg',
+          social: {
+            twitter: '@johndoe',
+            linkedin: 'johndoe'
+          }
+        }
+      ],
+      sponsors: [
+        {
+          id: 'sponsor-1',
+          name: 'Tech Sponsor',
+          logo: 'https://images.pexels.com/photos/267350/pexels-photo-267350.jpeg',
+          tier: 'gold',
+          website: 'https://example.com'
+        }
+      ],
+      schedule: [
+        {
+          id: 'session-1',
+          time: '09:00',
+          title: 'Opening Keynote',
+          speaker: 'John Doe',
+          duration: 60,
+          description: 'Welcome and opening remarks'
+        },
+        {
+          id: 'session-2',
+          time: '10:30',
+          title: 'Panel Discussion',
+          speaker: 'Various Speakers',
+          duration: 90,
+          description: 'Industry panel discussion'
+        }
+      ],
       agenda: [
         {
           time: '09:00',
@@ -30,7 +98,14 @@ export class EventDetailService {
           speaker: 'Various Speakers',
           duration: 90
         }
-      ]
+      ],
+      isVirtual: false,
+      isFeatured: true,
+      registrationUrl: 'https://example.com/register',
+      requirements: ['Valid ID', 'Registration confirmation'],
+      whatToExpect: ['Networking opportunities', 'Expert presentations', 'Q&A sessions'],
+      createdAt: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString(), // 7 days ago
+      updatedAt: new Date().toISOString()
     };
   }
 }
