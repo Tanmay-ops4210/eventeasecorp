@@ -119,7 +119,7 @@ const AppContent: React.FC = () => {
             case 'contact': return <ContactPage />;
             case 'terms': return <TermsPage />;
             case 'privacy': return <PrivacyPage />;
-            case 'event-page': return <EventDetailPage eventId={selectedEventId || '1'} />;
+            case 'event-page': return <EventDetailPage eventId={selectedEventId || '1'} />; // <-- Pass selectedEventId
             case 'event-payment': return <EventPaymentPage />;
             case 'event-payment-success': return <EventPaymentSuccess />;
             case 'password-reset': return <PasswordResetPage />;
