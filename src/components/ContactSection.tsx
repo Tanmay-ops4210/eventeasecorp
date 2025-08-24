@@ -126,14 +126,12 @@ const ContactSection: React.FC = () => {
               <div className="bg-white/10 rounded-xl p-4 sm:p-6">
                 <div className="flex items-center space-x-3 mb-4">
                   <MapPin className="w-6 h-6 text-white" />
-                  <div>
-                    <h4 className="font-semibold text-white text-sm sm:text-base">Event Websites Office</h4>
-                    <p className="text-white/80 text-xs sm:text-sm">123 Event Street, Mumbai, Maharashtra</p>
+                    <p className="text-white/80 text-xs sm:text-sm">MHB colony Ambernath (w), Thane, Maharashtra</p>
                   </div>
                 </div>
                 <div className="text-white/70 text-xs sm:text-sm space-y-1 sm:space-y-2">
-                  <p>📍 Located in the heart of Mumbai's business district</p>
-                  <p>🚇 Near Andheri Metro Station</p>
+                  <p>📍 Located in Ambernath, Thane district</p>
+                  <p>🚇 Near Ambernath Railway Station</p>
                   <p>🅿️ Free parking available</p>
                 </div>
               </div>

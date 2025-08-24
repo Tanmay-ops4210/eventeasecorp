@@ -6,21 +6,21 @@ const contactInfo = [
   {
     icon: Mail,
     title: 'Email Us',
-    details: 'hello@eventease.com',
+    details: 'tanmay365210mogabeera@gmail.com',
     description: 'Send us an email anytime',
     color: 'bg-blue-500'
   },
   {
     icon: Phone,
     title: 'Call Us',
-    details: '+1 (555) 123-4567',
+    details: '+91 8652601487',
     description: 'Mon-Fri from 8am to 6pm',
     color: 'bg-green-500'
   },
   {
     icon: MapPin,
     title: 'Visit Us',
-    details: '123 Event Street, SF 94102',
+    details: 'MHB colony Ambernath (w), Thane, Maharashtra',
     description: 'Come say hello at our office',
     color: 'bg-purple-500'
   },
@@ -127,12 +127,12 @@ const ContactPage: React.FC = () => {
                   <MapPin className="w-6 h-6 text-indigo-600" />
                   <div>
                     <h4 className="font-semibold text-gray-900">EventEase Headquarters</h4>
-                    <p className="text-gray-600 text-sm">123 Event Street, San Francisco, CA 94102</p>
+                    <p className="text-sm text-gray-600">MHB colony Ambernath (w), Thane, Maharashtra</p>
                   </div>
                 </div>
                 <div className="text-gray-600 text-sm space-y-2">
-                  <p>📍 Located in the heart of San Francisco's tech district</p>
-                  <p>🚇 Near Montgomery BART Station</p>
+                  <p>📍 Located in Ambernath, Thane district</p>
+                  <p>🚇 Near Ambernath Railway Station</p>
                   <p>🅿️ Visitor parking available</p>
                 </div>
               </div>
