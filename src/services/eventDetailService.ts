@@ -103,3 +103,6 @@ export class EventDetailService {
     return true;
   }
 }
+
+// Export singleton instance
+export const eventDetailService = EventDetailService;
