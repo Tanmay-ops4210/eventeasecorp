@@ -32,7 +32,7 @@ const HomePage: React.FC = () => {
       attendees: 1200,
       image: 'https://images.pexels.com/photos/3184339/pexels-photo-3184339.jpeg?auto=compress&cs=tinysrgb&w=800',
       category: 'Sustainability'
-    }
+    },
     {
       id: '4',
       title: 'Mumbai Wedding Expo 2024',

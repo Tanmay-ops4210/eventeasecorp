@@ -73,7 +73,7 @@ const EventDiscoveryPage: React.FC = () => {
       category: 'Business',
       rating: 4.9,
       organizer: 'Leadership Pro'
-    }
+    },
     {
       id: '5',
       title: 'Mumbai Grand Wedding Exhibition',
