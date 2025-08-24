@@ -407,7 +407,7 @@ const EventDetailPage: React.FC<EventDetailPageProps> = ({ eventId }) => {
               </div>
 
               <div className="space-y-4">
-                {Array.isArray(event.schedule) && event.schedule.length > 0 ? event.schedule.map((item, index) => (
+                {(event.schedule || []).map((item, index) => (
                   <div
                     key={item.id}
                     className={`p-4 rounded-lg border-l-4 ${
@@ -448,7 +448,8 @@ const EventDetailPage: React.FC<EventDetailPageProps> = ({ eventId }) => {
                       </div>
                     </div>
                   </div>
-                )) : (
+                ))}
+                {(event.schedule || []).length === 0 && (
                   <div className="text-center py-8 text-gray-500">
                     <p>Schedule information will be available soon.</p>
                   </div>
