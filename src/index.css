@@ -2615,3 +2615,40 @@ body {
 .backdrop-sepia {
   --tw-backdrop-sepia: sepia(100%);
 }
+
+/* NEW STYLES FOR FIXED PARALLAX */
+.parallax-container-fixed {
+  position: relative;
+  overflow: hidden;
+}
+
+.parallax-bg-fixed {
+  /* This is the key part! */
+  background-attachment: fixed;
+
+  /* Ensure the image covers the area */
+  background-position: center;
+  background-repeat: no-repeat;
+  background-size: cover;
+
+  /* Set a height for the section */
+  min-height: 50vh; /* You can adjust this height */
+
+  /* Add an overlay for text readability */
+  position: relative;
+}
+
+.parallax-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.4); /* Dark overlay */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  color: white;
+  padding: 1rem;
+}
