@@ -1,6 +1,7 @@
 import React from 'react';
 import { Calendar, Users, Star, ArrowRight, Play, CheckCircle } from 'lucide-react';
 import { useApp } from '../../contexts/AppContext';
+import ParallaxSection from '../ParallaxSection';
 
 const HomePage: React.FC = () => {
   const { setCurrentView, setSelectedEventId } = useApp(); // <-- Add setSelectedEventId
@@ -238,6 +239,9 @@ const HomePage: React.FC = () => {
           </div>
         </div>
       </section>
+
+      {/* Parallax Section */}
+      <ParallaxSection />
 
       {/* Platform Benefits */}
       <section className="py-20 bg-gray-50">
