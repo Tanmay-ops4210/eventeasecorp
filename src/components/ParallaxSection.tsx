@@ -5,6 +5,7 @@ const ParallaxSection: React.FC = () => {
   const parallaxRef = useRef<HTMLDivElement>(null);
   const [scrollY, setScrollY] = useState(0);
 
+  // Indian event images for rotation
   const images = [
     'https://images.pexels.com/photos/1024993/pexels-photo-1024993.jpeg?auto=compress&cs=tinysrgb&w=1920', // Indian wedding
     'https://images.pexels.com/photos/1729931/pexels-photo-1729931.jpeg?auto=compress&cs=tinysrgb&w=1920', // Birthday party
@@ -12,6 +13,7 @@ const ParallaxSection: React.FC = () => {
     'https://images.pexels.com/photos/159844/cellular-education-classroom-159844.jpeg?auto=compress&cs=tinysrgb&w=1920' // School function
   ];
 
+  // Handle scroll for parallax effect
   useEffect(() => {
     const handleScroll = () => {
       setScrollY(window.scrollY);
@@ -21,6 +23,7 @@ const ParallaxSection: React.FC = () => {
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
+  // Auto-rotate images every 4 seconds
   useEffect(() => {
     const interval = setInterval(() => {
       setCurrentImageIndex((prevIndex) => (prevIndex + 1) % images.length);
@@ -29,27 +32,26 @@ const ParallaxSection: React.FC = () => {
     return () => clearInterval(interval);
   }, [images.length]);
 
+  // Calculate parallax offset
   const parallaxOffset = scrollY * 0.3;
 
   return (
     <div
       ref={parallaxRef}
-      className="relative h-96 overflow-hidden"
+      className="relative h-96 overflow-hidden parallax-container"
     >
       <div
-        className="absolute inset-0 transition-all duration-1000 ease-in-out"
+        className="parallax-background"
         style={{
           transform: `translateY(${parallaxOffset}px)`,
           backgroundImage: `url(${images[currentImageIndex]})`,
-          backgroundPosition: 'center',
-          backgroundRepeat: 'no-repeat',
-          backgroundSize: 'cover',
-          willChange: 'transform'
         }}
       />
 
+      {/* Overlay for better text readability */}
       <div className="absolute inset-0 bg-black bg-opacity-40" />
 
+      {/* Content overlay */}
       <div className="relative z-10 flex items-center justify-center h-full">
         <div className="text-center text-white px-4">
           <h2 className="text-4xl md:text-5xl font-bold mb-4 opacity-90">
@@ -61,6 +63,7 @@ const ParallaxSection: React.FC = () => {
         </div>
       </div>
 
+      {/* Image indicators */}
       <div className="absolute bottom-6 left-1/2 transform -translate-x-1/2 flex space-x-2 z-20">
         {images.map((_, index) => (
           <button
