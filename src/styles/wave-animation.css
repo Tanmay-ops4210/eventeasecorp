@@ -30,7 +30,7 @@
   bottom: 10px;
   opacity: 0.2;
   animation-duration: 15s;
-  background: rgba(59, 130, 246, 0.1); /* Very subtle indigo tint */
+  background: rgba(139, 92, 246, 0.1); /* Very subtle purple tint */
 }
 
 /* Wave 2 - The middle layer */
@@ -39,7 +39,7 @@
   bottom: 20px;
   opacity: 0.3;
   animation-duration: 10s;
-  background: rgba(139, 92, 246, 0.1); /* Very subtle purple tint */
+  background: rgba(147, 51, 234, 0.15); /* Medium purple tint */
 }
 
 /* Wave 3 - The front layer */
@@ -48,7 +48,7 @@
   bottom: 30px;
   opacity: 0.4;
   animation-duration: 7s;
-  background: rgba(255, 255, 255, 0.6); /* More opaque white for front layer */
+  background: rgba(255, 255, 255, 0.8); /* Enhanced white for front layer */
 }
 
 /* Keyframes for the wave movement */
