@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { User, AuthState, UserRole } from '../types/user';
+import { useApp } from './AppContext'; // Import useApp
 
 interface AuthContextType extends AuthState {
   login: (email: string, password: string) => Promise<void>;
@@ -28,6 +29,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     isAuthenticated: false,
     isLoading: true,
   });
+  const { setCurrentView } = useApp(); // Get setCurrentView from AppContext
 
   useEffect(() => {
     // Check for saved user data
@@ -77,6 +79,11 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       isAuthenticated: true,
       isLoading: false,
     });
+
+    // Redirect to admin dashboard if the user is an admin
+    if (user.role === 'admin') {
+      setCurrentView('admin-dashboard');
+    }
   };
 
   const register = async (email: string, password: string, name: string, role: UserRole) => {
