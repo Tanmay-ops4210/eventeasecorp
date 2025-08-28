@@ -200,11 +200,11 @@ const AppContent: React.FC = () => {
  */
 function App() {
     return (
-        <AuthProvider>
-            <AppProvider>
+        <AppProvider>
+            <AuthProvider>
                 <AppContent />
-            </AppProvider>
-        </AuthProvider>
+            </AuthProvider>
+        </AppProvider>
     );
 }
 
