@@ -11,12 +11,14 @@ interface AdminNavigationProps {
   isMobileMenuOpen: boolean;
   setIsMobileMenuOpen: (open: boolean) => void;
   isSidebarExpanded: boolean;
+  setIsSidebarExpanded: (expanded: boolean) => void;
 }
 
 const AdminNavigation: React.FC<AdminNavigationProps> = ({
   isMobileMenuOpen,
   setIsMobileMenuOpen,
-  isSidebarExpanded
+  isSidebarExpanded,
+  setIsSidebarExpanded,
 }) => {
   const { setCurrentView } = useApp();
   const { user, logout } = useAuth();
@@ -68,7 +70,11 @@ const AdminNavigation: React.FC<AdminNavigationProps> = ({
       />
 
       {/* Admin Sidebar */}
-      <aside className={`admin-sidebar ${isMobileMenuOpen ? 'mobile-open' : ''} ${isSidebarExpanded ? 'expanded' : ''}`}>
+      <aside
+        className={`admin-sidebar ${isMobileMenu-open ? 'mobile-open' : ''} ${isSidebarExpanded ? 'expanded' : ''}`}
+        onMouseEnter={() => setIsSidebarExpanded(true)}
+        onMouseLeave={() => setIsSidebarExpanded(false)}
+      >
         {/* Sidebar Header */}
         <div className="admin-sidebar-header">
           <div className="admin-logo-container">
