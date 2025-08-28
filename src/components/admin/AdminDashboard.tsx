@@ -23,10 +23,9 @@ const AdminDashboard: React.FC = () => {
   const fetchData = async () => {
     setIsLoading(true);
     const usersResponse = await db.getAllUsers();
-    // This is a temporary solution for the demo. In a real app, you'd fetch events from your API
-    const eventsResponse = (window as any).eventService ? await (window as any).eventService.getAdminEvents() : { data: [] };
+    const eventsResponse = await db.getAllEvents();
     if (usersResponse.data) setUsers(usersResponse.data);
-    if (eventsResponse.data) setEvents(eventsResponse.data);
+    if (eventsResponse.data) setEvents(eventsResponse.data as Event[]);
     setIsLoading(false);
   };
 
@@ -260,7 +259,7 @@ const AdminDashboard: React.FC = () => {
                         <thead>
                           <tr>
                             <th>Event Name</th>
-                            <th>Owner</th>
+                            <th>Organizer</th>
                             <th>Type</th>
                             <th>Attendees</th>
                             <th>Date</th>
@@ -272,13 +271,13 @@ const AdminDashboard: React.FC = () => {
                               <td>
                                 <div className="font-medium">{event.event_name}</div>
                               </td>
-                              <td>{users.find(u => u.id === event.user_id)?.username || 'Unknown'}</td>
+                              <td>{event.app_users?.username || 'Unknown'}</td>
                               <td>
                                 <span className="admin-badge-status admin-badge-info">
                                   {event.event_type}
                                 </span>
                               </td>
-                              <td>{event.expected_attendees}</td>
+                              <td>{event.current_attendees || 0} / {event.expected_attendees}</td>
                               <td>{event.event_date ? new Date(event.event_date).toLocaleDateString() : 'TBD'}</td>
                             </tr>
                           ))}
