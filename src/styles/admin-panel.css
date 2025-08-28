@@ -300,11 +300,11 @@
 /* ... (keep the rest of the styles from .admin-header to the end) ... */
 /* Admin Header */
 .admin-header {
-  background-color: var(--admin-bg-primary);
-  border-bottom: 1px solid var(--admin-border);
-  padding: 1.5rem 2rem;
-  margin: -2rem -2rem 2rem;
-  box-shadow: var(--admin-shadow-sm);
+  background-color: var(--admin-bg-primary);
+  border-bottom: 1px solid var(--admin-border);
+  padding: 1.5rem 2rem;
+  margin: -2rem -2rem 2rem;
+  box-shadow: var(--admin-shadow-sm);
 }
 
 .admin-header h1 {
