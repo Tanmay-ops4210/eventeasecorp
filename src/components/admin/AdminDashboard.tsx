@@ -54,6 +54,7 @@ const AdminDashboard: React.FC = () => {
           isMobileMenuOpen={isMobileMenuOpen}
           setIsMobileMenuOpen={setIsMobileMenuOpen}
           isSidebarExpanded={isSidebarExpanded}
+          setIsSidebarExpanded={setIsSidebarExpanded}
         />
         <main className="admin-main">
           <div className="admin-content">
@@ -68,10 +69,7 @@ const AdminDashboard: React.FC = () => {
   }
 
   return (
-    <div className="admin-layout"
-         onMouseEnter={() => setIsSidebarExpanded(true)}
-         onMouseLeave={() => setIsSidebarExpanded(false)}
-    >
+    <div className="admin-layout">
       {/* Mobile Toggle Button */}
       <button
         className="admin-mobile-toggle"
@@ -86,6 +84,7 @@ const AdminDashboard: React.FC = () => {
         isMobileMenuOpen={isMobileMenuOpen}
         setIsMobileMenuOpen={setIsMobileMenuOpen}
         isSidebarExpanded={isSidebarExpanded}
+        setIsSidebarExpanded={setIsSidebarExpanded}
       />
 
       {/* Main Content Area */}
