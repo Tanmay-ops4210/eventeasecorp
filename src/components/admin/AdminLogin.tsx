@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Lock, User, Eye, EyeOff, Shield, AlertCircle } from 'lucide-react';
 import { adminAuth } from '../../lib/supabase';
+import '../../styles/admin-panel.css';
 
 interface AdminLoginProps {
   onLoginSuccess: () => void;
@@ -27,24 +28,25 @@ const AdminLogin: React.FC<AdminLoginProps> = ({ onLoginSuccess }) => {
     setError('');
 
     try {
-      // Validate admin email
+      // Client-side check for admin email to provide a specific error message
       if (credentials.email !== 'tanmay365210mogabbera@gmail.com') {
-        setError('Access denied. Admin credentials required.');
+        setError('Access denied. This login form is for administrators only.');
         setIsLoading(false);
         return;
       }
 
-      const { data, error } = await adminAuth.signIn(credentials.email, credentials.password);
+      const { data, error: authError } = await adminAuth.signIn(credentials.email, credentials.password);
 
-      if (error) {
-        setError(error.message);
+      if (authError) {
+        setError(authError.message || 'Invalid credentials. Please try again.');
       } else if (data.user && adminAuth.isAdmin(data.user)) {
         onLoginSuccess();
       } else {
-        setError('Access denied. Admin privileges required.');
+        // This case handles if a non-admin user somehow authenticates
+        setError('Access denied. You do not have administrator privileges.');
       }
     } catch (err) {
-      setError('An unexpected error occurred. Please try again.');
+      setError('An unexpected error occurred. Please try again later.');
     } finally {
       setIsLoading(false);
     }
@@ -53,10 +55,10 @@ const AdminLogin: React.FC<AdminLoginProps> = ({ onLoginSuccess }) => {
   return (
     <div className="min-h-screen bg-gradient-to-br from-indigo-900 via-purple-900 to-indigo-800 flex items-center justify-center p-4">
       <div className="w-full max-w-md">
-        <div className="bg-white rounded-2xl shadow-2xl overflow-hidden">
+        <div className="bg-white rounded-2xl shadow-2xl overflow-hidden animate-fade-in">
           {/* Header */}
           <div className="bg-gradient-to-r from-indigo-600 to-purple-600 px-8 py-6 text-center">
-            <div className="w-16 h-16 bg-white/20 rounded-full flex items-center justify-center mx-auto mb-4">
+            <div className="w-16 h-16 bg-white/20 rounded-full flex items-center justify-center mx-auto mb-4 backdrop-blur-sm">
               <Shield className="w-8 h-8 text-white" />
             </div>
             <h1 className="text-2xl font-bold text-white">Admin Panel</h1>
@@ -74,17 +76,15 @@ const AdminLogin: React.FC<AdminLoginProps> = ({ onLoginSuccess }) => {
 
             <form onSubmit={handleSubmit} className="space-y-6">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Admin Email
-                </label>
+                <label className="admin-form-label">Admin Email</label>
                 <div className="relative">
-                  <User className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
+                  <User className="absolute left-3.5 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
                   <input
                     type="email"
                     name="email"
                     value={credentials.email}
                     onChange={handleInputChange}
-                    className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-colors duration-200"
+                    className="admin-form-input !pl-10"
                     placeholder="Enter admin email"
                     required
                   />
@@ -92,24 +92,23 @@ const AdminLogin: React.FC<AdminLoginProps> = ({ onLoginSuccess }) => {
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Password
-                </label>
+                <label className="admin-form-label">Password</label>
                 <div className="relative">
-                  <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
+                  <Lock className="absolute left-3.5 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
                   <input
                     type={showPassword ? 'text' : 'password'}
                     name="password"
                     value={credentials.password}
                     onChange={handleInputChange}
-                    className="w-full pl-10 pr-12 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-colors duration-200"
+                    className="admin-form-input !pl-10 !pr-12"
                     placeholder="Enter password"
                     required
                   />
                   <button
                     type="button"
                     onClick={() => setShowPassword(!showPassword)}
-                    className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                    className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600 p-1"
+                    aria-label={showPassword ? "Hide password" : "Show password"}
                   >
                     {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
                   </button>
@@ -119,7 +118,7 @@ const AdminLogin: React.FC<AdminLoginProps> = ({ onLoginSuccess }) => {
               <button
                 type="submit"
                 disabled={isLoading}
-                className="w-full bg-gradient-to-r from-indigo-600 to-purple-600 text-white py-3 rounded-lg font-medium hover:from-indigo-700 hover:to-purple-700 transform hover:scale-105 transition-all duration-200 shadow-lg hover:shadow-xl disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none flex items-center justify-center space-x-2"
+                className="admin-btn admin-btn-primary w-full !py-3 !text-base"
               >
                 {isLoading ? (
                   <>
@@ -138,9 +137,9 @@ const AdminLogin: React.FC<AdminLoginProps> = ({ onLoginSuccess }) => {
             {/* Security Notice */}
             <div className="mt-6 p-4 bg-gray-50 rounded-lg">
               <div className="flex items-center space-x-2">
-                <Shield className="w-4 h-4 text-gray-500" />
+                <Shield className="w-4 h-4 text-gray-500 flex-shrink-0" />
                 <p className="text-xs text-gray-600">
-                  This admin panel is restricted to authorized personnel only.
+                  This admin panel is restricted to authorized personnel. All activity is logged.
                 </p>
               </div>
             </div>
