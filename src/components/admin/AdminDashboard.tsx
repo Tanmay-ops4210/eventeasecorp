@@ -2,9 +2,9 @@ import React, { useState, useEffect } from 'react';
 import { useApp } from '../../contexts/AppContext';
 import { useAuth } from '../../contexts/AuthContext';
 import { db, AppUser, Event } from '../../lib/supabase';
-import { 
-  Users, Calendar, FileText, TrendingUp, Activity, 
-  ArrowUp, ArrowDown, BarChart3, Shield, Menu, X 
+import {
+  Users, Calendar, FileText, TrendingUp, Activity,
+  ArrowUp, ArrowDown, BarChart3, Shield, Menu, X
 } from 'lucide-react';
 import AdminNavigation from '../layout/AdminNavigation';
 import MemberManagement from './MemberManagement';
@@ -18,6 +18,7 @@ const AdminDashboard: React.FC = () => {
   const [events, setEvents] = useState<Event[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [isSidebarExpanded, setIsSidebarExpanded] = useState(false);
   const [activeTab, setActiveTab] = useState<'overview' | 'users' | 'events'>('overview');
 
   const fetchData = async () => {
@@ -49,9 +50,10 @@ const AdminDashboard: React.FC = () => {
   if (isLoading) {
     return (
       <div className="admin-layout">
-        <AdminNavigation 
+        <AdminNavigation
           isMobileMenuOpen={isMobileMenuOpen}
           setIsMobileMenuOpen={setIsMobileMenuOpen}
+          isSidebarExpanded={isSidebarExpanded}
         />
         <main className="admin-main">
           <div className="admin-content">
@@ -66,7 +68,10 @@ const AdminDashboard: React.FC = () => {
   }
 
   return (
-    <div className="admin-layout">
+    <div className="admin-layout"
+         onMouseEnter={() => setIsSidebarExpanded(true)}
+         onMouseLeave={() => setIsSidebarExpanded(false)}
+    >
       {/* Mobile Toggle Button */}
       <button
         className="admin-mobile-toggle"
@@ -77,13 +82,14 @@ const AdminDashboard: React.FC = () => {
       </button>
 
       {/* Admin Navigation Sidebar */}
-      <AdminNavigation 
+      <AdminNavigation
         isMobileMenuOpen={isMobileMenuOpen}
         setIsMobileMenuOpen={setIsMobileMenuOpen}
+        isSidebarExpanded={isSidebarExpanded}
       />
 
       {/* Main Content Area */}
-      <main className="admin-main">
+      <main className={`admin-main ${isSidebarExpanded ? 'expanded' : ''}`}>
         <div className="admin-content">
           {/* Header */}
           <div className="admin-header">
