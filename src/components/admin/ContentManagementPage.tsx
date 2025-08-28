@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useApp } from '../../contexts/AppContext';
 import { Edit, Save, Plus, Trash2, FileText, Image, Video, AlertTriangle, X } from 'lucide-react';
+import '../../styles/admin-panel.css';
 
 interface ContentBlock {
   id: string;
@@ -15,6 +16,7 @@ const mockContent: ContentBlock[] = [
   { id: '2', page: 'Home', section: 'Hero Subtitle', content: 'A unique event filled with networking, workshops, seminars, and engaging conversations with the industry\'s leading experts.', type: 'text' },
   { id: '3', page: 'About', section: 'Main Heading', content: 'ABOUT EVENTEASE', type: 'text' },
   { id: '4', page: 'Contact', section: 'Header', content: 'CONTACT', type: 'text' },
+  { id: '5', page: 'Home', section: 'Featured Event Image', content: 'https://images.pexels.com/photos/3184291/pexels-photo-3184291.jpeg', type: 'image' },
 ];
 
 const ContentManagementPage: React.FC = () => {
@@ -47,11 +49,17 @@ const ContentManagementPage: React.FC = () => {
   const handleCancel = () => {
     setEditingId(null);
   };
+  
+  const handleDelete = (id: string) => {
+      if (window.confirm('Are you sure you want to delete this content block? This action cannot be undone.')) {
+          setContent(content.filter(c => c.id !== id));
+      }
+  };
 
   const handleAddNewContent = (e: React.FormEvent) => {
     e.preventDefault();
     const newBlock: ContentBlock = {
-      id: (content.length + 1).toString(),
+      id: `content-${Date.now()}`,
       ...newContentData,
     };
     setContent([...content, newBlock]);
@@ -62,11 +70,50 @@ const ContentManagementPage: React.FC = () => {
 
   const getIcon = (type: 'text' | 'image' | 'video') => {
     switch (type) {
-      case 'image': return <Image className="w-5 h-5 text-gray-500" />;
-      case 'video': return <Video className="w-5 h-5 text-gray-500" />;
-      default: return <FileText className="w-5 h-5 text-gray-500" />;
+      case 'image': return <Image className="w-5 h-5 text-gray-500 flex-shrink-0" />;
+      case 'video': return <Video className="w-5 h-5 text-gray-500 flex-shrink-0" />;
+      default: return <FileText className="w-5 h-5 text-gray-500 flex-shrink-0" />;
     }
   };
+
+  const AddContentModal = () => (
+    <div className="admin-modal-overlay">
+        <div className="admin-modal">
+            <div className="admin-modal-header">
+                <h3 className="admin-modal-title">Add New Content Block</h3>
+                <button onClick={() => setShowAddModal(false)} className="admin-modal-close"><X className="w-5 h-5"/></button>
+            </div>
+            <form onSubmit={handleAddNewContent}>
+                <div className="admin-modal-body space-y-4">
+                    <div className="admin-form-group">
+                        <label className="admin-form-label">Page</label>
+                        <input type="text" value={newContentData.page} onChange={(e) => setNewContentData({...newContentData, page: e.target.value})} className="admin-form-input" required placeholder="e.g., Home, About" />
+                    </div>
+                    <div className="admin-form-group">
+                        <label className="admin-form-label">Section</label>
+                        <input type="text" value={newContentData.section} onChange={(e) => setNewContentData({...newContentData, section: e.target.value})} className="admin-form-input" required placeholder="e.g., Hero Title, Main Banner"/>
+                    </div>
+                    <div className="admin-form-group">
+                        <label className="admin-form-label">Type</label>
+                        <select value={newContentData.type} onChange={(e) => setNewContentData({...newContentData, type: e.target.value as any})} className="admin-form-select">
+                            <option value="text">Text</option>
+                            <option value="image">Image URL</option>
+                            <option value="video">Video URL</option>
+                        </select>
+                    </div>
+                    <div className="admin-form-group">
+                        <label className="admin-form-label">Content</label>
+                        <textarea value={newContentData.content} onChange={(e) => setNewContentData({...newContentData, content: e.target.value})} className="admin-form-input" rows={4} required placeholder="Enter the text or URL..."/>
+                    </div>
+                </div>
+                <div className="admin-modal-footer">
+                    <button type="button" onClick={() => setShowAddModal(false)} className="admin-btn admin-btn-secondary">Cancel</button>
+                    <button type="submit" className="admin-btn admin-btn-primary">Add Content</button>
+                </div>
+            </form>
+        </div>
+    </div>
+  );
 
   return (
     <div className="min-h-screen bg-gray-50 pt-20">
@@ -75,128 +122,76 @@ const ContentManagementPage: React.FC = () => {
             <h1 className="text-3xl font-bold text-gray-900">Global Content Management</h1>
             <button
                 onClick={() => setShowAddModal(true)}
-                className="flex items-center space-x-2 px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700">
+                className="admin-btn admin-btn-primary">
                 <Plus className="w-4 h-4" />
                 <span>Add Content Block</span>
             </button>
         </div>
 
-        <div className="bg-yellow-50 border-l-4 border-yellow-400 p-4 rounded-md mb-8">
-            <div className="flex">
-                <div className="flex-shrink-0">
-                    <AlertTriangle className="h-5 w-5 text-yellow-400" />
-                </div>
-                <div className="ml-3">
-                    <p className="text-sm text-yellow-700">
-                        Changes made here will affect the live website content. Please be certain before saving.
-                    </p>
-                </div>
-            </div>
+        <div className="admin-alert admin-alert-warning">
+            <AlertTriangle className="h-5 w-5 flex-shrink-0" />
+            <p className="text-sm">
+                Changes made here will affect the live website content. Please be certain before saving.
+            </p>
         </div>
 
-        <div className="bg-white rounded-xl shadow-lg overflow-hidden">
+        <div className="admin-table-container">
             <div className="overflow-x-auto">
-                <table className="min-w-full divide-y divide-gray-200">
-                    <thead className="bg-gray-50">
+                <table className="admin-table">
+                    <thead>
                         <tr>
-                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Page</th>
-                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Section</th>
-                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Content</th>
-                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Actions</th>
+                            <th>Page</th>
+                            <th>Section</th>
+                            <th>Content</th>
+                            <th>Actions</th>
                         </tr>
                     </thead>
-                    <tbody className="bg-white divide-y divide-gray-200">
+                    <tbody>
                         {content.map((block) => (
                             <tr key={block.id}>
-                                <td className="px-6 py-4 whitespace-nowrap">{block.page}</td>
-                                <td className="px-6 py-4 whitespace-nowrap">{block.section}</td>
-                                <td className="px-6 py-4">
+                                <td>{block.page}</td>
+                                <td>{block.section}</td>
+                                <td className="max-w-sm">
                                     {editingId === block.id ? (
-                                        <textarea value={editedContent} onChange={(e) => setEditedContent(e.target.value)} className="w-full p-2 border rounded-lg" rows={3}/>
+                                        <textarea value={editedContent} onChange={(e) => setEditedContent(e.target.value)} className="admin-form-input" rows={3}/>
                                     ) : (
-                                        <div className="flex items-start space-x-2">
+                                        <div className="flex items-start gap-2">
                                             {getIcon(block.type)}
-                                            <p className="text-gray-700 truncate max-w-sm">{block.content}</p>
+                                            <p className="text-gray-700 truncate">{block.content}</p>
                                         </div>
                                     )}
                                 </td>
-                                <td className="px-6 py-4 whitespace-nowrap text-sm font-medium space-x-2">
-                                    {editingId === block.id ? (
-                                        <>
-                                            <button onClick={() => handleSave(block.id)} className="text-green-600 hover:text-green-900"><Save className="w-4 h-4"/></button>
-                                            <button onClick={handleCancel} className="text-gray-600 hover:text-gray-900">Cancel</button>
-                                        </>
-                                    ) : (
-                                        <>
-                                            <button onClick={() => handleEdit(block)} className="text-indigo-600 hover:text-indigo-900"><Edit className="w-4 h-4"/></button>
-                                            <button className="text-red-600 hover:text-red-900"><Trash2 className="w-4 h-4"/></button>
-                                        </>
-                                    )}
+                                <td>
+                                    <div className="flex items-center gap-2">
+                                        {editingId === block.id ? (
+                                            <>
+                                                <button onClick={() => handleSave(block.id)} className="admin-action-btn admin-tooltip" data-tooltip="Save"><Save className="w-4 h-4 text-green-600"/></button>
+                                                <button onClick={handleCancel} className="admin-action-btn admin-tooltip" data-tooltip="Cancel"><X className="w-4 h-4"/></button>
+                                            </>
+                                        ) : (
+                                            <>
+                                                <button onClick={() => handleEdit(block)} className="admin-action-btn admin-tooltip" data-tooltip="Edit"><Edit className="w-4 h-4"/></button>
+                                                <button onClick={() => handleDelete(block.id)} className="admin-action-btn danger admin-tooltip" data-tooltip="Delete"><Trash2 className="w-4 h-4" /></button>
+                                            </>
+                                        )}
+                                    </div>
                                 </td>
                             </tr>
                         ))}
                     </tbody>
                 </table>
             </div>
-        </div>
-        {showAddModal && (
-            <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black bg-opacity-50 backdrop-blur-sm">
-                <div className="bg-white rounded-2xl shadow-2xl max-w-lg w-full">
-                    <div className="p-6 border-b flex justify-between items-center">
-                        <h3 className="text-xl font-bold">Add New Content Block</h3>
-                        <button onClick={() => setShowAddModal(false)}><X className="w-5 h-5"/></button>
-                    </div>
-                    <form onSubmit={handleAddNewContent} className="p-6 space-y-4">
-                         <div>
-                            <label className="block text-sm font-medium">Page</label>
-                            <input
-                                type="text"
-                                value={newContentData.page}
-                                onChange={(e) => setNewContentData({...newContentData, page: e.target.value})}
-                                className="w-full mt-1 p-2 border rounded-lg"
-                                required
-                            />
-                        </div>
-                        <div>
-                            <label className="block text-sm font-medium">Section</label>
-                            <input
-                                type="text"
-                                value={newContentData.section}
-                                onChange={(e) => setNewContentData({...newContentData, section: e.target.value})}
-                                className="w-full mt-1 p-2 border rounded-lg"
-                                required
-                            />
-                        </div>
-                        <div>
-                            <label className="block text-sm font-medium">Type</label>
-                             <select
-                                value={newContentData.type}
-                                onChange={(e) => setNewContentData({...newContentData, type: e.target.value as any})}
-                                className="w-full mt-1 p-2 border rounded-lg"
-                            >
-                                <option value="text">Text</option>
-                                <option value="image">Image URL</option>
-                                <option value="video">Video URL</option>
-                            </select>
-                        </div>
-                        <div>
-                            <label className="block text-sm font-medium">Content</label>
-                            <textarea
-                                value={newContentData.content}
-                                onChange={(e) => setNewContentData({...newContentData, content: e.target.value})}
-                                className="w-full mt-1 p-2 border rounded-lg"
-                                rows={4}
-                                required
-                            />
-                        </div>
-                        <div className="flex justify-end space-x-4 pt-4">
-                            <button type="button" onClick={() => setShowAddModal(false)} className="px-4 py-2 border rounded-lg">Cancel</button>
-                            <button type="submit" className="px-4 py-2 bg-indigo-600 text-white rounded-lg">Add Content</button>
-                        </div>
-                    </form>
+             {content.length === 0 && (
+                <div className="admin-empty-state">
+                    <FileText className="admin-empty-icon" />
+                    <h3 className="admin-empty-title">No Content Blocks</h3>
+                    <p className="admin-empty-description">
+                        Add a content block to start managing your site's content.
+                    </p>
                 </div>
-            </div>
-        )}
+            )}
+        </div>
+        {showAddModal && <AddContentModal />}
       </div>
     </div>
   );
