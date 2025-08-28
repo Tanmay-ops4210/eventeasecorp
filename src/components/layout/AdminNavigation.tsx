@@ -71,7 +71,7 @@ const AdminNavigation: React.FC<AdminNavigationProps> = ({
 
       {/* Admin Sidebar */}
       <aside
-        className={`admin-sidebar ${isMobileMenu-open ? 'mobile-open' : ''} ${isSidebarExpanded ? 'expanded' : ''}`}
+        className={`admin-sidebar ${isMobileMenuOpen ? 'mobile-open' : ''} ${isSidebarExpanded ? 'expanded' : ''}`}
         onMouseEnter={() => setIsSidebarExpanded(true)}
         onMouseLeave={() => setIsSidebarExpanded(false)}
       >
