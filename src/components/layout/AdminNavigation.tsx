@@ -1,27 +1,43 @@
 import React, { useState, useEffect, useRef } from 'react';
 import {
   Home, Users, Calendar, FileText, Settings,
-  LogOut, Menu, X, User, Bell, Shield, ChevronDown, BarChart3
+  LogOut, Menu, X, User, Bell, Shield, ChevronDown, BarChart3,
+  ChevronLeft, ChevronRight
 } from 'lucide-react';
 import { useApp } from '../../contexts/AppContext';
 import { useAuth } from '../../contexts/AuthContext';
 import '../../styles/admin-panel.css';
 
-interface AdminNavigationProps {
-  isMobileMenuOpen: boolean;
-  setIsMobileMenuOpen: (open: boolean) => void;
-  isSidebarExpanded: boolean;
-  setIsSidebarExpanded: (expanded: boolean) => void;
-}
-
-const AdminNavigation: React.FC<AdminNavigationProps> = ({
-  isMobileMenuOpen,
-  setIsMobileMenuOpen,
-  isSidebarExpanded,
-  setIsSidebarExpanded,
-}) => {
+const AdminNavigation: React.FC = () => {
   const { setCurrentView } = useApp();
   const { user, logout } = useAuth();
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [isSidebarExpanded, setIsSidebarExpanded] = useState(false);
+  const [isMobile, setIsMobile] = useState(false);
+
+  // Check if we're on mobile
+  useEffect(() => {
+    const checkMobile = () => {
+      setIsMobile(window.innerWidth < 1024);
+    };
+    
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+    return () => window.removeEventListener('resize', checkMobile);
+  }, []);
+
+  // Close mobile menu when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      const target = event.target as Element;
+      if (isMobile && isMobileMenuOpen && !target.closest('.admin-sidebar') && !target.closest('.admin-mobile-toggle')) {
+        setIsMobileMenuOpen(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, [isMobile, isMobileMenuOpen]);
 
   const navigationItems = [
     {
@@ -61,8 +77,27 @@ const AdminNavigation: React.FC<AdminNavigationProps> = ({
     setIsMobileMenuOpen(false);
   };
 
+  const toggleMobileMenu = () => {
+    setIsMobileMenuOpen(!isMobileMenuOpen);
+  };
+
+  const toggleSidebarExpansion = () => {
+    if (!isMobile) {
+      setIsSidebarExpanded(!isSidebarExpanded);
+    }
+  };
+
   return (
     <>
+      {/* Mobile Toggle Button */}
+      <button
+        className="admin-mobile-toggle"
+        onClick={toggleMobileMenu}
+        aria-label={isMobileMenuOpen ? 'Close menu' : 'Open menu'}
+      >
+        {isMobileMenuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
+      </button>
+
       {/* Mobile Sidebar Overlay */}
       <div
         className={`admin-sidebar-overlay ${isMobileMenuOpen ? 'active' : ''}`}
@@ -71,9 +106,9 @@ const AdminNavigation: React.FC<AdminNavigationProps> = ({
 
       {/* Admin Sidebar */}
       <aside
-        className={`admin-sidebar ${isMobileMenuOpen ? 'mobile-open' : ''} ${isSidebarExpanded ? 'expanded' : ''}`}
-        onMouseEnter={() => setIsSidebarExpanded(true)}
-        onMouseLeave={() => setIsSidebarExpanded(false)}
+        className={`admin-sidebar ${isMobileMenuOpen ? 'mobile-open' : ''} ${isSidebarExpanded && !isMobile ? 'expanded' : ''}`}
+        onMouseEnter={() => !isMobile && setIsSidebarExpanded(true)}
+        onMouseLeave={() => !isMobile && setIsSidebarExpanded(false)}
       >
         {/* Sidebar Header */}
         <div className="admin-sidebar-header">
@@ -86,6 +121,17 @@ const AdminNavigation: React.FC<AdminNavigationProps> = ({
               <div className="admin-badge">Admin Panel</div>
             </div>
           </div>
+          
+          {/* Desktop Expand/Collapse Button */}
+          {!isMobile && (
+            <button
+              onClick={toggleSidebarExpansion}
+              className="admin-expand-btn"
+              aria-label={isSidebarExpanded ? 'Collapse sidebar' : 'Expand sidebar'}
+            >
+              {isSidebarExpanded ? <ChevronLeft className="w-4 h-4" /> : <ChevronRight className="w-4 h-4" />}
+            </button>
+          )}
         </div>
 
         {/* Navigation */}
@@ -141,7 +187,7 @@ const AdminNavigation: React.FC<AdminNavigationProps> = ({
           </div>
           <button
             onClick={handleLogout}
-            className="admin-btn admin-btn-secondary w-full mt-3"
+            className="admin-logout-btn w-full mt-3"
           >
             <LogOut className="w-4 h-4" />
             <span>Sign Out</span>

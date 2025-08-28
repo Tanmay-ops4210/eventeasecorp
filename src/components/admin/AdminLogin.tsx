@@ -40,6 +40,17 @@ const AdminLogin: React.FC<AdminLoginProps> = ({ onLoginSuccess }) => {
       if (authError) {
         setError(authError.message || 'Invalid credentials. Please try again.');
       } else if (data.user && adminAuth.isAdmin(data.user)) {
+        // Create user session for the app
+        const adminUser = {
+          _id: 'admin_user',
+          email: credentials.email,
+          name: 'Admin User',
+          role: 'admin' as const,
+          plan: 'PRO' as const,
+          createdAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString()
+        };
+        localStorage.setItem('eventease_user', JSON.stringify(adminUser));
         onLoginSuccess();
       } else {
         // This case handles if a non-admin user somehow authenticates

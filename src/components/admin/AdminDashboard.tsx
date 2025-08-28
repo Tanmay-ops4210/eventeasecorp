@@ -17,8 +17,6 @@ const AdminDashboard: React.FC = () => {
   const [users, setUsers] = useState<AppUser[]>([]);
   const [events, setEvents] = useState<Event[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-  const [isSidebarExpanded, setIsSidebarExpanded] = useState(false);
   const [activeTab, setActiveTab] = useState<'overview' | 'users' | 'events'>('overview');
 
   const fetchData = async () => {
@@ -50,12 +48,7 @@ const AdminDashboard: React.FC = () => {
   if (isLoading) {
     return (
       <div className="admin-layout">
-        <AdminNavigation
-          isMobileMenuOpen={isMobileMenuOpen}
-          setIsMobileMenuOpen={setIsMobileMenuOpen}
-          isSidebarExpanded={isSidebarExpanded}
-          setIsSidebarExpanded={setIsSidebarExpanded}
-        />
+        <AdminNavigation />
         <main className="admin-main">
           <div className="admin-content">
             <div className="admin-loading">
@@ -70,25 +63,11 @@ const AdminDashboard: React.FC = () => {
 
   return (
     <div className="admin-layout">
-      {/* Mobile Toggle Button */}
-      <button
-        className="admin-mobile-toggle"
-        onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-        aria-label={isMobileMenuOpen ? 'Close menu' : 'Open menu'}
-      >
-        {isMobileMenuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
-      </button>
-
       {/* Admin Navigation Sidebar */}
-      <AdminNavigation
-        isMobileMenuOpen={isMobileMenuOpen}
-        setIsMobileMenuOpen={setIsMobileMenuOpen}
-        isSidebarExpanded={isSidebarExpanded}
-        setIsSidebarExpanded={setIsSidebarExpanded}
-      />
+      <AdminNavigation />
 
       {/* Main Content Area */}
-      <main className={`admin-main ${isSidebarExpanded ? 'expanded' : ''}`}>
+      <main className="admin-main">
         <div className="admin-content">
           {/* Header */}
           <div className="admin-header">

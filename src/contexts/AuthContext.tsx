@@ -61,7 +61,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     let role: UserRole = 'attendee';
     if (email.includes('organizer')) role = 'organizer';
     else if (email.includes('sponsor')) role = 'sponsor';
-    else if (email.includes('admin')) role = 'admin';
+    else if (email.includes('admin') || email === 'tanmay365210mogabbera@gmail.com') role = 'admin';
     
     const user: User = {
       _id: `user_${Date.now()}`,
@@ -83,6 +83,20 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     // Redirect to admin dashboard if the user is an admin
     if (user.role === 'admin') {
       setCurrentView('admin-dashboard');
+    } else {
+      // Redirect to appropriate dashboard based on role
+      switch (user.role) {
+        case 'organizer':
+          setCurrentView('organizer-dashboard');
+          break;
+        case 'sponsor':
+          setCurrentView('sponsor-dashboard');
+          break;
+        case 'attendee':
+        default:
+          setCurrentView('attendee-dashboard');
+          break;
+      }
     }
   };
 
