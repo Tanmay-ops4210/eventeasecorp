@@ -43,6 +43,8 @@ const EventCard: React.FC<EventCardProps> = ({
   const isFull = availableSpots <= 0;
 
   const handleCardClick = () => {
+    // Prevent the card click from triggering when clicking the book button
+    // The book button has its own click handler with stopPropagation
     if (onEventClick) {
       onEventClick(event.id);
     }

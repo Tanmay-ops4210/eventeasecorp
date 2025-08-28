@@ -1,11 +1,17 @@
 import React from 'react';
 import { Calendar, Users, Star, ArrowRight, Play, CheckCircle } from 'lucide-react';
 import { useApp } from '../../contexts/AppContext';
+import { useAuth } from '../../contexts/AuthContext';
 import ParallaxSection from '../ParallaxSection';
+import LoginPromptOverlay from '../common/LoginPromptOverlay';
+import AuthModal from '../auth/AuthModal';
 import '../../styles/wave-animation.css';
 
 const HomePage: React.FC = () => {
   const { setCurrentView, setSelectedEventId } = useApp(); // <-- Add setSelectedEventId
+  const { isAuthenticated } = useAuth();
+  const [showLoginPrompt, setShowLoginPrompt] = React.useState(false);
+  const [showAuthModal, setShowAuthModal] = React.useState(false);
 
   const featuredEvents = [
     {
@@ -122,8 +128,21 @@ const HomePage: React.FC = () => {
   
   // This new function handles the click event on a featured event card
   const handleEventClick = (eventId: string) => {
+    if (!isAuthenticated) {
+      setShowLoginPrompt(true);
+      return;
+    }
     setSelectedEventId(eventId);
     setCurrentView('event-page');
+  };
+
+  const handleLoginPromptClose = () => {
+    setShowLoginPrompt(false);
+  };
+
+  const handleLoginPromptLogin = () => {
+    setShowLoginPrompt(false);
+    setShowAuthModal(true);
   };
 
   return (
@@ -424,6 +443,19 @@ const HomePage: React.FC = () => {
           </div>
         </div>
       </section>
+
+      {/* Login Prompt Overlay */}
+      <LoginPromptOverlay
+        isOpen={showLoginPrompt}
+        onClose={handleLoginPromptClose}
+        onLogin={handleLoginPromptLogin}
+      />
+
+      {/* Auth Modal */}
+      <AuthModal
+        isOpen={showAuthModal}
+        onClose={() => setShowAuthModal(false)}
+      />
     </div>
   );
 };

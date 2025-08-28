@@ -1,12 +1,18 @@
 import React, { useState } from 'react';
 import { Search, Filter, Calendar, MapPin, Users, Star, ArrowRight } from 'lucide-react';
 import { useApp } from '../../contexts/AppContext';
+import { useAuth } from '../../contexts/AuthContext';
+import LoginPromptOverlay from '../common/LoginPromptOverlay';
+import AuthModal from '../auth/AuthModal';
 
 const EventDiscoveryPage: React.FC = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('all');
   const [viewMode, setViewMode] = useState<'list' | 'map'>('list');
   const { setCurrentView, setSelectedEventId } = useApp();
+  const { isAuthenticated } = useAuth();
+  const [showLoginPrompt, setShowLoginPrompt] = useState(false);
+  const [showAuthModal, setShowAuthModal] = useState(false);
 
   const categories = [
     'All', 'Technology', 'Marketing', 'Business', 'Design', 
@@ -250,8 +256,21 @@ const EventDiscoveryPage: React.FC = () => {
   });
 
   const handleEventClick = (eventId: string) => {
+    if (!isAuthenticated) {
+      setShowLoginPrompt(true);
+      return;
+    }
     setSelectedEventId(eventId);
     setCurrentView('event-page');
+  };
+
+  const handleLoginPromptClose = () => {
+    setShowLoginPrompt(false);
+  };
+
+  const handleLoginPromptLogin = () => {
+    setShowLoginPrompt(false);
+    setShowAuthModal(true);
   };
 
   return (
@@ -451,6 +470,19 @@ const EventDiscoveryPage: React.FC = () => {
           </div>
         )}
       </div>
+
+      {/* Login Prompt Overlay */}
+      <LoginPromptOverlay
+        isOpen={showLoginPrompt}
+        onClose={handleLoginPromptClose}
+        onLogin={handleLoginPromptLogin}
+      />
+
+      {/* Auth Modal */}
+      <AuthModal
+        isOpen={showAuthModal}
+        onClose={() => setShowAuthModal(false)}
+      />
     </div>
   );
 };
