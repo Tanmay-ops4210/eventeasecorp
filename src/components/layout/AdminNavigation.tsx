@@ -10,37 +10,39 @@ import '../../styles/admin-panel.css';
 interface AdminNavigationProps {
   isMobileMenuOpen: boolean;
   setIsMobileMenuOpen: (open: boolean) => void;
+  isSidebarExpanded: boolean;
 }
 
-const AdminNavigation: React.FC<AdminNavigationProps> = ({ 
-  isMobileMenuOpen, 
-  setIsMobileMenuOpen 
+const AdminNavigation: React.FC<AdminNavigationProps> = ({
+  isMobileMenuOpen,
+  setIsMobileMenuOpen,
+  isSidebarExpanded
 }) => {
   const { setCurrentView } = useApp();
   const { user, logout } = useAuth();
 
   const navigationItems = [
-    { 
-      label: 'Dashboard', 
-      view: 'admin-dashboard' as const, 
+    {
+      label: 'Dashboard',
+      view: 'admin-dashboard' as const,
       icon: Home,
       description: 'Overview & Analytics'
     },
-    { 
-      label: 'User Management', 
-      view: 'user-management' as const, 
+    {
+      label: 'User Management',
+      view: 'user-management' as const,
       icon: Users,
       description: 'Manage Users & Roles'
     },
-    { 
-      label: 'Event Oversight', 
-      view: 'event-oversight' as const, 
+    {
+      label: 'Event Oversight',
+      view: 'event-oversight' as const,
       icon: Calendar,
       description: 'Monitor Events'
     },
-    { 
-      label: 'Content Management', 
-      view: 'content-management' as const, 
+    {
+      label: 'Content Management',
+      view: 'content-management' as const,
       icon: FileText,
       description: 'Site Content & Pages'
     },
@@ -60,13 +62,13 @@ const AdminNavigation: React.FC<AdminNavigationProps> = ({
   return (
     <>
       {/* Mobile Sidebar Overlay */}
-      <div 
+      <div
         className={`admin-sidebar-overlay ${isMobileMenuOpen ? 'active' : ''}`}
         onClick={() => setIsMobileMenuOpen(false)}
       />
-      
+
       {/* Admin Sidebar */}
-      <aside className={`admin-sidebar ${isMobileMenuOpen ? 'mobile-open' : ''}`}>
+      <aside className={`admin-sidebar ${isMobileMenuOpen ? 'mobile-open' : ''} ${isSidebarExpanded ? 'expanded' : ''}`}>
         {/* Sidebar Header */}
         <div className="admin-sidebar-header">
           <div className="admin-logo-container">
