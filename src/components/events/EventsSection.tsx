@@ -2,6 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { Search, Filter, Calendar, MapPin, Loader2 } from 'lucide-react';
 import Navigation from '../Navigation';
 import EventCard from './EventCard';
+import LoginPromptOverlay from '../common/LoginPromptOverlay';
+import AuthModal from '../auth/AuthModal';
 
 interface Event {
   id: string;
@@ -310,6 +312,8 @@ const EventsSection: React.FC<EventsSectionProps> = ({
   const [searchTerm, setSearchTerm] = useState('');
   const [isLoading, setIsLoading] = useState(true);
   const [sortBy, setSortBy] = useState<'date' | 'price' | 'popularity'>('date');
+  const [showLoginPrompt, setShowLoginPrompt] = useState(false);
+  const [showAuthModal, setShowAuthModal] = useState(false);
 
   useEffect(() => {
     // Simulate API call to load events
@@ -367,6 +371,23 @@ const EventsSection: React.FC<EventsSectionProps> = ({
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
     // Search is handled by useEffect
+  };
+
+  const handleEventCardClick = (eventId: string) => {
+    if (!isAuthenticated) {
+      setShowLoginPrompt(true);
+      return;
+    }
+    onBookEvent(eventId);
+  };
+
+  const handleLoginPromptClose = () => {
+    setShowLoginPrompt(false);
+  };
+
+  const handleLoginPromptLogin = () => {
+    setShowLoginPrompt(false);
+    setShowAuthModal(true);
   };
 
   if (isLoading) {
@@ -469,7 +490,7 @@ const EventsSection: React.FC<EventsSectionProps> = ({
                   onBookNow={onBookEvent}
                   isAuthenticated={isAuthenticated}
                   onLoginRequired={onLoginRequired}
-                  onEventClick={onBookEvent}
+                  onEventClick={handleEventCardClick}
                 />
               </div>
             ))}
@@ -498,6 +519,19 @@ const EventsSection: React.FC<EventsSectionProps> = ({
         )}
       </div>
     </section>
+
+      {/* Login Prompt Overlay */}
+      <LoginPromptOverlay
+        isOpen={showLoginPrompt}
+        onClose={handleLoginPromptClose}
+        onLogin={handleLoginPromptLogin}
+      />
+
+      {/* Auth Modal */}
+      <AuthModal
+        isOpen={showAuthModal}
+        onClose={() => setShowAuthModal(false)}
+      />
     </>
   );
 };
