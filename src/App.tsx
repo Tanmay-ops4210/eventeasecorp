@@ -4,6 +4,7 @@ import { AppProvider, useApp } from './contexts/AppContext';
 import { UserRole } from './types/user';
 import './index.css';
 import './components/chart-styles.css';
+import EmailVerificationBanner from './components/common/EmailVerificationBanner';
 
 // --- Layout Components ---
 // These components handle the main structure and navigation of the app.
@@ -34,6 +35,8 @@ import ContactPage from './components/pages/ContactPage';
 import TermsPage from './components/pages/TermsPage';
 import PrivacyPage from './components/pages/PrivacyPage';
 import PasswordResetPage from './components/auth/PasswordResetPage';
+import EmailVerificationCallback from './components/auth/EmailVerificationCallback';
+import PasswordResetCallback from './components/auth/PasswordResetCallback';
 import AttendeeDashboard from './components/attendee/AttendeeDashboard';
 import MyEventsPage from './components/attendee/MyEventsPage';
 import MyNetworkPage from './components/attendee/MyNetworkPage';
@@ -123,6 +126,8 @@ const AppContent: React.FC = () => {
             case 'event-payment': return <EventPaymentPage />;
             case 'event-payment-success': return <EventPaymentSuccess />;
             case 'password-reset': return <PasswordResetPage />;
+            case 'auth-callback': return <EmailVerificationCallback />;
+            case 'auth-reset-password': return <PasswordResetCallback />;
 
             // --- Authenticated Views ---
             // Attendee
@@ -185,6 +190,7 @@ const AppContent: React.FC = () => {
     return (
         <div className="min-h-screen bg-gray-50">
             {renderNavigation()}
+            <EmailVerificationBanner />
             {!isPublicView && <Breadcrumbs />}
             <main>
                 {renderPage()}

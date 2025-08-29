@@ -1,3 +1,5 @@
+import { supabase, UserProfile } from './supabaseClient';
+
 // Types for our database tables
 export interface AppUser {
   id: string;
@@ -43,85 +45,174 @@ let mockEvents: Event[] = [
 // --- MOCK AUTHENTICATION ---
 export const adminAuth = {
   async signIn(email: string, password: string) {
-    if (email === 'tanmay365210mogabbera@gmail.com' && password === 'TAM123***') {
-      return { data: { user: { id: 'mock-admin-id', email: email, aud: 'authenticated', role: 'authenticated' } }, error: null };
+    // Use real Supabase auth for admin
+    const { data, error } = await supabase.auth.signInWithPassword({
+      email,
+      password
+    });
+    
+    if (error) {
+      return { data: null, error };
     }
-    return { data: null, error: new Error('Invalid credentials') };
+    
+    // Check if user is admin
+    if (email === 'tanmay365210@gmail.com') {
+      return { data, error: null };
+    } else {
+      // Sign out non-admin users
+      await supabase.auth.signOut();
+      return { data: null, error: new Error('Access denied. Admin privileges required.') };
+    }
   },
-  async signOut() { return { error: null }; },
-  async getCurrentUser() { return null; },
-  async getCurrentSession() { return null; },
+  async signOut() { 
+    const { error } = await supabase.auth.signOut();
+    return { error }; 
+  },
+  async getCurrentUser() { 
+    const { data: { user } } = await supabase.auth.getUser();
+    return user;
+  },
+  async getCurrentSession() { 
+    const { data: { session } } = await supabase.auth.getSession();
+    return session;
+  },
   isAdmin(user: any) {
     return user?.email === 'tanmay365210mogabbera@gmail.com';
   }
 };
 
 // --- MOCK DATABASE FUNCTIONS ---
+// Note: These are kept for backward compatibility with existing admin panel
+// In production, you should migrate these to use Supabase directly
 export const db = {
   // User Functions
   async getAllUsers() {
-    return { data: mockUsers, error: null };
+    // Get real users from Supabase
+    const { data, error } = await supabase
+      .from('user_profiles')
+      .select('*')
+      .order('created_at', { ascending: false });
+    
+    if (error) return { data: null, error };
+    
+    // Map to expected format for compatibility
+    const mappedUsers = data?.map(profile => ({
+      id: profile.id,
+      email: profile.email,
+      username: profile.full_name,
+      created_at: profile.created_at,
+      updated_at: profile.updated_at
+    })) || [];
+    
+    return { data: mappedUsers, error: null };
   },
   async createUser(userData: Partial<AppUser>) {
-    const newUser: AppUser = {
-      id: `user-${Date.now()}`,
+    // Create user through Supabase Auth
+    const { data, error } = await supabase.auth.admin.createUser({
       email: userData.email || '',
+      password: 'TempPassword123!', // Temporary password
+      email_confirm: true,
+      user_metadata: {
+        full_name: userData.username || '',
+        role: 'attendee'
+      }
+    });
+    
+    if (error) return { data: null, error };
+    
+    const mappedUser: AppUser = {
+      id: data.user.id,
+      email: data.user.email || '',
       username: userData.username || '',
-      created_at: new Date().toISOString(),
-      updated_at: new Date().toISOString()
+      created_at: data.user.created_at,
+      updated_at: data.user.updated_at || data.user.created_at
     };
-    mockUsers.push(newUser);
-    return { data: newUser, error: null };
+    
+    return { data: mappedUser, error: null };
   },
   async deleteUser(id: string) {
-    mockUsers = mockUsers.filter(user => user.id !== id);
-    // Also remove events associated with the deleted user
-    mockEvents = mockEvents.filter(event => event.user_id !== id);
+    // Delete user from Supabase
+    const { error } = await supabase.auth.admin.deleteUser(id);
+    
+    if (error) return { error };
+    
+    // Also delete from events table
+    await supabase
+      .from('events')
+      .delete()
+      .eq('user_id', id);
+    
     return { error: null };
   },
 
   // Event Functions
   async getAllEvents() {
-    const eventsWithUsers = mockEvents.map(event => ({
+    // Get real events from Supabase
+    const { data, error } = await supabase
+      .from('events')
+      .select(`
+        *,
+        app_users:user_profiles(id, email, full_name)
+      `)
+      .order('created_at', { ascending: false });
+    
+    if (error) return { data: null, error };
+    
+    // Map to expected format
+    const mappedEvents = data?.map(event => ({
       ...event,
-      app_users: mockUsers.find(u => u.id === event.user_id)
-    }));
-    return { data: eventsWithUsers, error: null };
+      app_users: event.app_users ? {
+        id: event.app_users.id,
+        email: event.app_users.email,
+        username: event.app_users.full_name
+      } : null
+    })) || [];
+    
+    return { data: mappedEvents, error: null };
   },
   async createEvent(eventData: Partial<Event>) {
-    const newEvent: Event = {
-      id: `evt-${Date.now()}`,
-      user_id: eventData.user_id || '',
-      event_name: eventData.event_name || 'Unnamed Event',
-      event_type: eventData.event_type || 'conference',
-      expected_attendees: eventData.expected_attendees || 50,
-      event_date: eventData.event_date,
-      budget: eventData.budget,
-      description: eventData.description,
-      location_address: eventData.location_address,
-      created_at: new Date().toISOString(),
-      updated_at: new Date().toISOString()
-    };
-    mockEvents.push(newEvent);
-    return { data: newEvent, error: null };
+    const { data, error } = await supabase
+      .from('events')
+      .insert([{
+        user_id: eventData.user_id,
+        event_name: eventData.event_name || 'Unnamed Event',
+        event_type: eventData.event_type || 'conference',
+        expected_attendees: eventData.expected_attendees || 50,
+        event_date: eventData.event_date,
+        budget: eventData.budget,
+        description: eventData.description,
+        location_address: eventData.location_address
+      }])
+      .select()
+      .single();
+    
+    return { data, error };
   },
   async updateEvent(id: string, eventData: Partial<Event>) {
-    let updatedEvent: Event | undefined;
-    mockEvents = mockEvents.map(event => {
-      if (event.id === id) {
-        updatedEvent = { ...event, ...eventData, updated_at: new Date().toISOString() };
-        return updatedEvent;
-      }
-      return event;
-    });
-    return { data: updatedEvent, error: null };
+    const { data, error } = await supabase
+      .from('events')
+      .update(eventData)
+      .eq('id', id)
+      .select()
+      .single();
+    
+    return { data, error };
   },
   async deleteEvent(id: string) {
-    mockEvents = mockEvents.filter(event => event.id !== id);
-    return { error: null };
+    const { error } = await supabase
+      .from('events')
+      .delete()
+      .eq('id', id);
+    
+    return { error };
   },
   async getEventsByUser(userId: string) {
-    const userEvents = mockEvents.filter(e => e.user_id === userId);
-    return { data: userEvents, error: null };
+    const { data, error } = await supabase
+      .from('events')
+      .select('*')
+      .eq('user_id', userId)
+      .order('created_at', { ascending: false });
+    
+    return { data, error };
   }
 };

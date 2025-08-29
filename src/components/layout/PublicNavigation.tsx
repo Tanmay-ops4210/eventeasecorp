@@ -15,16 +15,28 @@ const PublicNavigation: React.FC = () => {
     const handlePasswordResetNavigation = () => {
       setCurrentView('password-reset');
     };
-    const handleOpenAuthModal = () => {
-      setIsAuthModalOpen(true);
+
+    const handleAuthCallback = () => {
+      const urlParams = new URLSearchParams(window.location.search);
+      const type = urlParams.get('type');
+      
+      if (type === 'recovery') {
+        setCurrentView('auth-reset-password');
+      } else {
+        setCurrentView('auth-callback');
+      }
     };
 
     window.addEventListener('navigate-to-password-reset', handlePasswordResetNavigation);
-    window.addEventListener('open-auth-modal', handleOpenAuthModal);
+    
+    // Check for auth callback on page load
+    const urlParams = new URLSearchParams(window.location.search);
+    if (urlParams.get('token') && (urlParams.get('type') === 'email' || urlParams.get('type') === 'recovery')) {
+      handleAuthCallback();
+    }
 
     return () => {
       window.removeEventListener('navigate-to-password-reset', handlePasswordResetNavigation);
-      window.removeEventListener('open-auth-modal', handleOpenAuthModal);
     };
   }, [setCurrentView]);
 

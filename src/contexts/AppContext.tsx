@@ -16,6 +16,8 @@ type AppView =
   | 'terms'
   | 'privacy'
   | 'password-reset'
+  | 'auth-callback'
+  | 'auth-reset-password'
   | 'event-payment'
   | 'event-payment-success'
   // Attendee Module

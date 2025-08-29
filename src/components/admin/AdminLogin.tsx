@@ -29,7 +29,7 @@ const AdminLogin: React.FC<AdminLoginProps> = ({ onLoginSuccess }) => {
 
     try {
       // Client-side check for admin email to provide a specific error message
-      if (credentials.email !== 'tanmay365210mogabbera@gmail.com') {
+      if (credentials.email !== 'tanmay365210@gmail.com') {
         setError('Access denied. This login form is for administrators only.');
         setIsLoading(false);
         return;

@@ -16,3 +16,16 @@ export interface AuthState {
   isAuthenticated: boolean;
   isLoading: boolean;
 }
+
+// Supabase specific types
+export interface SupabaseUser {
+  id: string;
+  email: string;
+  email_confirmed_at?: string;
+  user_metadata: {
+    full_name?: string;
+    role?: UserRole;
+  };
+  created_at: string;
+  updated_at: string;
+}
