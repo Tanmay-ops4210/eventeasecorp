@@ -48,22 +48,6 @@ export interface RolePermission {
 
 // Auth helper functions
 export const authHelpers = {
-  async signUp(email: string, password: string, fullName: string, role: 'attendee' | 'organizer' | 'sponsor') {
-    const { data, error } = await supabase.auth.signUp({
-      email,
-      password,
-      options: {
-        data: {
-          full_name: fullName,
-          role: role
-        },
-        emailRedirectTo: `${window.location.origin}/auth/callback`
-      }
-    });
-
-    return { data, error };
-  },
-
   async signIn(email: string, password: string) {
     // First check if user exists and has completed signup
     const { data: profile, error: profileError } = await supabase

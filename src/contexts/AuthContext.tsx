@@ -197,17 +197,25 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     setAuthState(prev => ({ ...prev, isLoading: true }));
     
     try {
-      const { data, error } = await authHelpers.signUp(email, password, name, role);
+      const { data, error } = await supabase.auth.signUp({
+        email,
+        password,
+        options: {
+          data: {
+            full_name: name,
+            role: role
+          },
+          emailRedirectTo: `${window.location.origin}?type=email`
+        }
+      });
       
       if (error) {
         setAuthState(prev => ({ ...prev, isLoading: false }));
         throw error;
       }
 
-      // For signup, we don't automatically sign in - user needs to verify email first
       setAuthState(prev => ({ ...prev, isLoading: false }));
       
-      // Show success message or redirect to verification page
       return { success: true, message: 'Please check your email to verify your account before signing in.' };
     } catch (error) {
       setAuthState(prev => ({ ...prev, isLoading: false }));

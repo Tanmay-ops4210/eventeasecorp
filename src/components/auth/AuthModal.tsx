@@ -80,7 +80,7 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
         setFormData({ name: '', email: '', password: '', confirmPassword: '' });
         onClose();
       } else {
-        const result = await register(formData.email, formData.password, formData.name, selectedRole);
+        await register(formData.email, formData.password, formData.name, selectedRole);
         // Show email verification screen
         setRegistrationEmail(formData.email);
         setShowEmailVerification(true);
