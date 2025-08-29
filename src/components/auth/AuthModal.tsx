@@ -1,326 +1,286 @@
--- EventEase Supabase Schema with Auth Integration (Fully Idempotent & Corrected)
---
+import React, { useState } from 'react';
+import { X, User, Mail, Lock, Eye, EyeOff } from 'lucide-react';
+import { useAuth } from '../../contexts/AuthContext';
+import { UserRole } from '../../types/user';
 
--- ----------------------------------------------------------------
--- 1. EXTENSIONS & TYPES
--- ----------------------------------------------------------------
+interface AuthModalProps {
+isOpen: boolean;
+onClose: () => void;
+}
 
--- Enable the pgcrypto extension for UUID generation if not already enabled.
-CREATE EXTENSION IF NOT EXISTS "uuid-ossp" WITH SCHEMA "extensions";
+const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
+const [isLoginMode, setIsLoginMode] = useState(true);
+const [showPassword, setShowPassword] = useState(false);
+const [selectedRole, setSelectedRole] = useState<UserRole>('attendee');
+const [formData, setFormData] = useState({
+name: '',
+email: '',
+password: '',
+confirmPassword: ''
+});
+const [errors, setErrors] = useState<{[key: string]: string}>({});
+const [isLoading, setIsLoading] = useState(false);
 
--- Conditionally create custom types only if they don't already exist.
-DO $$
-BEGIN
-    IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'user_role') THEN
-        CREATE TYPE public.user_role AS ENUM ('attendee', 'organizer', 'sponsor', 'admin');
-    END IF;
-    IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'event_status') THEN
-        CREATE TYPE public.event_status AS ENUM ('draft', 'published', 'ongoing', 'completed', 'cancelled');
-    END IF;
-    IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'lead_status') THEN
-        CREATE TYPE public.lead_status AS ENUM ('new', 'contacted', 'qualified', 'converted');
-    END IF;
-END$$;
+const { login, register } = useAuth();
 
+if (!isOpen) return null;
 
--- ----------------------------------------------------------------
--- 2. TABLES
--- ----------------------------------------------------------------
+const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+const { name, value } = e.target;
+setFormData(prev => ({ ...prev, [name]: value }));
+if (errors[name]) {
+setErrors(prev => ({ ...prev, [name]: '' }));
+}
+};
 
--- Create tables only if they do not already exist.
-CREATE TABLE IF NOT EXISTS public.profiles (
-  id UUID PRIMARY KEY REFERENCES auth.users(id) ON DELETE CASCADE,
-  username TEXT NOT NULL,
-  full_name TEXT,
-  avatar_url TEXT,
-  role user_role NOT NULL DEFAULT 'attendee',
-  plan TEXT DEFAULT 'free',
-  company TEXT,
-  title TEXT,
-  updated_at TIMESTAMPTZ DEFAULT NOW()
-);
-COMMENT ON TABLE public.profiles IS 'Stores public profile information for each user.';
+const validateForm = () => {
+const newErrors: {[key: string]: string} = {};
 
-CREATE TABLE IF NOT EXISTS public.events (
-  id UUID PRIMARY KEY DEFAULT extensions.uuid_generate_v4(),
-  organizer_id UUID NOT NULL REFERENCES public.profiles(id) ON DELETE CASCADE,
-  title TEXT NOT NULL,
-  description TEXT,
-  full_description TEXT,
-  category TEXT,
-  event_date DATE,
-  start_time TIME,
-  end_time TIME,
-  venue_name TEXT,
-  venue_address TEXT,
-  image_url TEXT,
-  status event_status NOT NULL DEFAULT 'draft',
-  visibility TEXT DEFAULT 'public',
-  max_attendees INTEGER,
-  created_at TIMESTAMPTZ DEFAULT NOW(),
-  updated_at TIMESTAMPTZ DEFAULT NOW()
-);
+if (!formData.email) {
+newErrors.email = 'Email is required';
+} else if (!/\S+@\S+\.\S+/.test(formData.email)) {
+newErrors.email = 'Please enter a valid email';
+}
 
-CREATE TABLE IF NOT EXISTS public.ticket_types (
-  id UUID PRIMARY KEY DEFAULT extensions.uuid_generate_v4(),
-  event_id UUID NOT NULL REFERENCES public.events(id) ON DELETE CASCADE,
-  name TEXT NOT NULL,
-  description TEXT,
-  price NUMERIC(10, 2) NOT NULL,
-  quantity INTEGER NOT NULL,
-  sale_start_date TIMESTAMPTZ,
-  sale_end_date TIMESTAMPTZ,
-  is_active BOOLEAN DEFAULT TRUE
-);
+if (!formData.password) {
+newErrors.password = 'Password is required';
+} else if (formData.password.length < 6) {
+newErrors.password = 'Password must be at least 6 characters';
+}
 
-CREATE TABLE IF NOT EXISTS public.attendees (
-  id UUID PRIMARY KEY DEFAULT extensions.uuid_generate_v4(),
-  event_id UUID NOT NULL REFERENCES public.events(id) ON DELETE CASCADE,
-  user_id UUID NOT NULL REFERENCES public.profiles(id) ON DELETE CASCADE,
-  ticket_type_id UUID NOT NULL REFERENCES public.ticket_types(id) ON DELETE CASCADE,
-  registration_date TIMESTAMPTZ DEFAULT NOW(),
-  check_in_status TEXT DEFAULT 'pending',
-  payment_status TEXT DEFAULT 'completed'
-);
+if (!isLoginMode) {
+if (!formData.name) {
+newErrors.name = 'Name is required';
+}
+if (!formData.confirmPassword) {
+newErrors.confirmPassword = 'Please confirm your password';
+} else if (formData.password !== formData.confirmPassword) {
+newErrors.confirmPassword = 'Passwords do not match';
+}
+}
 
-CREATE TABLE IF NOT EXISTS public.speakers (
-  id UUID PRIMARY KEY DEFAULT extensions.uuid_generate_v4(),
-  name TEXT NOT NULL,
-  title TEXT,
-  company TEXT,
-  bio TEXT,
-  full_bio TEXT,
-  image_url TEXT,
-  expertise TEXT[],
-  location TEXT,
-  rating NUMERIC(2, 1),
-  social_links JSONB,
-  featured BOOLEAN DEFAULT FALSE
-);
+setErrors(newErrors);
+return Object.keys(newErrors).length === 0;
+};
 
-CREATE TABLE IF NOT EXISTS public.event_speakers (
-  id UUID PRIMARY KEY DEFAULT extensions.uuid_generate_v4(),
-  event_id UUID NOT NULL REFERENCES public.events(id) ON DELETE CASCADE,
-  speaker_id UUID NOT NULL REFERENCES public.speakers(id) ON DELETE CASCADE,
-  UNIQUE(event_id, speaker_id)
-);
+const handleSubmit = async (e: React.FormEvent) => {
+e.preventDefault();
 
-CREATE TABLE IF NOT EXISTS public.sponsors (
-  id UUID PRIMARY KEY DEFAULT extensions.uuid_generate_v4(),
-  name TEXT NOT NULL,
-  logo_url TEXT,
-  tier TEXT,
-  website TEXT,
-  industry TEXT
-);
+if (!validateForm()) return;
 
-CREATE TABLE IF NOT EXISTS public.event_sponsors (
-  id UUID PRIMARY KEY DEFAULT extensions.uuid_generate_v4(),
-  event_id UUID NOT NULL REFERENCES public.events(id) ON DELETE CASCADE,
-  sponsor_id UUID NOT NULL REFERENCES public.sponsors(id) ON DELETE CASCADE,
-  UNIQUE(event_id, sponsor_id)
-);
+setIsLoading(true);
+try {
+if (isLoginMode) {
+await login(formData.email, formData.password);
+} else {
+await register(formData.email, formData.password, formData.name, selectedRole);
+}
 
-CREATE TABLE IF NOT EXISTS public.booths (
-  id UUID PRIMARY KEY DEFAULT extensions.uuid_generate_v4(),
-  sponsor_id UUID NOT NULL REFERENCES public.sponsors(id) ON DELETE CASCADE,
-  event_id UUID NOT NULL REFERENCES public.events(id) ON DELETE CASCADE,
-  primary_color TEXT,
-  secondary_color TEXT,
-  banner_url TEXT,
-  description TEXT,
-  contact_info JSONB,
-  UNIQUE(sponsor_id, event_id)
-);
+// Reset form and close modal
+setFormData({ name: '', email: '', password: '', confirmPassword: '' });
+setErrors({});
+onClose();
+} catch (error) {
+setErrors({ general: 'Authentication failed. Please try again.' });
+} finally {
+setIsLoading(false);
+}
+};
 
-CREATE TABLE IF NOT EXISTS public.leads (
-  id UUID PRIMARY KEY DEFAULT extensions.uuid_generate_v4(),
-  sponsor_id UUID NOT NULL REFERENCES public.sponsors(id) ON DELETE CASCADE,
-  event_id UUID NOT NULL REFERENCES public.events(id) ON DELETE CASCADE,
-  name TEXT NOT NULL,
-  email TEXT NOT NULL,
-  company TEXT,
-  title TEXT,
-  phone TEXT,
-  notes TEXT,
-  status lead_status NOT NULL DEFAULT 'new'
-);
+const toggleMode = () => {
+setIsLoginMode(!isLoginMode);
+setErrors({});
+setFormData({ name: '', email: '', password: '', confirmPassword: '' });
+};
 
-CREATE TABLE IF NOT EXISTS public.blog_articles (
-  id UUID PRIMARY KEY DEFAULT extensions.uuid_generate_v4(),
-  slug TEXT UNIQUE NOT NULL,
-  title TEXT NOT NULL,
-  excerpt TEXT,
-  content TEXT,
-  author_id UUID REFERENCES public.profiles(id),
-  published_date DATE,
-  category TEXT,
-  image_url TEXT,
-  featured BOOLEAN DEFAULT FALSE,
-  tags TEXT[]
-);
+const roleOptions = [
+{ value: 'attendee', label: 'Attendee', description: 'Join and attend events' },
+{ value: 'organizer', label: 'Event Organizer', description: 'Create and manage events' },
+{ value: 'sponsor', label: 'Sponsor/Exhibitor', description: 'Sponsor events and showcase products' },
+];
 
-CREATE TABLE IF NOT EXISTS public.resources (
-  id UUID PRIMARY KEY DEFAULT extensions.uuid_generate_v4(),
-  title TEXT NOT NULL,
-  description TEXT,
-  type TEXT,
-  category TEXT,
-  download_url TEXT,
-  image_url TEXT,
-  featured BOOLEAN DEFAULT FALSE
-);
+return (
+<div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black bg-opacity-50 backdrop-blur-sm">
+<div className="relative w-full max-w-md bg-white rounded-2xl shadow-2xl transform transition-all duration-300 scale-100">
+{/* Close Button */}
+<button
+onClick={onClose}
+className="absolute top-4 right-4 p-2 text-gray-400 hover:text-gray-600 transition-colors duration-200"
+>
+<X className="w-6 h-6" />
+</button>
 
-CREATE TABLE IF NOT EXISTS public.press_releases (
-  id UUID PRIMARY KEY DEFAULT extensions.uuid_generate_v4(),
-  title TEXT NOT NULL,
-  release_date DATE,
-  excerpt TEXT,
-  full_content TEXT,
-  download_url TEXT
-);
+{/* Header */}
+<div className="p-8 pb-4">
+<div className="text-center mb-6">
+<div className="w-16 h-16 bg-gradient-to-br from-indigo-600 to-purple-600 rounded-full flex items-center justify-center mx-auto mb-4">
+<User className="w-8 h-8 text-white" />
+</div>
+<h2 className="text-2xl font-bold text-gray-900">
+{isLoginMode ? 'Welcome Back' : 'Join EventEase'}
+</h2>
+<p className="text-gray-600 mt-2">
+{isLoginMode ? 'Sign in to access your account' : 'Create your account to get started'}
+</p>
+</div>
 
-CREATE TABLE IF NOT EXISTS public.notifications (
-  id UUID PRIMARY KEY DEFAULT extensions.uuid_generate_v4(),
-  user_id UUID NOT NULL REFERENCES public.profiles(id) ON DELETE CASCADE,
-  title TEXT NOT NULL,
-  message TEXT,
-  is_read BOOLEAN DEFAULT FALSE,
-  created_at TIMESTAMPTZ DEFAULT NOW()
-);
+{/* Error Message */}
+{errors.general && (
+<div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg">
+<p className="text-red-700 text-sm">{errors.general}</p>
+</div>
+)}
 
--- ----------------------------------------------------------------
--- 3. PERMISSIONS FOR SUPABASE AUTH
--- ----------------------------------------------------------------
--- CRITICAL FIX: Grant usage on the public schema and ALL permissions 
--- on your new tables to the Supabase internal authentication role.
--- This allows the handle_new_user trigger to work correctly.
-GRANT USAGE ON SCHEMA public TO supabase_auth_admin;
-GRANT ALL ON ALL TABLES IN SCHEMA public TO supabase_auth_admin;
-GRANT ALL ON ALL SEQUENCES IN SCHEMA public TO supabase_auth_admin;
-GRANT ALL ON ALL FUNCTIONS IN SCHEMA public TO supabase_auth_admin;
+{/* Form */}
+<form onSubmit={handleSubmit} className="space-y-4">
+{!isLoginMode && (
+<>
+<div>
+<div className="relative">
+<User className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
+<input
+type="text"
+name="name"
+placeholder="Full Name"
+value={formData.name}
+onChange={handleInputChange}
+className={`w-full pl-10 pr-4 py-3 border rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-colors duration-200 ${
+                       errors.name ? 'border-red-500' : 'border-gray-300'
+                     }`}
+/>
+</div>
+{errors.name && <p className="text-red-500 text-sm mt-1">{errors.name}</p>}
+</div>
 
+{/* Role Selection */}
+<div>
+<label className="block text-sm font-medium text-gray-700 mb-2">
+I want to join as:
+</label>
+<div className="space-y-2">
+{roleOptions.map((role) => (
+<label key={role.value} className="flex items-start space-x-3 cursor-pointer">
+<input
+type="radio"
+name="role"
+value={role.value}
+checked={selectedRole === role.value}
+onChange={(e) => setSelectedRole(e.target.value as UserRole)}
+className="mt-1 text-indigo-600 focus:ring-indigo-500"
+/>
+<div>
+<p className="font-medium text-gray-900">{role.label}</p>
+<p className="text-sm text-gray-500">{role.description}</p>
+</div>
+</label>
+))}
+</div>
+</div>
+</>
+)}
 
--- ----------------------------------------------------------------
--- 4. DATABASE FUNCTIONS
--- ----------------------------------------------------------------
+<div>
+<div className="relative">
+<Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
+<input
+type="email"
+name="email"
+placeholder="Email Address"
+value={formData.email}
+onChange={handleInputChange}
+className={`w-full pl-10 pr-4 py-3 border rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-colors duration-200 ${
+                   errors.email ? 'border-red-500' : 'border-gray-300'
+                 }`}
+/>
+</div>
+{errors.email && <p className="text-red-500 text-sm mt-1">{errors.email}</p>}
+</div>
 
-CREATE OR REPLACE FUNCTION public.get_user_role()
-RETURNS user_role AS $$
-  SELECT role FROM public.profiles WHERE id = auth.uid();
-$$ LANGUAGE sql SECURITY DEFINER;
-COMMENT ON FUNCTION public.get_user_role() IS 'Retrieves the role of the currently authenticated user.';
+<div>
+<div className="relative">
+<Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
+<input
+type={showPassword ? 'text' : 'password'}
+name="password"
+placeholder="Password"
+value={formData.password}
+onChange={handleInputChange}
+className={`w-full pl-10 pr-12 py-3 border rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-colors duration-200 ${
+                   errors.password ? 'border-red-500' : 'border-gray-300'
+                 }`}
+/>
+<button
+type="button"
+onClick={() => setShowPassword(!showPassword)}
+className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
+>
+{showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+</button>
+</div>
+{errors.password && <p className="text-red-500 text-sm mt-1">{errors.password}</p>}
+</div>
 
-CREATE OR REPLACE FUNCTION public.is_admin()
-RETURNS BOOLEAN AS $$
-  SELECT public.get_user_role() = 'admin';
-$$ LANGUAGE sql SECURITY DEFINER;
-COMMENT ON FUNCTION public.is_admin() IS 'Checks if the current authenticated user has the admin role.';
+{!isLoginMode && (
+<div>
+<div className="relative">
+<Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
+<input
+type="password"
+name="confirmPassword"
+placeholder="Confirm Password"
+value={formData.confirmPassword}
+onChange={handleInputChange}
+className={`w-full pl-10 pr-4 py-3 border rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-colors duration-200 ${
+                     errors.confirmPassword ? 'border-red-500' : 'border-gray-300'
+                   }`}
+/>
+</div>
+{errors.confirmPassword && <p className="text-red-500 text-sm mt-1">{errors.confirmPassword}</p>}
+</div>
+)}
 
--- ----------------------------------------------------------------
--- 5. ROW LEVEL SECURITY (RLS)
--- ----------------------------------------------------------------
+<button
+type="submit"
+disabled={isLoading}
+className="w-full bg-gradient-to-r from-indigo-600 to-purple-600 text-white py-3 rounded-lg font-medium hover:from-indigo-700 hover:to-purple-700 transform hover:scale-105 transition-all duration-200 shadow-lg hover:shadow-xl disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none"
+>
+{isLoading ? (
+<div className="flex items-center justify-center space-x-2">
+<div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+<span>{isLoginMode ? 'Signing In...' : 'Creating Account...'}</span>
+</div>
+) : (
+isLoginMode ? 'Sign In' : 'Create Account'
+)}
+</button>
+</form>
 
-ALTER TABLE public.profiles ENABLE ROW LEVEL SECURITY;
-ALTER TABLE public.events ENABLE ROW LEVEL SECURITY;
-ALTER TABLE public.ticket_types ENABLE ROW LEVEL SECURITY;
-ALTER TABLE public.attendees ENABLE ROW LEVEL SECURITY;
-ALTER TABLE public.speakers ENABLE ROW LEVEL SECURITY;
-ALTER TABLE public.event_speakers ENABLE ROW LEVEL SECURITY;
-ALTER TABLE public.sponsors ENABLE ROW LEVEL SECURITY;
-ALTER TABLE public.event_sponsors ENABLE ROW LEVEL SECURITY;
-ALTER TABLE public.booths ENABLE ROW LEVEL SECURITY;
-ALTER TABLE public.leads ENABLE ROW LEVEL SECURITY;
-ALTER TABLE public.blog_articles ENABLE ROW LEVEL SECURITY;
-ALTER TABLE public.resources ENABLE ROW LEVEL SECURITY;
-ALTER TABLE public.press_releases ENABLE ROW LEVEL SECURITY;
-ALTER TABLE public.notifications ENABLE ROW LEVEL SECURITY;
-
--- RLS Policies (Drop existing policies before creating new ones)
-
--- Profiles
-DROP POLICY IF EXISTS "Allow public read access to profiles" ON public.profiles;
-CREATE POLICY "Allow public read access to profiles" ON public.profiles FOR SELECT USING (true);
-
-DROP POLICY IF EXISTS "Users can update their own profile" ON public.profiles;
-CREATE POLICY "Users can update their own profile" ON public.profiles FOR UPDATE USING (auth.uid() = id) WITH CHECK (auth.uid() = id);
-
-DROP POLICY IF EXISTS "Allow new user to insert own profile" ON public.profiles;
-CREATE POLICY "Allow new user to insert own profile" ON public.profiles FOR INSERT WITH CHECK (auth.uid() = id);
-
--- Events
-DROP POLICY IF EXISTS "Allow public read access to published events" ON public.events;
-CREATE POLICY "Allow public read access to published events" ON public.events FOR SELECT USING (status = 'published');
-
-DROP POLICY IF EXISTS "Organizers can manage their own events" ON public.events;
-CREATE POLICY "Organizers can manage their own events" ON public.events FOR ALL USING (auth.uid() = organizer_id) WITH CHECK (auth.uid() = organizer_id);
-
-DROP POLICY IF EXISTS "Admins have full access to events" ON public.events;
-CREATE POLICY "Admins have full access to events" ON public.events FOR ALL USING (public.is_admin());
-
--- Tickets
-DROP POLICY IF EXISTS "Allow public read access to tickets of published events" ON public.ticket_types;
-CREATE POLICY "Allow public read access to tickets of published events" ON public.ticket_types FOR SELECT USING (
-  EXISTS (SELECT 1 FROM public.events WHERE events.id = ticket_types.event_id AND events.status = 'published')
-);
-
-DROP POLICY IF EXISTS "Organizers can manage tickets for their events" ON public.ticket_types;
-CREATE POLICY "Organizers can manage tickets for their events" ON public.ticket_types FOR ALL USING (
-  auth.uid() = (SELECT organizer_id FROM public.events WHERE events.id = ticket_types.event_id)
-);
-
--- Notifications
-DROP POLICY IF EXISTS "Users can access their own notifications" ON public.notifications;
-CREATE POLICY "Users can access their own notifications" ON public.notifications FOR ALL USING (auth.uid() = user_id) WITH CHECK (auth.uid() = user_id);
-
--- Speakers
-DROP POLICY IF EXISTS "Allow read access to all speakers" ON public.speakers;
-CREATE POLICY "Allow read access to all speakers" ON public.speakers FOR SELECT USING (true);
-
-DROP POLICY IF EXISTS "Admins have full access to speakers" ON public.speakers;
-CREATE POLICY "Admins have full access to speakers" ON public.speakers FOR ALL USING (public.is_admin());
-
--- ----------------------------------------------------------------
--- 6. TRIGGERS
--- ----------------------------------------------------------------
-
--- Trigger function to create a profile for new users.
-CREATE OR REPLACE FUNCTION public.handle_new_user()
-RETURNS TRIGGER AS $$
-BEGIN
-  INSERT INTO public.profiles (id, username, full_name, role)
-  VALUES (
-    NEW.id,
-    NEW.email,
-    NEW.raw_user_meta_data->>'full_name',
-    COALESCE(
-      (NEW.raw_user_meta_data->>'role')::user_role, 
-      'attendee'::user_role
-    )
-  );
-  RETURN NEW;
-END;
-$$ LANGUAGE plpgsql SECURITY DEFINER;
-COMMENT ON FUNCTION public.handle_new_user() IS 'Creates a new profile row when a user signs up via Supabase Auth.';
-
--- Drop the trigger if it exists before creating it.
-DROP TRIGGER IF EXISTS on_auth_user_created ON auth.users;
-CREATE TRIGGER on_auth_user_created
-  AFTER INSERT ON auth.users
-  FOR EACH ROW EXECUTE FUNCTION public.handle_new_user();
-
--- Function to automatically update 'updated_at' timestamps.
-CREATE OR REPLACE FUNCTION public.update_updated_at_column()
-RETURNS TRIGGER AS $$
-BEGIN
-  NEW.updated_at = NOW();
-  RETURN NEW;
-END;
-$$ LANGUAGE plpgsql;
-
--- Drop and re-create triggers for 'updated_at' columns to ensure idempotency.
-DROP TRIGGER IF EXISTS handle_updated_at ON public.profiles;
-CREATE TRIGGER handle_updated_at BEFORE UPDATE ON public.profiles FOR EACH ROW EXECUTE FUNCTION public.update_updated_at_column();
-
-DROP TRIGGER IF EXISTS handle_updated_at ON public.events;
-CREATE TRIGGER handle_updated_at BEFORE UPDATE ON public.events FOR EACH ROW EXECUTE FUNCTION public.update_updated_at_column();
+{/* Toggle Mode */}
+<div className="text-center mt-6">
+<p className="text-gray-600">
+{isLoginMode ? "Don't have an account?" : 'Already have an account?'}
+<button
+onClick={toggleMode}
+className="ml-2 text-indigo-600 hover:text-indigo-700 font-medium transition-colors duration-200"
+>
+{isLoginMode ? 'Sign Up' : 'Sign In'}
+</button>
+</p>
+            {isLoginMode && (
+              <div className="mt-3">
+                <button
+                  type="button"
+                  onClick={() => {
+                    onClose();
+                    // Navigate to password reset page
+                    window.dispatchEvent(new CustomEvent('navigate-to-password-reset'));
+                  }}
+                  className="text-sm text-indigo-600 hover:text-indigo-700 transition-colors duration-200"
+                >
+                  Forgot your password?
+                </button>
+              </div>
+            )}
+</div>
+</div>
+</div>
