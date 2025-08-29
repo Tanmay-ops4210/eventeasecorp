@@ -185,4 +185,4 @@ const PasswordResetCallback: React.FC = () => {
   );
 };
 
-export default EmailVerificationCallback;
+export default PasswordResetCallback;
