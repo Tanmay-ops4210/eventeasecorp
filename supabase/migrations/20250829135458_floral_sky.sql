@@ -76,6 +76,11 @@ INSERT INTO user_role_permissions (role, permission, description) VALUES
 ALTER TABLE user_profiles ENABLE ROW LEVEL SECURITY;
 ALTER TABLE user_role_permissions ENABLE ROW LEVEL SECURITY;
 
+-- Grant permissions to Supabase's internal auth role
+GRANT USAGE ON SCHEMA public TO supabase_auth_admin;
+GRANT ALL ON TABLE public.user_profiles TO supabase_auth_admin;
+GRANT ALL ON TABLE public.user_role_permissions TO supabase_auth_admin;
+
 -- RLS Policies for user_profiles
 CREATE POLICY "Users can view own profile"
   ON user_profiles
