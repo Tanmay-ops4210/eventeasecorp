@@ -192,7 +192,7 @@ CREATE TABLE IF NOT EXISTS public.notifications (
 -- ----------------------------------------------------------------
 -- 3. PERMISSIONS FOR SUPABASE AUTH
 -- ----------------------------------------------------------------
--- CRITICAL FIX: Grant usage on the public schema and ALL permissions 
+-- CRITICAL FIX: Grant usage on the public schema and ALL permissions
 -- on your new tables to the Supabase internal authentication role.
 -- This allows the handle_new_user trigger to work correctly.
 GRANT USAGE ON SCHEMA public TO supabase_auth_admin;
@@ -294,7 +294,7 @@ BEGIN
     NEW.email,
     NEW.raw_user_meta_data->>'full_name',
     COALESCE(
-      (NEW.raw_user_meta_data->>'role')::user_role, 
+      (NEW.raw_user_meta_data->>'role')::user_role,
       'attendee'::user_role
     )
   );
