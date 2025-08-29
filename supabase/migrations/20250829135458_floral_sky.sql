@@ -294,8 +294,8 @@ BEGIN
     NEW.email,
     NEW.raw_user_meta_data->>'full_name',
     COALESCE(
-      (NEW.raw_user_meta_data->>'role')::user_role,
-      'attendee'::user_role
+      (NEW.raw_user_meta_data->>'role')::public.user_role,
+      'attendee'::public.user_role
     )
   );
   RETURN NEW;
