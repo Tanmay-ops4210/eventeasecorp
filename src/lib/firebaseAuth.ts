@@ -69,9 +69,6 @@ export class FirebaseAuthService {
         displayName: data.name
       });
 
-      // Send email verification
-      await sendEmailVerification(firebaseUser);
-
       // Create user profile in Supabase database
       const { error: supabaseError } = await supabase
         .from('profiles')
@@ -113,14 +110,6 @@ export class FirebaseAuthService {
       );
 
       const firebaseUser = userCredential.user;
-
-      // Check if email is verified
-      if (!firebaseUser.emailVerified) {
-        return {
-          success: false,
-          error: 'Please verify your email address before signing in. Check your inbox for a verification link.'
-        };
-      }
 
       // Verify user exists in Supabase database
       const { data: profile, error: profileError } = await supabase

@@ -10,7 +10,7 @@ interface AuthModalProps {
 }
 
 const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
-  const { login, register, resendVerification, firebaseUser } = useAuth();
+  const { login, register } = useAuth();
   const { setCurrentView } = useApp();
   const [isLoginMode, setIsLoginMode] = useState(true);
   const [showPassword, setShowPassword] = useState(false);
@@ -23,8 +23,6 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
   });
   const [errors, setErrors] = useState<{ [key: string]: string }>({});
   const [isLoading, setIsLoading] = useState(false);
-  const [showEmailVerification, setShowEmailVerification] = useState(false);
-  const [registrationEmail, setRegistrationEmail] = useState('');
 
   if (!isOpen) return null;
 
@@ -80,9 +78,8 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
         onClose();
       } else {
         await register(formData.email, formData.password, formData.name, selectedRole);
-        setRegistrationEmail(formData.email);
-        setShowEmailVerification(true);
         setFormData({ name: '', email: '', password: '', confirmPassword: '' });
+        onClose();
       }
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Authentication failed. Please try again.';
@@ -92,24 +89,10 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
     }
   };
 
-  const handleResendVerification = async () => {
-    try {
-      setIsLoading(true);
-      await resendVerification();
-      alert('Verification email sent! Please check your inbox.');
-    } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : 'Failed to send verification email';
-      alert(errorMessage);
-    } finally {
-      setIsLoading(false);
-    }
-  };
-  
   const toggleMode = () => {
     setIsLoginMode(!isLoginMode);
     setErrors({});
     setFormData({ name: '', email: '', password: '', confirmPassword: '' });
-    setShowEmailVerification(false);
   };
 
   const roleOptions = [
@@ -118,68 +101,6 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
     { value: 'sponsor', label: 'Sponsor/Exhibitor', description: 'Sponsor events and showcase products' },
   ];
   
-  // Email Verification Screen
-  if (showEmailVerification) {
-    return (
-      <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black bg-opacity-50 backdrop-blur-sm">
-        <div className="relative w-full max-w-md bg-white rounded-2xl shadow-2xl transform transition-all duration-300 scale-100">
-          <button
-            onClick={onClose}
-            className="absolute top-4 right-4 p-2 text-gray-400 hover:text-gray-600 transition-colors duration-200"
-          >
-            <X className="w-6 h-6" />
-          </button>
-
-          <div className="p-8">
-            <div className="text-center mb-6">
-              <div className="w-16 h-16 bg-green-500 rounded-full flex items-center justify-center mx-auto mb-4">
-                <Mail className="w-8 h-8 text-white" />
-              </div>
-              <h2 className="text-2xl font-bold text-gray-900">Check Your Email</h2>
-              <p className="text-gray-600 mt-2">
-                We've sent a verification link to <strong>{registrationEmail}</strong>
-              </p>
-            </div>
-
-            <div className="space-y-4">
-              <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-                <p className="text-blue-800 text-sm">
-                  Please click the verification link in your email to activate your account.
-                  You won't be able to sign in until your email is verified.
-                </p>
-              </div>
-
-              <button
-                onClick={handleResendVerification}
-                disabled={isLoading}
-                className="w-full bg-gradient-to-r from-indigo-600 to-purple-600 text-white py-3 rounded-lg font-medium hover:from-indigo-700 hover:to-purple-700 transition-all duration-200 disabled:opacity-50"
-              >
-                {isLoading ? (
-                  <div className="flex items-center justify-center space-x-2">
-                    <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                    <span>Sending...</span>
-                  </div>
-                ) : (
-                  'Resend Verification Email'
-                )}
-              </button>
-
-              <button
-                onClick={() => {
-                  setShowEmailVerification(false);
-                  setIsLoginMode(true);
-                }}
-                className="w-full text-indigo-600 hover:text-indigo-700 font-medium transition-colors duration-200"
-              >
-                Back to Sign In
-              </button>
-            </div>
-          </div>
-        </div>
-      </div>
-    );
-  }
-
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black bg-opacity-50 backdrop-blur-sm">
       <div className="relative w-full max-w-md bg-white rounded-2xl shadow-2xl transform transition-all duration-300 scale-100">

@@ -51,7 +51,6 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     isLoading: true,
   });
   const [profile, setProfile] = useState<any | null>(null); // Using any for now
-  const [isEmailVerified, setIsEmailVerified] = useState(false);
   const [firebaseUser, setFirebaseUser] = useState<FirebaseUser | null>(null);
   const { setCurrentView } = useApp();
 
@@ -61,7 +60,6 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       
       if (firebaseUser) {
         await loadUserProfile(firebaseUser.uid);
-        setIsEmailVerified(firebaseUser.emailVerified);
       } else {
         setAuthState({
           user: null,
@@ -69,7 +67,6 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
           isLoading: false,
         });
         setProfile(null);
-        setIsEmailVerified(false);
         localStorage.removeItem('eventease_user');
       }
     });
@@ -156,7 +153,6 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     firebaseAuthService.signOut();
     localStorage.removeItem('eventease_user');
     setProfile(null);
-    setIsEmailVerified(false);
     setFirebaseUser(null);
     setCurrentView('home');
   };
@@ -216,7 +212,6 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       value={{
         ...authState,
         profile,
-        isEmailVerified,
         firebaseUser,
         login,
         register,
