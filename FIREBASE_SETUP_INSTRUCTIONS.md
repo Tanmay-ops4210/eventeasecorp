@@ -3,14 +3,14 @@
 ## Prerequisites
 
 1. **Firebase Project**: Ensure you have a Firebase project created at [Firebase Console](https://console.firebase.google.com/)
-2. **Firebase Configuration**: Your Firebase config is already set up in `src/lib/firebaseConfig.ts`
+2. **Firebase Configuration**: Your new Firebase config is set up in `src/lib/firebaseConfig.ts`
 
 ## Firebase Console Configuration
 
 ### 1. Enable Authentication Methods
 
 1. Go to [Firebase Console](https://console.firebase.google.com/)
-2. Select your project (`event-49a89`)
+2. Select your project (`eventeasecorp`)
 3. Navigate to **Authentication** > **Sign-in method**
 4. Enable the following providers:
    - **Email/Password**: Enable this provider
@@ -30,7 +30,7 @@
 2. Add your domains to **Authorized domains**:
    - `localhost` (for development)
    - Your production domain
-   - `event-49a89.firebaseapp.com` (Firebase hosting domain)
+   - `eventeasecorp.firebaseapp.com` (Firebase hosting domain)
 
 ### 4. Set Up Email Action Handler
 
@@ -45,14 +45,14 @@ Configure the action handler URL for email verification and password reset:
 Add these to your `.env` file (if not already present):
 
 ```env
-# Firebase Configuration (from your firebaseConfig.ts)
-VITE_FIREBASE_API_KEY=AIzaSyC0SgZdxaBagK0U4qG5olmJl8LDciZ-6og
-VITE_FIREBASE_AUTH_DOMAIN=event-49a89.firebaseapp.com
-VITE_FIREBASE_PROJECT_ID=event-49a89
-VITE_FIREBASE_STORAGE_BUCKET=event-49a89.firebasestorage.app
-VITE_FIREBASE_MESSAGING_SENDER_ID=1061205319218
-VITE_FIREBASE_APP_ID=1:1061205319218:web:f70c6c18001a3d2c7d262b
-VITE_FIREBASE_MEASUREMENT_ID=G-PRGXW1NF1B
+# Firebase Configuration (updated)
+VITE_FIREBASE_API_KEY=AIzaSyDCScMcAMwBFXHKei_RRZ7M6SG9YA2oQqE
+VITE_FIREBASE_AUTH_DOMAIN=eventeasecorp.firebaseapp.com
+VITE_FIREBASE_PROJECT_ID=eventeasecorp
+VITE_FIREBASE_STORAGE_BUCKET=eventeasecorp.firebasestorage.app
+VITE_FIREBASE_MESSAGING_SENDER_ID=796329798902
+VITE_FIREBASE_APP_ID=1:796329798902:web:cd5a163b12fc2fdb6750d7
+VITE_FIREBASE_MEASUREMENT_ID=G-WB4KBXM17F
 
 # Supabase Configuration (keep for database operations)
 VITE_SUPABASE_URL=your-supabase-url

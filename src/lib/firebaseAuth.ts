@@ -38,7 +38,7 @@ export interface RegistrationData {
 
 /**
  * Firebase Authentication Service
- * Handles all authentication operations while maintaining Supabase for database
+ * Handles all authentication operations while using Supabase only for database
  */
 export class FirebaseAuthService {
   private static instance: FirebaseAuthService;
@@ -51,7 +51,7 @@ export class FirebaseAuthService {
   }
 
   /**
-   * Register a new user with Firebase Auth and create profile in Supabase
+   * Register a new user with Firebase Auth and create profile in Supabase database
    */
   async register(data: RegistrationData): Promise<AuthResult> {
     try {
@@ -87,7 +87,6 @@ export class FirebaseAuthService {
 
       if (supabaseError) {
         console.error('Failed to create Supabase profile:', supabaseError);
-        // Note: In production, you might want to delete the Firebase user if Supabase fails
       }
 
       return {

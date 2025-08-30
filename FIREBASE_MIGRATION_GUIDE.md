@@ -6,12 +6,12 @@ This guide provides step-by-step instructions for migrating from Supabase Auth t
 ## What Changed
 
 ### 1. Authentication Provider
-- **Before**: Supabase Auth (`supabase.auth`)
+- **Before**: Old Firebase configuration
 - **After**: Firebase Auth (`firebase/auth`)
 
 ### 2. Database Operations
 - **Unchanged**: Supabase database operations remain the same
-- **Enhanced**: Better separation of concerns between auth and database
+- **Enhanced**: Updated Firebase project configuration
 
 ## Implementation Details
 
@@ -30,31 +30,9 @@ This guide provides step-by-step instructions for migrating from Supabase Auth t
 
 ### Step 1: Update Authentication Calls
 
-Replace Supabase auth calls with Firebase auth calls:
+Firebase auth calls remain the same, but now use the new project configuration:
 
-#### Before (Supabase Auth):
-```typescript
-// Login
-const { data, error } = await supabase.auth.signInWithPassword({
-  email,
-  password
-});
-
-// Register
-const { data, error } = await supabase.auth.signUp({
-  email,
-  password,
-  options: { data: { full_name: name, role: role } }
-});
-
-// Logout
-await supabase.auth.signOut();
-
-// Password Reset
-await supabase.auth.resetPasswordForEmail(email);
-```
-
-#### After (Firebase Auth):
+#### Firebase Auth Usage:
 ```typescript
 // Login
 const result = await firebaseAuthService.signIn(email, password);
@@ -76,16 +54,7 @@ await firebaseAuthService.resetPassword(email);
 
 ### Step 2: Update Auth State Listening
 
-#### Before (Supabase):
-```typescript
-const { data: { subscription } } = supabase.auth.onAuthStateChange(
-  async (event, session) => {
-    // Handle auth state changes
-  }
-);
-```
-
-#### After (Firebase):
+#### Firebase Auth State:
 ```typescript
 const unsubscribe = firebaseAuthService.onAuthStateChanged(async (firebaseUser) => {
   // Handle auth state changes
@@ -140,11 +109,14 @@ user_id UUID NOT NULL REFERENCES public.profiles(id)
 Add these to your `.env` file:
 
 ```env
-# Firebase Configuration (already in your firebaseConfig.ts)
-VITE_FIREBASE_API_KEY=AIzaSyC0SgZdxaBagK0U4qG5olmJl8LDciZ-6og
-VITE_FIREBASE_AUTH_DOMAIN=event-49a89.firebaseapp.com
-VITE_FIREBASE_PROJECT_ID=event-49a89
-# ... other Firebase config values
+# Firebase Configuration (updated)
+VITE_FIREBASE_API_KEY=AIzaSyDCScMcAMwBFXHKei_RRZ7M6SG9YA2oQqE
+VITE_FIREBASE_AUTH_DOMAIN=eventeasecorp.firebaseapp.com
+VITE_FIREBASE_PROJECT_ID=eventeasecorp
+VITE_FIREBASE_STORAGE_BUCKET=eventeasecorp.firebasestorage.app
+VITE_FIREBASE_MESSAGING_SENDER_ID=796329798902
+VITE_FIREBASE_APP_ID=1:796329798902:web:cd5a163b12fc2fdb6750d7
+VITE_FIREBASE_MEASUREMENT_ID=G-WB4KBXM17F
 
 # Supabase Configuration (keep for database operations)
 VITE_SUPABASE_URL=your-supabase-url

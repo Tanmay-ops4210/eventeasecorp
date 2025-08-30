@@ -189,7 +189,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   useEffect(() => {
     if (authState.isAuthenticated && profile && !authState.isLoading) {
       // Check for admin access
-      if (profile.role === 'admin' || firebaseUser?.email === 'tanmay365210@gmail.com') {
+      if (profile.role === 'admin' || firebaseUser?.email === 'tanmay365210mogabeera@gmail.com') {
         setCurrentView('admin-dashboard');
       } else {
         switch (profile.role) {

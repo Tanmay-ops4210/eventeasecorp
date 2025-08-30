@@ -4,7 +4,7 @@ import { UserRole } from '../types/user';
 
 /**
  * Helper functions for Firebase Auth integration with Supabase database
- * These functions provide a bridge between Firebase Auth and Supabase database operations
+ * These functions provide integration between Firebase Auth and Supabase database
  */
 
 /**
@@ -17,7 +17,7 @@ export const isAdmin = async (): Promise<boolean> => {
     if (!firebaseUser || !profile) return false;
     
     // Check if user is admin by role or specific email
-    return profile.role === 'admin' || firebaseUser.email === 'tanmay365210@gmail.com';
+    return profile.role === 'admin' || firebaseUser.email === 'tanmay365210mogabeera@gmail.com';
   } catch (error) {
     console.error('Error checking admin status:', error);
     return false;
