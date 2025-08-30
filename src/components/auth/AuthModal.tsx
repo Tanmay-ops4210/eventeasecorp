@@ -10,7 +10,7 @@ interface AuthModalProps {
 }
 
 const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
-  const { login, register, resendVerification } = useAuth();
+  const { login, register, resendVerification, firebaseUser } = useAuth();
   const { setCurrentView } = useApp();
   const [isLoginMode, setIsLoginMode] = useState(true);
   const [showPassword, setShowPassword] = useState(false);
@@ -144,7 +144,7 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
             <div className="space-y-4">
               <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
                 <p className="text-blue-800 text-sm">
-                  Please click the verification link in your email to activate your account. 
+                  Please click the verification link in your email to activate your account.
                   You won't be able to sign in until your email is verified.
                 </p>
               </div>

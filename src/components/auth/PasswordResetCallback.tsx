@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useApp } from '../../contexts/AppContext';
-import { supabase } from '../../lib/supabaseClient';
+import { auth } from '../../lib/firebaseConfig';
+import { confirmPasswordReset, verifyPasswordResetCode } from 'firebase/auth';
 import { Lock, Eye, EyeOff, CheckCircle, AlertCircle } from 'lucide-react';
 
 const PasswordResetCallback: React.FC = () => {
@@ -11,20 +12,30 @@ const PasswordResetCallback: React.FC = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [errors, setErrors] = useState<{[key: string]: string}>({});
   const [isValidToken, setIsValidToken] = useState<boolean | null>(null);
+  const [resetCode, setResetCode] = useState<string | null>(null);
 
   useEffect(() => {
-    // Check if we have a valid reset token
+    // Check if we have a valid reset code from Firebase
     const urlParams = new URLSearchParams(window.location.search);
-    const token = urlParams.get('token');
-    const type = urlParams.get('type');
+    const mode = urlParams.get('mode');
+    const oobCode = urlParams.get('oobCode');
 
-    if (type === 'recovery' && token) {
-      setIsValidToken(true);
+    if (mode === 'resetPassword' && oobCode) {
+      setResetCode(oobCode);
+      verifyResetCode(oobCode);
     } else {
       setIsValidToken(false);
     }
   }, []);
 
+  const verifyResetCode = async (code: string) => {
+    try {
+      await verifyPasswordResetCode(auth, code);
+      setIsValidToken(true);
+    } catch (error) {
+      setIsValidToken(false);
+    }
+  };
   const handlePasswordReset = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
@@ -48,20 +59,20 @@ const PasswordResetCallback: React.FC = () => {
       return;
     }
 
+    if (!resetCode) {
+      setErrors({ general: 'Invalid reset code' });
+      setIsLoading(false);
+      return;
+    }
     try {
-      const { data, error } = await supabase.auth.updateUser({
-        password: newPassword
-      });
+      await confirmPasswordReset(auth, resetCode, newPassword);
 
-      if (error) {
-        setErrors({ general: error.message });
-      } else {
-        // Success - redirect to login
-        alert('Password updated successfully! You can now sign in with your new password.');
-        setCurrentView('home');
-      }
+      // Success - redirect to login
+      alert('Password updated successfully! You can now sign in with your new password.');
+      setCurrentView('home');
     } catch (error) {
-      setErrors({ general: 'An unexpected error occurred' });
+      const errorMessage = error instanceof Error ? error.message : 'An unexpected error occurred';
+      setErrors({ general: errorMessage });
     } finally {
       setIsLoading(false);
     }

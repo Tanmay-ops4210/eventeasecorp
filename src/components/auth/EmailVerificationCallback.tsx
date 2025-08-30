@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useApp } from '../../contexts/AppContext';
-import { supabase } from '../../lib/supabaseClient';
+import { auth } from '../../lib/firebaseConfig';
+import { applyActionCode } from 'firebase/auth';
 import { CheckCircle, AlertCircle, Loader2 } from 'lucide-react';
 
 const EmailVerificationCallback: React.FC = () => {
@@ -15,34 +16,27 @@ const EmailVerificationCallback: React.FC = () => {
   const handleEmailVerification = async () => {
     try {
       const urlParams = new URLSearchParams(window.location.search);
-      const token = urlParams.get('token');
-      const type = urlParams.get('type');
+      const mode = urlParams.get('mode');
+      const oobCode = urlParams.get('oobCode');
 
-      if (type === 'email' && token) {
-        const { data, error } = await supabase.auth.verifyOtp({
-          token_hash: token,
-          type: 'email'
-        });
+      if (mode === 'verifyEmail' && oobCode) {
+        await applyActionCode(auth, oobCode);
 
-        if (error) {
-          setStatus('error');
-          setMessage(error.message || 'Email verification failed');
-        } else {
-          setStatus('success');
-          setMessage('Your email has been verified successfully! You can now sign in.');
-          
-          // Redirect to home after 3 seconds
-          setTimeout(() => {
-            setCurrentView('home');
-          }, 3000);
-        }
+        setStatus('success');
+        setMessage('Your email has been verified successfully! You can now sign in.');
+        
+        // Redirect to home after 3 seconds
+        setTimeout(() => {
+          setCurrentView('home');
+        }, 3000);
       } else {
         setStatus('error');
         setMessage('Invalid verification link');
       }
     } catch (error) {
       setStatus('error');
-      setMessage('An unexpected error occurred during verification');
+      const errorMessage = error instanceof Error ? error.message : 'An unexpected error occurred during verification';
+      setMessage(errorMessage);
     }
   };
 

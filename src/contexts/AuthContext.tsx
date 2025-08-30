@@ -1,7 +1,9 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { User, AuthState, UserRole } from '../types/user';
 import { useApp } from './AppContext';
-import { supabase, authHelpers, UserProfile } from '../lib/supabaseClient';
+import { supabase, UserProfile } from '../lib/supabaseClient';
+import { firebaseAuthService, FirebaseAuthUser } from '../lib/firebaseAuth';
+import { User as FirebaseUser } from 'firebase/auth';
 
 interface AuthContextType extends AuthState {
   login: (email: string, password: string) => Promise<void>;
@@ -12,6 +14,7 @@ interface AuthContextType extends AuthState {
   isEmailVerified: boolean;
   resendVerification: () => Promise<void>;
   resetPassword: (email: string) => Promise<void>;
+  firebaseUser: FirebaseUser | null;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -36,73 +39,36 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   });
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [isEmailVerified, setIsEmailVerified] = useState(false);
+  const [firebaseUser, setFirebaseUser] = useState<FirebaseUser | null>(null);
   const { setCurrentView } = useApp(); // Get setCurrentView from AppContext
 
   useEffect(() => {
-    // Initialize Supabase auth session
-    initializeAuth();
-
-    // Listen for auth state changes
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      async (event, session) => {
-        if (event === 'SIGNED_IN' && session?.user) {
-          await loadUserProfile(session.user.id);
-        } else if (event === 'SIGNED_OUT') {
-          setAuthState({
-            user: null,
-            isAuthenticated: false,
-            isLoading: false,
-          });
-          setProfile(null);
-          setIsEmailVerified(false);
-          localStorage.removeItem('eventease_user');
-        }
-      }
-    );
-
-    return () => {
-      subscription.unsubscribe();
-    };
-  }, []);
-
-  const initializeAuth = async () => {
-    try {
-      const { user, profile: userProfile, error } = await authHelpers.getCurrentUser();
+    // Listen for Firebase auth state changes
+    const unsubscribe = firebaseAuthService.onAuthStateChanged(async (firebaseUser) => {
+      setFirebaseUser(firebaseUser);
       
-      if (user && userProfile) {
-        const mappedUser: User = {
-          _id: user.id,
-          email: user.email || '',
-          name: userProfile.full_name,
-          role: userProfile.role as UserRole,
-          plan: 'FREE', // Default plan
-          createdAt: userProfile.created_at,
-          updatedAt: userProfile.updated_at,
-        };
-
+      if (firebaseUser) {
+        await loadUserProfile(firebaseUser.uid);
+        setIsEmailVerified(firebaseUser.emailVerified);
+      } else {
         setAuthState({
-          user: mappedUser,
-          isAuthenticated: true,
+          user: null,
+          isAuthenticated: false,
           isLoading: false,
         });
-        setProfile(userProfile);
-        setIsEmailVerified(userProfile.email_verified);
-        
-        // Save to localStorage for compatibility
-        localStorage.setItem('eventease_user', JSON.stringify(mappedUser));
-      } else {
-        setAuthState(prev => ({ ...prev, isLoading: false }));
+        setProfile(null);
+        setIsEmailVerified(false);
+        localStorage.removeItem('eventease_user');
       }
-    } catch (error) {
-      console.error('Auth initialization error:', error);
-      setAuthState(prev => ({ ...prev, isLoading: false }));
-    }
-  };
+    });
+
+    return unsubscribe;
+  }, []);
 
   const loadUserProfile = async (userId: string) => {
     try {
       const { data: userProfile, error } = await supabase
-        .from('user_profiles')
+        .from('profiles')
         .select('*')
         .eq('id', userId)
         .single();
@@ -110,7 +76,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       if (userProfile && !error) {
         const mappedUser: User = {
           _id: userId,
-          email: userProfile.email,
+          email: firebaseUser?.email || '',
           name: userProfile.full_name,
           role: userProfile.role as UserRole,
           plan: 'FREE', // Default plan
@@ -124,13 +90,15 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
           isLoading: false,
         });
         setProfile(userProfile);
-        setIsEmailVerified(userProfile.email_verified);
         
         // Save to localStorage for compatibility
         localStorage.setItem('eventease_user', JSON.stringify(mappedUser));
+      } else {
+        setAuthState(prev => ({ ...prev, isLoading: false }));
       }
     } catch (error) {
       console.error('Error loading user profile:', error);
+      setAuthState(prev => ({ ...prev, isLoading: false }));
     }
   };
 
@@ -138,55 +106,15 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     setAuthState(prev => ({ ...prev, isLoading: true }));
     
     try {
-      const { data, error } = await authHelpers.signIn(email, password);
+      const result = await firebaseAuthService.signIn(email, password);
       
-      if (error) {
+      if (!result.success) {
         setAuthState(prev => ({ ...prev, isLoading: false }));
-        throw error;
+        throw new Error(result.error);
       }
 
-      if (data?.profile) {
-        const userProfile = data.profile as UserProfile;
-        
-        const mappedUser: User = {
-          _id: data.user?.id || '',
-          email: userProfile.email,
-          name: userProfile.full_name,
-          role: userProfile.role as UserRole,
-          plan: 'FREE',
-          createdAt: userProfile.created_at,
-          updatedAt: userProfile.updated_at,
-        };
-
-        setAuthState({
-          user: mappedUser,
-          isAuthenticated: true,
-          isLoading: false,
-        });
-        setProfile(userProfile);
-        setIsEmailVerified(userProfile.email_verified);
-        
-        // Save to localStorage for compatibility
-        localStorage.setItem('eventease_user', JSON.stringify(mappedUser));
-
-        // Redirect based on role
-        if (userProfile.role === 'admin' || email === 'tanmay365210@gmail.com') {
-          setCurrentView('admin-dashboard');
-        } else {
-          switch (userProfile.role) {
-            case 'organizer':
-              setCurrentView('organizer-dashboard');
-              break;
-            case 'sponsor':
-              setCurrentView('sponsor-dashboard');
-              break;
-            case 'attendee':
-            default:
-              setCurrentView('attendee-dashboard');
-              break;
-          }
-        }
-      }
+      // User profile will be loaded by the auth state change listener
+      // Redirect logic will be handled there
     } catch (error) {
       setAuthState(prev => ({ ...prev, isLoading: false }));
       throw error;
@@ -197,21 +125,16 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     setAuthState(prev => ({ ...prev, isLoading: true }));
     
     try {
-      const { data, error } = await supabase.auth.signUp({
+      const result = await firebaseAuthService.register({
         email,
         password,
-        options: {
-          data: {
-            full_name: name,
-            role: role
-          },
-          emailRedirectTo: `${window.location.origin}?type=email`
-        }
+        name,
+        role
       });
       
-      if (error) {
+      if (!result.success) {
         setAuthState(prev => ({ ...prev, isLoading: false }));
-        throw error;
+        throw new Error(result.error);
       }
 
       setAuthState(prev => ({ ...prev, isLoading: false }));
@@ -224,10 +147,11 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   };
 
   const logout = () => {
-    authHelpers.signOut();
+    firebaseAuthService.signOut();
     localStorage.removeItem('eventease_user');
     setProfile(null);
     setIsEmailVerified(false);
+    setFirebaseUser(null);
     setCurrentView('home');
   };
 
@@ -237,41 +161,59 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       localStorage.setItem('eventease_user', JSON.stringify(updatedUser));
       setAuthState(prev => ({ ...prev, user: updatedUser }));
       
-      // Also update Supabase profile
-      authHelpers.updateProfile({
+      // Update profile in Supabase
+      firebaseAuthService.updateUserProfile({
         full_name: updatedUser.name,
-        // Map other fields as needed
+        username: updatedUser.name,
+        role: updatedUser.role
       });
     }
   };
 
   const resendVerification = async () => {
-    if (!authState.user?.email) {
-      throw new Error('No email address found');
+    const result = await firebaseAuthService.resendEmailVerification();
+    
+    if (!result.success) {
+      throw new Error(result.error);
     }
-    
-    const { error } = await supabase.auth.resend({
-      type: 'signup',
-      email: authState.user.email,
-      options: {
-        emailRedirectTo: `${window.location.origin}/auth/callback`
-      }
-    });
-    
-    if (error) throw error;
   };
 
   const resetPassword = async (email: string) => {
-    const { error } = await authHelpers.resetPassword(email);
-    if (error) throw error;
+    const result = await firebaseAuthService.resetPassword(email);
+    if (!result.success) {
+      throw new Error(result.error);
+    }
   };
 
+  // Handle role-based redirects when user profile is loaded
+  useEffect(() => {
+    if (authState.isAuthenticated && profile && !authState.isLoading) {
+      // Check for admin access
+      if (profile.role === 'admin' || firebaseUser?.email === 'tanmay365210@gmail.com') {
+        setCurrentView('admin-dashboard');
+      } else {
+        switch (profile.role) {
+          case 'organizer':
+            setCurrentView('organizer-dashboard');
+            break;
+          case 'sponsor':
+            setCurrentView('sponsor-dashboard');
+            break;
+          case 'attendee':
+          default:
+            setCurrentView('attendee-dashboard');
+            break;
+        }
+      }
+    }
+  }, [authState.isAuthenticated, profile, authState.isLoading, firebaseUser?.email, setCurrentView]);
   return (
     <AuthContext.Provider
       value={{
         ...authState,
         profile,
         isEmailVerified,
+        firebaseUser,
         login,
         register,
         logout,

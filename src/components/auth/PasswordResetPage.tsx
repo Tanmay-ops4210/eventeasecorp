@@ -1,13 +1,12 @@
 import React, { useState } from 'react';
 import { useApp } from '../../contexts/AppContext';
-import { useAuth } from '../../contexts/AuthContext';
+import { firebaseAuthService } from '../../lib/firebaseAuth';
 import { Mail, ArrowLeft, CheckCircle, Lock, Eye, EyeOff } from 'lucide-react';
 
 type ResetStep = 'request' | 'sent' | 'reset' | 'success';
 
 const PasswordResetPage: React.FC = () => {
   const { setBreadcrumbs, setCurrentView } = useApp();
-  const { resetPassword } = useAuth();
   const [currentStep, setCurrentStep] = useState<ResetStep>('request');
   const [email, setEmail] = useState('');
   const [isLoading, setIsLoading] = useState(false);
@@ -35,7 +34,12 @@ const PasswordResetPage: React.FC = () => {
     }
 
     try {
-      await resetPassword(email);
+      const result = await firebaseAuthService.resetPassword(email);
+      if (!result.success) {
+        setErrors({ email: result.error || 'Failed to send reset email' });
+        setIsLoading(false);
+        return;
+      }
       setCurrentStep('sent');
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Failed to send reset email';
