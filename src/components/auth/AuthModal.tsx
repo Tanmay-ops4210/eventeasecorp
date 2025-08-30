@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { X, User, Mail, Lock, Eye, EyeOff } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
 import { UserRole } from '../../types/user';
+import { useApp } from '../../contexts/AppContext';
 
 interface AuthModalProps {
   isOpen: boolean;
@@ -9,6 +10,8 @@ interface AuthModalProps {
 }
 
 const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
+  const { login, register, resendVerification } = useAuth();
+  const { setCurrentView } = useApp();
   const [isLoginMode, setIsLoginMode] = useState(true);
   const [showPassword, setShowPassword] = useState(false);
   const [selectedRole, setSelectedRole] = useState<UserRole>('attendee');
@@ -18,12 +21,10 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
     password: '',
     confirmPassword: ''
   });
-  const [errors, setErrors] = useState<{[key: string]: string}>({});
+  const [errors, setErrors] = useState<{ [key: string]: string }>({});
   const [isLoading, setIsLoading] = useState(false);
   const [showEmailVerification, setShowEmailVerification] = useState(false);
   const [registrationEmail, setRegistrationEmail] = useState('');
-
-  const { login, register, resendVerification } = useAuth();
 
   if (!isOpen) return null;
 
@@ -36,7 +37,7 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
   };
 
   const validateForm = () => {
-    const newErrors: {[key: string]: string} = {};
+    const newErrors: { [key: string]: string } = {};
 
     if (!formData.email) {
       newErrors.email = 'Email is required';
@@ -67,7 +68,6 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
     if (!validateForm()) return;
 
     setIsLoading(true);
@@ -76,12 +76,10 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
     try {
       if (isLoginMode) {
         await login(formData.email, formData.password);
-        // Reset form and close modal on successful login
         setFormData({ name: '', email: '', password: '', confirmPassword: '' });
         onClose();
       } else {
         await register(formData.email, formData.password, formData.name, selectedRole);
-        // Show email verification screen
         setRegistrationEmail(formData.email);
         setShowEmailVerification(true);
         setFormData({ name: '', email: '', password: '', confirmPassword: '' });
@@ -106,7 +104,7 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
       setIsLoading(false);
     }
   };
-
+  
   const toggleMode = () => {
     setIsLoginMode(!isLoginMode);
     setErrors({});
@@ -119,7 +117,7 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
     { value: 'organizer', label: 'Event Organizer', description: 'Create and manage events' },
     { value: 'sponsor', label: 'Sponsor/Exhibitor', description: 'Sponsor events and showcase products' },
   ];
-
+  
   // Email Verification Screen
   if (showEmailVerification) {
     return (
@@ -355,8 +353,7 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
                   type="button"
                   onClick={() => {
                     onClose();
-                    // Navigate to password reset page
-                    window.dispatchEvent(new CustomEvent('navigate-to-password-reset'));
+                    setCurrentView('password-reset');
                   }}
                   className="text-sm text-indigo-600 hover:text-indigo-700 transition-colors duration-200"
                 >
