@@ -49,28 +49,8 @@ export interface RolePermission {
 // Auth helper functions
 export const authHelpers = {
   async signIn(email: string, password: string) {
-    // First check if user exists and has completed signup
-    const { data: profile, error: profileError } = await supabase
-      .from('user_profiles')
-      .select('*')
-      .eq('email', email)
-      .single();
-
-    if (profileError || !profile) {
-      return { 
-        data: null, 
-        error: new Error('No account found with this email. Please sign up first.') 
-      };
-    }
-
-    if (!profile.email_verified) {
-      return { 
-        data: null, 
-        error: new Error('Please verify your email address before signing in.') 
-      };
-    }
-
-    // Proceed with authentication
+    // Rely on Supabase's built-in check for email verification.
+    // The custom pre-check has been removed.
     const { data, error } = await supabase.auth.signInWithPassword({
       email,
       password
@@ -80,13 +60,30 @@ export const authHelpers = {
       return { data: null, error };
     }
 
-    // Return user data with profile information
-    return { 
+    // After a successful sign-in, get the user's profile from the correct table.
+    const { data: profile, error: profileError } = await supabase
+      .from('profiles') // Corrected table name to 'profiles'
+      .select('*')
+      .eq('id', data.user.id) // Query by user ID for accuracy
+      .single();
+
+    if (profileError || !profile) {
+      // This can happen if the trigger to create a profile failed.
+      // Log out the user to prevent an inconsistent state.
+      await supabase.auth.signOut();
+      return {
+        data: null,
+        error: new Error('User profile not found. Please contact support.')
+      };
+    }
+
+    // Return the authenticated user data along with their profile information
+    return {
       data: {
         ...data,
         profile
-      }, 
-      error: null 
+      },
+      error: null
     };
   },
 
@@ -104,7 +101,7 @@ export const authHelpers = {
 
     // Get user profile
     const { data: profile, error: profileError } = await supabase
-      .from('user_profiles')
+      .from('profiles') // Corrected table name
       .select('*')
       .eq('id', user.id)
       .single();
@@ -124,7 +121,7 @@ export const authHelpers = {
     }
 
     const { data, error } = await supabase
-      .from('user_profiles')
+      .from('profiles') // Corrected table name
       .update(updates)
       .eq('id', user.id)
       .select()
@@ -135,7 +132,7 @@ export const authHelpers = {
 
   async getUserPermissions(userId: string) {
     const { data: profile } = await supabase
-      .from('user_profiles')
+      .from('profiles') // Corrected table name
       .select('role')
       .eq('id', userId)
       .single();
@@ -185,7 +182,7 @@ export const subscriptions = {
         {
           event: '*',
           schema: 'public',
-          table: 'user_profiles',
+          table: 'profiles', // Corrected table name
           filter: `id=eq.${userId}`
         },
         (payload) => {
