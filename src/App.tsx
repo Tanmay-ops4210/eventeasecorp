@@ -1,13 +1,13 @@
-import React from 'react';
+import React, { Suspense, lazy } from 'react'; // Import Suspense and lazy
 import { AuthProvider, useAuth } from './contexts/AuthContext';
 import { AppProvider, useApp } from './contexts/AppContext';
 import { UserRole } from './types/user';
 import './index.css';
 import './components/chart-styles.css';
 import EmailVerificationBanner from './components/common/EmailVerificationBanner';
+import { Loader2 } from 'lucide-react'; // Import a loading icon
 
 // --- Layout Components ---
-// These components handle the main structure and navigation of the app.
 import PublicNavigation from './components/layout/PublicNavigation';
 import AttendeeNavigation from './components/layout/AttendeeNavigation';
 import OrganizerNavigation from './components/layout/OrganizerNavigation';
@@ -15,77 +15,76 @@ import SponsorNavigation from './components/layout/SponsorNavigation';
 import AdminNavigation from './components/layout/AdminNavigation';
 import Breadcrumbs from './components/layout/Breadcrumbs';
 
-// --- Page Components ---
-// These are the individual pages of your application.
-// For simplicity and to ensure functionality, we are importing them directly.
-import HomePage from './components/pages/HomePage';
-import EventDiscoveryPage from './components/pages/EventDiscoveryPage';
-import SpeakerDirectoryPage from './components/speakers/SpeakerDirectoryPage';
-import SponsorDirectoryPage from './components/sponsors/SponsorDirectoryPage';
-import OrganizerDirectoryPage from './components/pages/OrganizerDirectoryPage';
-import BlogPage from './components/blog/BlogPage';
-import EventDetailPage from './components/events/EventDetailPage';
-import EventPaymentPage from './components/events/EventPaymentPage';
-import EventPaymentSuccess from './components/events/EventPaymentSuccess';
-import ResourcesPage from './components/pages/ResourcesPage';
-import PressPage from './components/pages/PressPage';
-import AboutPage from './components/pages/AboutPage';
-import PricingPage from './components/pages/PricingPage';
-import ContactPage from './components/pages/ContactPage';
-import TermsPage from './components/pages/TermsPage';
-import PrivacyPage from './components/pages/PrivacyPage';
-import PasswordResetPage from './components/auth/PasswordResetPage';
-import EmailVerificationCallback from './components/auth/EmailVerificationCallback';
-import PasswordResetCallback from './components/auth/PasswordResetCallback';
-import AttendeeDashboard from './components/attendee/AttendeeDashboard';
-import MyEventsPage from './components/attendee/MyEventsPage';
-import MyNetworkPage from './components/attendee/MyNetworkPage';
-import NotificationsPage from './components/attendee/NotificationsPage';
-import AttendeeProfilePage from './components/attendee/AttendeeProfilePage';
-import AgendaBuilderPage from './components/attendee/AgendaBuilderPage';
-import NetworkingHubPage from './components/attendee/NetworkingHubPage';
-import LiveEventPage from './components/attendee/LiveEventPage';
-import SessionRoomPage from './components/attendee/SessionRoomPage';
-import ExpoHallPage from './components/attendee/ExpoHallPage';
-import ResourceLibraryPage from './components/attendee/ResourceLibraryPage';
-import OrganizerDashboard from './components/organizer/OrganizerDashboard';
-import EventBuilderPage from './components/organizer/EventBuilderPage';
-import EventSettingsPage from './components/organizer/EventSettingsPage';
-import LandingCustomizerPage from './components/organizer/LandingCustomizerPage';
-import AgendaManagerPage from './components/organizer/AgendaManagerPage';
-import VenueManagerPage from './components/organizer/VenueManagerPage';
-import TicketingPage from './components/organizer/TicketingPage';
-import DiscountCodesPage from './components/organizer/DiscountCodesPage';
-import EmailCampaignsPage from './components/organizer/EmailCampaignsPage';
-import AttendeeManagementPage from './components/organizer/AttendeeManagementPage';
-import SpeakerPortalPage from './components/organizer/SpeakerPortalPage';
-import StaffRolesPage from './components/organizer/StaffRolesPage';
-import AnalyticsPage from './components/organizer/AnalyticsPage';
-import OrganizerSettingsPage from './components/organizer/OrganizerSettingsPage';
-import SponsorDashboard from './components/sponsor/SponsorDashboard';
-import BoothCustomizationPage from './components/sponsor/BoothCustomizationPage';
-import LeadCapturePage from './components/sponsor/LeadCapturePage';
-import SponsorAnalyticsPage from './components/sponsor/SponsorAnalyticsPage';
-import SponsorToolsPage from './components/sponsor/SponsorToolsPage';
-import AdminDashboard from './components/admin/AdminDashboard';
-import UserManagementPage from './components/admin/UserManagementPage';
-import EventOversightPage from './components/admin/EventOversightPage';
-import ContentManagementPage from './components/admin/ContentManagementPage';
+// --- Lazy-loaded Page Components ---
+const HomePage = lazy(() => import('./components/pages/HomePage'));
+const EventDiscoveryPage = lazy(() => import('./components/pages/EventDiscoveryPage'));
+const SpeakerDirectoryPage = lazy(() => import('./components/speakers/SpeakerDirectoryPage'));
+const SponsorDirectoryPage = lazy(() => import('./components/sponsors/SponsorDirectoryPage'));
+const OrganizerDirectoryPage = lazy(() => import('./components/pages/OrganizerDirectoryPage'));
+const BlogPage = lazy(() => import('./components/blog/BlogPage'));
+const EventDetailPage = lazy(() => import('./components/events/EventDetailPage'));
+const EventPaymentPage = lazy(() => import('./components/events/EventPaymentPage'));
+const EventPaymentSuccess = lazy(() => import('./components/events/EventPaymentSuccess'));
+const ResourcesPage = lazy(() => import('./components/pages/ResourcesPage'));
+const PressPage = lazy(() => import('./components/pages/PressPage'));
+const AboutPage = lazy(() => import('./components/pages/AboutPage'));
+const PricingPage = lazy(() => import('./components/pages/PricingPage'));
+const ContactPage = lazy(() => import('./components/pages/ContactPage'));
+const TermsPage = lazy(() => import('./components/pages/TermsPage'));
+const PrivacyPage = lazy(() => import('./components/pages/PrivacyPage'));
+const PasswordResetPage = lazy(() => import('./components/auth/PasswordResetPage'));
+const EmailVerificationCallback = lazy(() => import('./components/auth/EmailVerificationCallback'));
+const PasswordResetCallback = lazy(() => import('./components/auth/PasswordResetCallback'));
+const AttendeeDashboard = lazy(() => import('./components/attendee/AttendeeDashboard'));
+const MyEventsPage = lazy(() => import('./components/attendee/MyEventsPage'));
+const MyNetworkPage = lazy(() => import('./components/attendee/MyNetworkPage'));
+const NotificationsPage = lazy(() => import('./components/attendee/NotificationsPage'));
+const AttendeeProfilePage = lazy(() => import('./components/attendee/AttendeeProfilePage'));
+const AgendaBuilderPage = lazy(() => import('./components/attendee/AgendaBuilderPage'));
+const NetworkingHubPage = lazy(() => import('./components/attendee/NetworkingHubPage'));
+const LiveEventPage = lazy(() => import('./components/attendee/LiveEventPage'));
+const SessionRoomPage = lazy(() => import('./components/attendee/SessionRoomPage'));
+const ExpoHallPage = lazy(() => import('./components/attendee/ExpoHallPage'));
+const ResourceLibraryPage = lazy(() => import('./components/attendee/ResourceLibraryPage'));
+const OrganizerDashboard = lazy(() => import('./components/organizer/OrganizerDashboard'));
+const EventBuilderPage = lazy(() => import('./components/organizer/EventBuilderPage'));
+const EventSettingsPage = lazy(() => import('./components/organizer/EventSettingsPage'));
+const LandingCustomizerPage = lazy(() => import('./components/organizer/LandingCustomizerPage'));
+const AgendaManagerPage = lazy(() => import('./components/organizer/AgendaManagerPage'));
+const VenueManagerPage = lazy(() => import('./components/organizer/VenueManagerPage'));
+const TicketingPage = lazy(() => import('./components/organizer/TicketingPage'));
+const DiscountCodesPage = lazy(() => import('./components/organizer/DiscountCodesPage'));
+const EmailCampaignsPage = lazy(() => import('./components/organizer/EmailCampaignsPage'));
+const AttendeeManagementPage = lazy(() => import('./components/organizer/AttendeeManagementPage'));
+const SpeakerPortalPage = lazy(() => import('./components/organizer/SpeakerPortalPage'));
+const StaffRolesPage = lazy(() => import('./components/organizer/StaffRolesPage'));
+const AnalyticsPage = lazy(() => import('./components/organizer/AnalyticsPage'));
+const OrganizerSettingsPage = lazy(() => import('./components/organizer/OrganizerSettingsPage'));
+const SponsorDashboard = lazy(() => import('./components/sponsor/SponsorDashboard'));
+const BoothCustomizationPage = lazy(() => import('./components/sponsor/BoothCustomizationPage'));
+const LeadCapturePage = lazy(() => import('./components/sponsor/LeadCapturePage'));
+const SponsorAnalyticsPage = lazy(() => import('./components/sponsor/SponsorAnalyticsPage'));
+const SponsorToolsPage = lazy(() => import('./components/sponsor/SponsorToolsPage'));
+const AdminDashboard = lazy(() => import('./components/admin/AdminDashboard'));
+const UserManagementPage = lazy(() => import('./components/admin/UserManagementPage'));
+const EventOversightPage = lazy(() => import('./components/admin/EventOversightPage'));
+const ContentManagementPage = lazy(() => import('./components/admin/ContentManagementPage'));
 
-/**
- * AppContent Component
- * This component is the core of the application's UI. It determines which
- * navigation bar and which page to display based on the user's authentication
- * status and the current view selected in the application's state.
- */
+
+// A loading spinner component to show while pages are being lazy-loaded.
+const LoadingFallback: React.FC = () => (
+    <div className="flex items-center justify-center h-screen bg-gray-50">
+      <div className="text-center">
+        <Loader2 className="w-12 h-12 text-indigo-600 animate-spin mx-auto mb-4" />
+        <p className="text-lg text-gray-600">Loading...</p>
+      </div>
+    </div>
+);
+
 const AppContent: React.FC = () => {
     const { user, isAuthenticated } = useAuth();
     const { currentView, selectedEventId } = useApp();
 
-    /**
-     * Renders the appropriate navigation component based on the user's role.
-     * @returns {React.ReactNode} The navigation component.
-     */
     const renderNavigation = () => {
         if (isAuthenticated && user) {
             switch (user.role) {
@@ -99,11 +98,6 @@ const AppContent: React.FC = () => {
         return <PublicNavigation />;
     };
 
-    /**
-     * Determines which page component to render based on the currentView state.
-     * It also handles role-based access control for protected routes.
-     * @returns {React.ReactNode} The page component to render.
-     */
     const renderPage = () => {
         const hasRole = (roles: UserRole[]) => isAuthenticated && user && roles.includes(user.role);
 
@@ -122,7 +116,7 @@ const AppContent: React.FC = () => {
             case 'contact': return <ContactPage />;
             case 'terms': return <TermsPage />;
             case 'privacy': return <PrivacyPage />;
-            case 'event-page': return <EventDetailPage eventId={selectedEventId || '1'} />; // <-- Pass selectedEventId
+            case 'event-page': return <EventDetailPage eventId={selectedEventId || '1'} />;
             case 'event-payment': return <EventPaymentPage />;
             case 'event-payment-success': return <EventPaymentSuccess />;
             case 'password-reset': return <PasswordResetPage />;
@@ -180,7 +174,6 @@ const AppContent: React.FC = () => {
         }
     };
 
-    // Determines if the current view is a public page to decide whether to show breadcrumbs.
     const isPublicView = [
         'home', 'event-discovery', 'speaker-directory', 'sponsor-directory',
         'organizer-directory', 'blog', 'resources', 'press', 'about',
@@ -193,17 +186,14 @@ const AppContent: React.FC = () => {
             <EmailVerificationBanner />
             {!isPublicView && <Breadcrumbs />}
             <main>
-                {renderPage()}
+                <Suspense fallback={<LoadingFallback />}>
+                    {renderPage()}
+                </Suspense>
             </main>
         </div>
     );
 };
 
-/**
- * App Component (Root)
- * This is the main entry point of the application. It wraps the entire
- * app with the necessary context providers for state management.
- */
 function App() {
     return (
         <AppProvider>
@@ -215,4 +205,3 @@ function App() {
 }
 
 export default App;
-
