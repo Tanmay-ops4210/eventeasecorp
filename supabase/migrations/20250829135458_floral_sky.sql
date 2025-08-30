@@ -1,5 +1,6 @@
--- EventEase Supabase Schema with Auth Integration (Fully Idempotent & Corrected)
---
+-- EventEase Supabase Schema (Firebase Auth Integration)
+-- This schema is designed to work with an external authentication provider like Firebase.
+-- User profiles are created and managed from the application code.
 
 -- ----------------------------------------------------------------
 -- 1. EXTENSIONS & TYPES
@@ -29,7 +30,8 @@ END$$;
 
 -- Create tables only if they do not already exist.
 CREATE TABLE IF NOT EXISTS public.profiles (
-  id UUID PRIMARY KEY REFERENCES auth.users(id) ON DELETE CASCADE,
+  -- The 'id' is the Primary Key and will be populated with the Firebase Auth user's UID.
+  id UUID PRIMARY KEY,
   username TEXT NOT NULL,
   full_name TEXT,
   avatar_url TEXT,
@@ -39,7 +41,7 @@ CREATE TABLE IF NOT EXISTS public.profiles (
   title TEXT,
   updated_at TIMESTAMPTZ DEFAULT NOW()
 );
-COMMENT ON TABLE public.profiles IS 'Stores public profile information for each user.';
+COMMENT ON TABLE public.profiles IS 'Stores public profile information for each user, linked by Firebase UID.';
 
 CREATE TABLE IF NOT EXISTS public.events (
   id UUID PRIMARY KEY DEFAULT extensions.uuid_generate_v4(),
@@ -189,125 +191,39 @@ CREATE TABLE IF NOT EXISTS public.notifications (
   created_at TIMESTAMPTZ DEFAULT NOW()
 );
 
--- ----------------------------------------------------------------
--- 3. PERMISSIONS FOR SUPABASE AUTH
--- ----------------------------------------------------------------
--- CRITICAL FIX: Grant usage on the public schema and ALL permissions
--- on your new tables to the Supabase internal authentication role.
--- This allows the handle_new_user trigger to work correctly.
-GRANT USAGE ON SCHEMA public TO supabase_auth_admin;
-GRANT ALL ON ALL TABLES IN SCHEMA public TO supabase_auth_admin;
-GRANT ALL ON ALL SEQUENCES IN SCHEMA public TO supabase_auth_admin;
-GRANT ALL ON ALL FUNCTIONS IN SCHEMA public TO supabase_auth_admin;
-
 
 -- ----------------------------------------------------------------
--- 4. DATABASE FUNCTIONS
+-- 3. ROW LEVEL SECURITY (RLS) - PUBLIC ACCESS ONLY
 -- ----------------------------------------------------------------
 
-CREATE OR REPLACE FUNCTION public.get_user_role()
-RETURNS user_role AS $$
-  SELECT role FROM public.profiles WHERE id = auth.uid();
-$$ LANGUAGE sql SECURITY DEFINER;
-COMMENT ON FUNCTION public.get_user_role() IS 'Retrieves the role of the currently authenticated user.';
-
-CREATE OR REPLACE FUNCTION public.is_admin()
-RETURNS BOOLEAN AS $$
-  SELECT public.get_user_role() = 'admin';
-$$ LANGUAGE sql SECURITY DEFINER;
-COMMENT ON FUNCTION public.is_admin() IS 'Checks if the current authenticated user has the admin role.';
-
--- ----------------------------------------------------------------
--- 5. ROW LEVEL SECURITY (RLS)
--- ----------------------------------------------------------------
-
+-- Enable RLS on all tables
 ALTER TABLE public.profiles ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.events ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.ticket_types ENABLE ROW LEVEL SECURITY;
-ALTER TABLE public.attendees ENABLE ROW LEVEL SECURITY;
-ALTER TABLE public.speakers ENABLE ROW LEVEL SECURITY;
-ALTER TABLE public.event_speakers ENABLE ROW LEVEL SECURITY;
-ALTER TABLE public.sponsors ENABLE ROW LEVEL SECURITY;
-ALTER TABLE public.event_sponsors ENABLE ROW LEVEL SECURITY;
-ALTER TABLE public.booths ENABLE ROW LEVEL SECURITY;
-ALTER TABLE public.leads ENABLE ROW LEVEL SECURITY;
-ALTER TABLE public.blog_articles ENABLE ROW LEVEL SECURITY;
-ALTER TABLE public.resources ENABLE ROW LEVEL SECURITY;
-ALTER TABLE public.press_releases ENABLE ROW LEVEL SECURITY;
-ALTER TABLE public.notifications ENABLE ROW LEVEL SECURITY;
+-- (Enable for other tables as needed)
 
--- RLS Policies (Drop existing policies before creating new ones)
+-- RLS Policies that DON'T depend on Supabase Auth can remain.
+-- You can add more specific rules here later that work with Firebase JWTs.
 
--- Profiles
+-- Allow public read access on certain tables.
 DROP POLICY IF EXISTS "Allow public read access to profiles" ON public.profiles;
 CREATE POLICY "Allow public read access to profiles" ON public.profiles FOR SELECT USING (true);
 
-DROP POLICY IF EXISTS "Users can update their own profile" ON public.profiles;
-CREATE POLICY "Users can update their own profile" ON public.profiles FOR UPDATE USING (auth.uid() = id) WITH CHECK (auth.uid() = id);
-
-DROP POLICY IF EXISTS "Allow new user to insert own profile" ON public.profiles;
-CREATE POLICY "Allow new user to insert own profile" ON public.profiles FOR INSERT WITH CHECK (auth.uid() = id);
-
--- Events
 DROP POLICY IF EXISTS "Allow public read access to published events" ON public.events;
 CREATE POLICY "Allow public read access to published events" ON public.events FOR SELECT USING (status = 'published');
 
-DROP POLICY IF EXISTS "Organizers can manage their own events" ON public.events;
-CREATE POLICY "Organizers can manage their own events" ON public.events FOR ALL USING (auth.uid() = organizer_id) WITH CHECK (auth.uid() = organizer_id);
-
-DROP POLICY IF EXISTS "Admins have full access to events" ON public.events;
-CREATE POLICY "Admins have full access to events" ON public.events FOR ALL USING (public.is_admin());
-
--- Tickets
 DROP POLICY IF EXISTS "Allow public read access to tickets of published events" ON public.ticket_types;
 CREATE POLICY "Allow public read access to tickets of published events" ON public.ticket_types FOR SELECT USING (
   EXISTS (SELECT 1 FROM public.events WHERE events.id = ticket_types.event_id AND events.status = 'published')
 );
 
-DROP POLICY IF EXISTS "Organizers can manage tickets for their events" ON public.ticket_types;
-CREATE POLICY "Organizers can manage tickets for their events" ON public.ticket_types FOR ALL USING (
-  auth.uid() = (SELECT organizer_id FROM public.events WHERE events.id = ticket_types.event_id)
-);
-
--- Notifications
-DROP POLICY IF EXISTS "Users can access their own notifications" ON public.notifications;
-CREATE POLICY "Users can access their own notifications" ON public.notifications FOR ALL USING (auth.uid() = user_id) WITH CHECK (auth.uid() = user_id);
-
--- Speakers
 DROP POLICY IF EXISTS "Allow read access to all speakers" ON public.speakers;
 CREATE POLICY "Allow read access to all speakers" ON public.speakers FOR SELECT USING (true);
 
-DROP POLICY IF EXISTS "Admins have full access to speakers" ON public.speakers;
-CREATE POLICY "Admins have full access to speakers" ON public.speakers FOR ALL USING (public.is_admin());
 
 -- ----------------------------------------------------------------
--- 6. TRIGGERS
+-- 4. TRIGGERS - UTILITY
 -- ----------------------------------------------------------------
-
--- Trigger function to create a profile for new users.
-CREATE OR REPLACE FUNCTION public.handle_new_user()
-RETURNS TRIGGER AS $$
-BEGIN
-  INSERT INTO public.profiles (id, username, full_name, role)
-  VALUES (
-    NEW.id,
-    NEW.email,
-    NEW.raw_user_meta_data->>'full_name',
-    COALESCE(
-      (NEW.raw_user_meta_data->>'role')::public.user_role,
-      'attendee'::public.user_role
-    )
-  );
-  RETURN NEW;
-END;
-$$ LANGUAGE plpgsql SECURITY DEFINER;
-COMMENT ON FUNCTION public.handle_new_user() IS 'Creates a new profile row when a user signs up via Supabase Auth.';
-
--- Drop the trigger if it exists before creating it.
-DROP TRIGGER IF EXISTS on_auth_user_created ON auth.users;
-CREATE TRIGGER on_auth_user_created
-  AFTER INSERT ON auth.users
-  FOR EACH ROW EXECUTE FUNCTION public.handle_new_user();
 
 -- Function to automatically update 'updated_at' timestamps.
 CREATE OR REPLACE FUNCTION public.update_updated_at_column()
@@ -318,7 +234,7 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
--- Drop and re-create triggers for 'updated_at' columns to ensure idempotency.
+-- Apply the trigger to tables that have an 'updated_at' column.
 DROP TRIGGER IF EXISTS handle_updated_at ON public.profiles;
 CREATE TRIGGER handle_updated_at BEFORE UPDATE ON public.profiles FOR EACH ROW EXECUTE FUNCTION public.update_updated_at_column();
 
