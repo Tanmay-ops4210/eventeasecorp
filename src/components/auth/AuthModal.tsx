@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { X, User, Mail, Lock, Eye, EyeOff } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
 import { UserRole } from '../../types/user';
-import { useApp } from '../../contexts/AppContext'; // Import useApp
+import { useApp } from '../../contexts/AppContext';
 
 interface AuthModalProps {
   isOpen: boolean;
@@ -25,7 +25,7 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
   const [registrationEmail, setRegistrationEmail] = useState('');
 
   const { login, register, resendVerification } = useAuth();
-  const { setCurrentView } = useApp(); // Get setCurrentView from useApp
+  const { setCurrentView } = useApp();
 
   if (!isOpen) return null;
 
@@ -93,9 +93,6 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
       const errorMessage = error instanceof Error ? error.message : 'Authentication failed. Please try again.';
       setErrors({ general: errorMessage });
     } finally {
-      // *** THIS IS THE FIX ***
-      // This block ensures the loading spinner is always turned off,
-      // whether the login/register succeeds or fails.
       setIsLoading(false);
     }
   };
@@ -121,12 +118,11 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
   };
 
   const roleOptions = [
-    { value: 'attendee', label: 'Attendee', description: 'Join and attend events' },
-    { value: 'organizer', label: 'Event Organizer', description: 'Create and manage events' },
-    { value: 'sponsor', label: 'Sponsor/Exhibitor', description: 'Sponsor events and showcase products' },
+    { value: 'attendee' as UserRole, label: 'Attendee', description: 'Join and attend events' },
+    { value: 'organizer' as UserRole, label: 'Event Organizer', description: 'Create and manage events' },
+    { value: 'sponsor' as UserRole, label: 'Sponsor/Exhibitor', description: 'Sponsor events and showcase products' },
   ];
 
-  // Email Verification Screen
   if (showEmailVerification) {
     return (
       <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black bg-opacity-50 backdrop-blur-sm">
@@ -137,7 +133,6 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
           >
             <X className="w-6 h-6" />
           </button>
-
           <div className="p-8">
             <div className="text-center mb-6">
               <div className="w-16 h-16 bg-green-500 rounded-full flex items-center justify-center mx-auto mb-4">
@@ -148,7 +143,6 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
                 We've sent a verification link to <strong>{registrationEmail}</strong>
               </p>
             </div>
-
             <div className="space-y-4">
               <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
                 <p className="text-blue-800 text-sm">
@@ -156,7 +150,6 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
                   You won't be able to sign in until your email is verified.
                 </p>
               </div>
-
               <button
                 onClick={handleResendVerification}
                 disabled={isLoading}
@@ -171,7 +164,6 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
                   'Resend Verification Email'
                 )}
               </button>
-
               <button
                 onClick={() => {
                   setShowEmailVerification(false);
@@ -346,8 +338,7 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
                   type="button"
                   onClick={() => {
                     onClose();
-                    // Dispatch a custom event that App.tsx can listen for
-                    window.dispatchEvent(new CustomEvent('navigate-to-password-reset'));
+                    setCurrentView('password-reset');
                   }}
                   className="text-sm text-indigo-600 hover:text-indigo-700 transition-colors duration-200"
                 >
@@ -362,4 +353,4 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
   );
 };
 
-export default AuthModal;s
+export default AuthModal;
