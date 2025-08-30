@@ -349,7 +349,6 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
                 {isLoginMode ? 'Sign Up' : 'Sign In'}
               </button>
             </p>
-
             {isLoginMode && (
               <div className="mt-3">
                 <button
