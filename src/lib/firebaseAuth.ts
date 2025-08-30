@@ -3,7 +3,7 @@ import {
   createUserWithEmailAndPassword,
   signOut,
   sendPasswordResetEmail,
-  onAuthStateChanged,
+  onAuthStateChanged as firebaseOnAuthStateChanged,
   updateProfile,
   sendEmailVerification,
   User as FirebaseUser,
@@ -256,7 +256,7 @@ export class FirebaseAuthService {
    * Listen to authentication state changes
    */
   onAuthStateChanged(callback: (user: FirebaseUser | null) => void): () => void {
-    return onAuthStateChanged(auth, callback);
+    return firebaseOnAuthStateChanged(auth, callback);
   }
 
   /**
