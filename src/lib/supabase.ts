@@ -1,11 +1,24 @@
 import { createClient } from '@supabase/supabase-js';
 
 // --- SUPABASE CLIENT INITIALIZATION ---
-// Using Bolt's Supabase connection - environment variables will be provided by Bolt
-const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || 'https://placeholder.supabase.co';
-const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY || 'placeholder-key';
+// Check for required environment variables
+const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
+const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
 
-export const supabase = createClient(supabaseUrl, supabaseAnonKey);
+// Validate environment variables
+if (!supabaseUrl || supabaseUrl === 'https://your-project-id.supabase.co') {
+  console.error('VITE_SUPABASE_URL is not configured. Please set up your Supabase credentials in the .env file.');
+}
+
+if (!supabaseAnonKey || supabaseAnonKey === 'your-supabase-anon-key') {
+  console.error('VITE_SUPABASE_ANON_KEY is not configured. Please set up your Supabase credentials in the .env file.');
+}
+
+// Create Supabase client with fallback values to prevent crashes
+export const supabase = createClient(
+  supabaseUrl || 'https://placeholder.supabase.co',
+  supabaseAnonKey || 'placeholder-key'
+);
 
 // --- DATABASE TYPES ---
 export interface UserProfile {
