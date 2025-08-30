@@ -1,8 +1,7 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { User, AuthState, UserRole } from '../types/user';
 import { useApp } from './AppContext';
-import { supabase } from '../lib/supabase'; // CORRECTED IMPORT PATH
-import { UserProfile } from '../lib/supabaseClient'; // This type import is also wrong, let's fix it
+import { supabase, UserProfile } from '../lib/supabase'; // CORRECTED IMPORT
 import { firebaseAuthService } from '../lib/firebaseAuth';
 import { User as FirebaseUser } from 'firebase/auth';
 
