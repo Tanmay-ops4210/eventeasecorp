@@ -11,7 +11,7 @@ import {
   AuthError
 } from "firebase/auth";
 import { auth } from "./firebaseConfig";
-import { supabase } from "./supabase";
+import { supabase } from "./supabase"; // CORRECTED IMPORT
 import { UserRole } from "../types/user";
 
 // Types for Firebase Auth integration
