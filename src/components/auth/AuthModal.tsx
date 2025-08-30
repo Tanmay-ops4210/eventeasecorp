@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { X, User, Mail, Lock, Eye, EyeOff } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
 import { UserRole } from '../../types/user';
+import { useApp } from '../../contexts/AppContext'; // Import useApp
 
 interface AuthModalProps {
   isOpen: boolean;
@@ -18,12 +19,13 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
     password: '',
     confirmPassword: ''
   });
-  const [errors, setErrors] = useState<{[key: string]: string}>({});
+  const [errors, setErrors] = useState<{ [key: string]: string }>({});
   const [isLoading, setIsLoading] = useState(false);
   const [showEmailVerification, setShowEmailVerification] = useState(false);
   const [registrationEmail, setRegistrationEmail] = useState('');
 
   const { login, register, resendVerification } = useAuth();
+  const { setCurrentView } = useApp(); // Get setCurrentView from useApp
 
   if (!isOpen) return null;
 
@@ -36,7 +38,7 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
   };
 
   const validateForm = () => {
-    const newErrors: {[key: string]: string} = {};
+    const newErrors: { [key: string]: string } = {};
 
     if (!formData.email) {
       newErrors.email = 'Email is required';
@@ -76,12 +78,13 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
     try {
       if (isLoginMode) {
         await login(formData.email, formData.password);
-        // Reset form and close modal on successful login
+        // On successful login, AuthContext handles redirection.
+        // We can now close the modal.
         setFormData({ name: '', email: '', password: '', confirmPassword: '' });
         onClose();
       } else {
         await register(formData.email, formData.password, formData.name, selectedRole);
-        // Show email verification screen
+        // Show email verification screen after registration
         setRegistrationEmail(formData.email);
         setShowEmailVerification(true);
         setFormData({ name: '', email: '', password: '', confirmPassword: '' });
@@ -90,6 +93,9 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
       const errorMessage = error instanceof Error ? error.message : 'Authentication failed. Please try again.';
       setErrors({ general: errorMessage });
     } finally {
+      // *** THIS IS THE FIX ***
+      // This block ensures the loading spinner is always turned off,
+      // whether the login/register succeeds or fails.
       setIsLoading(false);
     }
   };
@@ -185,15 +191,12 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black bg-opacity-50 backdrop-blur-sm">
       <div className="relative w-full max-w-md bg-white rounded-2xl shadow-2xl transform transition-all duration-300 scale-100">
-        {/* Close Button */}
         <button
           onClick={onClose}
           className="absolute top-4 right-4 p-2 text-gray-400 hover:text-gray-600 transition-colors duration-200"
         >
           <X className="w-6 h-6" />
         </button>
-
-        {/* Header */}
         <div className="p-8 pb-4">
           <div className="text-center mb-6">
             <div className="w-16 h-16 bg-gradient-to-br from-indigo-600 to-purple-600 rounded-full flex items-center justify-center mx-auto mb-4">
@@ -206,15 +209,11 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
               {isLoginMode ? 'Sign in to access your account' : 'Create your account to get started'}
             </p>
           </div>
-
-          {/* Error Message */}
           {errors.general && (
             <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg">
               <p className="text-red-700 text-sm">{errors.general}</p>
             </div>
           )}
-
-          {/* Form */}
           <form onSubmit={handleSubmit} className="space-y-4">
             {!isLoginMode && (
               <>
@@ -234,8 +233,6 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
                   </div>
                   {errors.name && <p className="text-red-500 text-sm mt-1">{errors.name}</p>}
                 </div>
-
-                {/* Role Selection */}
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
                     I want to join as:
@@ -261,7 +258,6 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
                 </div>
               </>
             )}
-
             <div>
               <div className="relative">
                 <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
@@ -278,7 +274,6 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
               </div>
               {errors.email && <p className="text-red-500 text-sm mt-1">{errors.email}</p>}
             </div>
-
             <div>
               <div className="relative">
                 <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
@@ -302,7 +297,6 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
               </div>
               {errors.password && <p className="text-red-500 text-sm mt-1">{errors.password}</p>}
             </div>
-
             {!isLoginMode && (
               <div>
                 <div className="relative">
@@ -321,7 +315,6 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
                 {errors.confirmPassword && <p className="text-red-500 text-sm mt-1">{errors.confirmPassword}</p>}
               </div>
             )}
-
             <button
               type="submit"
               disabled={isLoading}
@@ -337,8 +330,6 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
               )}
             </button>
           </form>
-
-          {/* Toggle Mode */}
           <div className="text-center mt-6">
             <p className="text-gray-600">
               {isLoginMode ? "Don't have an account?" : 'Already have an account?'}
@@ -355,7 +346,8 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
                   type="button"
                   onClick={() => {
                     onClose();
-                    setCurrentView('password-reset');
+                    // Dispatch a custom event that App.tsx can listen for
+                    window.dispatchEvent(new CustomEvent('navigate-to-password-reset'));
                   }}
                   className="text-sm text-indigo-600 hover:text-indigo-700 transition-colors duration-200"
                 >
@@ -370,4 +362,4 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
   );
 };
 
-export default AuthModal;
+export default AuthModal;s
