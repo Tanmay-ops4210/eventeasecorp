@@ -1,45 +1,23 @@
-// Import the functions you need from the SDKs you need
 import { initializeApp } from "firebase/app";
 import { getAnalytics } from "firebase/analytics";
-import { 
-  getAuth, 
-  Auth,
-  connectAuthEmulator,
-  signInWithEmailAndPassword,
-  createUserWithEmailAndPassword,
-  signOut,
-  sendPasswordResetEmail,
-  onAuthStateChanged,
-  User as FirebaseUser,
-  UserCredential,
-  updateProfile,
-  sendEmailVerification
-} from "firebase/auth";
+import { getAuth, Auth } from "firebase/auth";
 
-// Your web app's Firebase configuration
-// For Firebase JS SDK v7.20.0 and later, measurementId is optional
+// This configuration now securely reads the variables from Vercel.
 const firebaseConfig = {
-  apiKey: "AIzaSyDCScMcAMwBFXHKei_RRZ7M6SG9YA2oQqE",
-  authDomain: "eventeasecorp.firebaseapp.com",
-  projectId: "eventeasecorp",
-  storageBucket: "eventeasecorp.firebasestorage.app",
-  messagingSenderId: "796329798902",
-  appId: "1:796329798902:web:cd5a163b12fc2fdb6750d7",
-  measurementId: "G-WB4KBXM17F"
+  apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
+  authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN,
+  projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID,
+  storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET,
+  messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID,
+  appId: import.meta.env.VITE_FIREBASE_APP_ID,
+  measurementId: import.meta.env.VITE_FIREBASE_MEASUREMENT_ID
 };
 
 // Initialize Firebase
 const app = initializeApp(firebaseConfig);
 const analytics = getAnalytics(app);
 
-// Initialize Firebase Authentication and get a reference to the service
+// Initialize Firebase Authentication
 export const auth: Auth = getAuth(app);
 
-// Connect to Auth emulator in development (optional)
-if (process.env.NODE_ENV === 'development' && !auth.emulatorConfig) {
-  // Uncomment the line below if you want to use Firebase Auth emulator
-  // connectAuthEmulator(auth, "http://localhost:9099");
-}
-
 export { app, analytics };
-export type { FirebaseUser, UserCredential };
