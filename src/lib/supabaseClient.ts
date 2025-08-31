@@ -1,8 +1,13 @@
-import { createClient } from '@supabase/supabase-js';
+import { createClient } from "@supabase/supabase-js";
 
-// The Supabase URL and Key are placed here directly.
-const supabaseUrl = "https://vjdsijuyzhhlofmlzexe.supabase.co";
-const supabaseAnonKey = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZqZHNpanV5emhobG9mbWx6ZXhlIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTU4NzcwNDQsImV4cCI6MjA3MTQ1MzA0NH0.T7pK7N0whtHSkXIXcttNFfyQMqtHlIQbVhYAe7s6UrM";
+// This is the correct way to read environment variables in a Vite project.
+// Vercel will provide these values to your application during the build process.
+const supabaseUrl = import.meta.env.VITE_SUPABASE_URL as string;
+const supabaseKey = import.meta.env.VITE_SUPABASE_KEY as string;
 
-// Create and export the Supabase client
-export const supabase = createClient(supabaseUrl, supabaseAnonKey);
+// This check will help you know if the variables are missing.
+if (!supabaseUrl || !supabaseKey) {
+  throw new Error("Supabase URL or Anon Key is missing. Make sure to set them in your Vercel project settings and redeploy.");
+}
+
+export const supabase = createClient(supabaseUrl, supabaseKey);
