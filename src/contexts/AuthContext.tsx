@@ -76,18 +76,6 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
   const loadUserProfile = async (userId: string) => {
     try {
-      // Check if Supabase is properly configured
-      const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
-      if (!supabaseUrl || supabaseUrl === 'https://your-project-id.supabase.co') {
-        console.warn('Supabase not configured. Skipping profile load.');
-        setAuthState({
-          user: null,
-          isAuthenticated: false,
-          isLoading: false,
-        });
-        return;
-      }
-
       const { data: userProfile, error } = await supabase
         .from('profiles')
         .select('*')
@@ -117,7 +105,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         setAuthState(prev => ({ ...prev, isLoading: false }));
       }
     } catch (error) {
-      console.warn('Supabase connection failed. This is expected if Supabase is not configured yet.');
+      console.error('Error loading user profile:', error);
       setAuthState(prev => ({ ...prev, isLoading: false }));
     }
   };
