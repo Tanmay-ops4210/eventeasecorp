@@ -1,29 +1,16 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { User, AuthState, UserRole } from '../types/user';
 import { useApp } from './AppContext';
-import { supabase, UserProfile } from '../lib/supabase'; // CORRECTED IMPORT
+import { supabase } from '../lib/supabase';
 import { firebaseAuthService } from '../lib/firebaseAuth';
 import { User as FirebaseUser } from 'firebase/auth';
-
-// We can define the UserProfile type here if it's not exported correctly elsewhere
-// For now, let's assume it should come from supabase.ts or a types file.
-// Based on your files, UserProfile is in `supabaseClient.ts`, which doesn't exist.
-// Let's assume the type should be defined or imported correctly.
-// A safe bet is to import it from the file that defines it, or define it locally if needed.
-// For now, we'll import it from the file where it SHOULD be. Let's fix that.
-// The type is defined in `supabaseClient.ts`, which is the file that doesn't exist.
-// Looking at `src/lib/supabase.ts`, it doesn't export the type.
-// Let's assume the type is defined in `src/types/user.ts` for now as a more logical location.
-// Actually, `supabaseClient.ts` does define it. We'll have to correct that file's name.
-// Let's assume you rename `src/lib/supabase.ts` to `src/lib/supabaseClient.ts` to fix all imports at once.
-// Or, even better, let's fix the imports.
 
 interface AuthContextType extends AuthState {
   login: (email: string, password: string) => Promise<void>;
   register: (email: string, password: string, name: string, role: UserRole) => Promise<void>;
   logout: () => void;
   updateUser: (userData: Partial<User>) => void;
-  profile: any | null; // Using 'any' to bypass the broken UserProfile import for now
+  profile: any | null;
   isEmailVerified: boolean;
   resendVerification: () => Promise<void>;
   resetPassword: (email: string) => Promise<void>;
@@ -50,45 +37,33 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     isAuthenticated: false,
     isLoading: true,
   });
-  const [profile, setProfile] = useState<any | null>(null); // Using any for now
+  const [profile, setProfile] = useState<any | null>(null);
   const [firebaseUser, setFirebaseUser] = useState<FirebaseUser | null>(null);
   const { setCurrentView } = useApp();
 
-  useEffect(() => {
-    const unsubscribe = firebaseAuthService.onAuthStateChanged(async (firebaseUser) => {
-      setFirebaseUser(firebaseUser);
-      
-      if (firebaseUser) {
-        await loadUserProfile(firebaseUser.uid);
-      } else {
-        setAuthState({
-          user: null,
-          isAuthenticated: false,
-          isLoading: false,
-        });
-        setProfile(null);
-        localStorage.removeItem('eventease_user');
-      }
-    });
-
-    return unsubscribe;
-  }, []);
-
-  const loadUserProfile = async (userId: string) => {
+  const loadUserProfile = async (fbUser: FirebaseUser) => {
     try {
       const { data: userProfile, error } = await supabase
         .from('profiles')
         .select('*')
-        .eq('id', userId)
+        .eq('id', fbUser.uid)
         .single();
 
-      if (userProfile && !error) {
+      if (error) {
+        console.error('Supabase profile fetch error:', error.message);
+        // This can happen if the profile creation failed during registration.
+        // Logging out prevents the user from being stuck in a broken state.
+        logout();
+        return;
+      }
+      
+      if (userProfile) {
         const mappedUser: User = {
-          _id: userId,
-          email: firebaseUser?.email || '',
+          _id: fbUser.uid,
+          email: fbUser.email || '',
           name: userProfile.full_name,
           role: userProfile.role as UserRole,
-          plan: 'FREE',
+          plan: userProfile.plan || 'FREE',
           createdAt: userProfile.created_at,
           updatedAt: userProfile.updated_at,
         };
@@ -99,27 +74,42 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
           isLoading: false,
         });
         setProfile(userProfile);
-        
         localStorage.setItem('eventease_user', JSON.stringify(mappedUser));
       } else {
-        setAuthState(prev => ({ ...prev, isLoading: false }));
+         console.error('No profile found for user:', fbUser.uid);
+         logout();
       }
     } catch (error) {
       console.error('Error loading user profile:', error);
-      setAuthState(prev => ({ ...prev, isLoading: false }));
+      setAuthState({ user: null, isAuthenticated: false, isLoading: false });
     }
   };
+  
+  useEffect(() => {
+    const unsubscribe = firebaseAuthService.onAuthStateChanged(async (fbUser) => {
+      setFirebaseUser(fbUser);
+      
+      if (fbUser) {
+        setAuthState(prev => ({ ...prev, isLoading: true }));
+        await loadUserProfile(fbUser);
+      } else {
+        setAuthState({ user: null, isAuthenticated: false, isLoading: false });
+        setProfile(null);
+        localStorage.removeItem('eventease_user');
+      }
+    });
+
+    return unsubscribe;
+  }, []);
 
   const login = async (email: string, password: string) => {
     setAuthState(prev => ({ ...prev, isLoading: true }));
-    
     try {
       const result = await firebaseAuthService.signIn(email, password);
-      
       if (!result.success) {
-        setAuthState(prev => ({ ...prev, isLoading: false }));
         throw new Error(result.error);
       }
+      // onAuthStateChanged will handle the rest
     } catch (error) {
       setAuthState(prev => ({ ...prev, isLoading: false }));
       throw error;
@@ -128,21 +118,12 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
   const register = async (email: string, password: string, name: string, role: UserRole) => {
     setAuthState(prev => ({ ...prev, isLoading: true }));
-    
     try {
-      const result = await firebaseAuthService.register({
-        email,
-        password,
-        name,
-        role
-      });
-      
+      const result = await firebaseAuthService.register({ email, password, name, role });
       if (!result.success) {
-        setAuthState(prev => ({ ...prev, isLoading: false }));
         throw new Error(result.error);
       }
-
-      setAuthState(prev => ({ ...prev, isLoading: false }));
+      // onAuthStateChanged will handle the rest
     } catch (error) {
       setAuthState(prev => ({ ...prev, isLoading: false }));
       throw error;
@@ -151,10 +132,6 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
   const logout = () => {
     firebaseAuthService.signOut();
-    localStorage.removeItem('eventease_user');
-    setProfile(null);
-    setFirebaseUser(null);
-    setCurrentView('home');
   };
 
   const updateUser = (userData: Partial<User>) => {
@@ -173,7 +150,6 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
   const resendVerification = async () => {
     const result = await firebaseAuthService.resendEmailVerification();
-    
     if (!result.success) {
       throw new Error(result.error);
     }
@@ -213,6 +189,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         ...authState,
         profile,
         firebaseUser,
+        isEmailVerified: firebaseUser?.emailVerified || false,
         login,
         register,
         logout,
