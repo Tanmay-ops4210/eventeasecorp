@@ -1,24 +1,11 @@
 import { createClient } from '@supabase/supabase-js';
 
 // --- SUPABASE CLIENT INITIALIZATION ---
-// Check for required environment variables
-const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
-const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
+// Hardcoded Supabase configuration
+const supabaseUrl = "https://vjdsijuyzhhlofmlzexe.supabase.co";
+const supabaseAnonKey = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZqZHNpanV5emhobG9mbWx6ZXhlIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTU4NzcwNDQsImV4cCI6MjA3MTQ1MzA0NH0.T7pK7N0whtHSkXIXcttNFfyQMqtHlIQbVhYAe7s6UrM";
 
-// Validate environment variables
-if (!supabaseUrl || supabaseUrl === 'https://your-project-id.supabase.co') {
-  console.error('VITE_SUPABASE_URL is not configured. Please set up your Supabase credentials in the .env file.');
-}
-
-if (!supabaseAnonKey || supabaseAnonKey === 'your-supabase-anon-key') {
-  console.error('VITE_SUPABASE_ANON_KEY is not configured. Please set up your Supabase credentials in the .env file.');
-}
-
-// Create Supabase client with fallback values to prevent crashes
-export const supabase = createClient(
-  supabaseUrl || 'https://placeholder.supabase.co',
-  supabaseAnonKey || 'placeholder-key'
-);
+export const supabase = createClient(supabaseUrl, supabaseAnonKey);
 
 // --- DATABASE TYPES ---
 export interface UserProfile {
