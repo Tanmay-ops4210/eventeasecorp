@@ -1,20 +1,11 @@
 import { createClient } from '@supabase/supabase-js';
 
 // --- SUPABASE CLIENT INITIALIZATION ---
-// For security, it's best to use environment variables.
-// Create a .env file in your project root and add your credentials:
-// VITE_SUPABASE_URL=YOUR_URL
-// VITE_SUPABASE_ANON_KEY=YOUR_KEY
-
-const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || "https://vjdsijuyzhhlofmlzexe.supabase.co";
-const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY || "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZqZHNpanV5emhobG9mbWx6ZXhlIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTU4NzcwNDQsImV4cCI6MjA3MTQ1MzA0NH0.T7pK7N0whtHSkXIXcttNFfyQMqtHlIQbVhYAe7s6UrM";
-
-if (!supabaseUrl || !supabaseAnonKey) {
-  console.error("Supabase URL or Anon Key is missing. Please check your .env file.");
-}
+// CORRECTED: We are directly using your credentials to ensure they are loaded correctly.
+const supabaseUrl = "https://vjdsijuyzhhlofmlzexe.supabase.co";
+const supabaseAnonKey = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZqZHNpanV5emhobG9mbWx6ZXhlIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTU4NzcwNDQsImV4cCI6MjA3MTQ1MzA0NH0.T7pK7N0whtHSkXIXcttNFfyQMqtHlIQbVhYAe7s6UrM";
 
 export const supabase = createClient(supabaseUrl, supabaseAnonKey);
-
 
 // --- DATABASE TYPES ---
 export interface UserProfile {
