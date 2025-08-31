@@ -5,11 +5,8 @@
 -- ----------------------------------------------------------------
 -- 1. EXTENSIONS & TYPES
 -- ----------------------------------------------------------------
-
--- Enable the pgcrypto extension for UUID generation if not already enabled.
 CREATE EXTENSION IF NOT EXISTS "uuid-ossp" WITH SCHEMA "extensions";
 
--- Conditionally create custom types only if they don't already exist.
 DO $$
 BEGIN
     IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'user_role') THEN
@@ -23,15 +20,10 @@ BEGIN
     END IF;
 END$$;
 
-
 -- ----------------------------------------------------------------
 -- 2. TABLES
 -- ----------------------------------------------------------------
-
--- Create tables only if they do not already exist.
 CREATE TABLE IF NOT EXISTS public.profiles (
-  -- The 'id' is the Primary Key and will be populated with the Firebase Auth user's UID.
-  -- CORRECTED: Changed from UUID to TEXT to store Firebase UIDs.
   id TEXT PRIMARY KEY,
   username TEXT NOT NULL,
   full_name TEXT,
@@ -41,7 +33,6 @@ CREATE TABLE IF NOT EXISTS public.profiles (
   company TEXT,
   title TEXT,
   updated_at TIMESTAMPTZ DEFAULT NOW(),
-  -- Added for consistency
   created_at TIMESTAMPTZ DEFAULT NOW(),
   email TEXT
 );
@@ -49,7 +40,6 @@ COMMENT ON TABLE public.profiles IS 'Stores public profile information for each 
 
 CREATE TABLE IF NOT EXISTS public.events (
   id UUID PRIMARY KEY DEFAULT extensions.uuid_generate_v4(),
-  -- CORRECTED: Changed organizer_id to TEXT to match profiles.id
   organizer_id TEXT NOT NULL REFERENCES public.profiles(id) ON DELETE CASCADE,
   title TEXT NOT NULL,
   description TEXT,
@@ -83,7 +73,6 @@ CREATE TABLE IF NOT EXISTS public.ticket_types (
 CREATE TABLE IF NOT EXISTS public.attendees (
   id UUID PRIMARY KEY DEFAULT extensions.uuid_generate_v4(),
   event_id UUID NOT NULL REFERENCES public.events(id) ON DELETE CASCADE,
-  -- CORRECTED: Changed user_id to TEXT
   user_id TEXT NOT NULL REFERENCES public.profiles(id) ON DELETE CASCADE,
   ticket_type_id UUID NOT NULL REFERENCES public.ticket_types(id) ON DELETE CASCADE,
   registration_date TIMESTAMPTZ DEFAULT NOW(),
@@ -160,7 +149,6 @@ CREATE TABLE IF NOT EXISTS public.blog_articles (
   title TEXT NOT NULL,
   excerpt TEXT,
   content TEXT,
-  -- CORRECTED: Changed author_id to TEXT
   author_id TEXT REFERENCES public.profiles(id),
   published_date DATE,
   category TEXT,
@@ -191,7 +179,6 @@ CREATE TABLE IF NOT EXISTS public.press_releases (
 
 CREATE TABLE IF NOT EXISTS public.notifications (
   id UUID PRIMARY KEY DEFAULT extensions.uuid_generate_v4(),
-  -- CORRECTED: Changed user_id to TEXT
   user_id TEXT NOT NULL REFERENCES public.profiles(id) ON DELETE CASCADE,
   title TEXT NOT NULL,
   message TEXT,
@@ -199,44 +186,50 @@ CREATE TABLE IF NOT EXISTS public.notifications (
   created_at TIMESTAMPTZ DEFAULT NOW()
 );
 
-
 -- ----------------------------------------------------------------
 -- 3. ROW LEVEL SECURITY (RLS)
 -- ----------------------------------------------------------------
-
--- Enable RLS on all relevant tables
 ALTER TABLE public.profiles ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.events ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.ticket_types ENABLE ROW LEVEL SECURITY;
--- (Enable for other tables as needed)
+ALTER TABLE public.attendees ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.speakers ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.event_speakers ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.sponsors ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.event_sponsors ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.booths ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.leads ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.blog_articles ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.resources ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.press_releases ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.notifications ENABLE ROW LEVEL SECURITY;
 
--- **NEW POLICY**: Allows new users to be created.
+-- Profiles
 DROP POLICY IF EXISTS "Public profiles are writable." ON public.profiles;
 CREATE POLICY "Public profiles are writable."
 ON public.profiles FOR INSERT
 WITH CHECK (true);
 
--- Allow public read access on certain tables.
 DROP POLICY IF EXISTS "Allow public read access to profiles" ON public.profiles;
 CREATE POLICY "Allow public read access to profiles" ON public.profiles FOR SELECT USING (true);
 
+-- Events
 DROP POLICY IF EXISTS "Allow public read access to published events" ON public.events;
 CREATE POLICY "Allow public read access to published events" ON public.events FOR SELECT USING (status = 'published');
 
+-- Ticket Types
 DROP POLICY IF EXISTS "Allow public read access to tickets of published events" ON public.ticket_types;
 CREATE POLICY "Allow public read access to tickets of published events" ON public.ticket_types FOR SELECT USING (
   EXISTS (SELECT 1 FROM public.events WHERE events.id = ticket_types.event_id AND events.status = 'published')
 );
 
+-- Speakers
 DROP POLICY IF EXISTS "Allow read access to all speakers" ON public.speakers;
 CREATE POLICY "Allow read access to all speakers" ON public.speakers FOR SELECT USING (true);
-
 
 -- ----------------------------------------------------------------
 -- 4. TRIGGERS - UTILITY
 -- ----------------------------------------------------------------
-
--- Function to automatically update 'updated_at' timestamps.
 CREATE OR REPLACE FUNCTION public.update_updated_at_column()
 RETURNS TRIGGER AS $$
 BEGIN
@@ -245,7 +238,6 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
--- Apply the trigger to tables that have an 'updated_at' column.
 DROP TRIGGER IF EXISTS handle_updated_at ON public.profiles;
 CREATE TRIGGER handle_updated_at BEFORE UPDATE ON public.profiles FOR EACH ROW EXECUTE FUNCTION public.update_updated_at_column();
 
