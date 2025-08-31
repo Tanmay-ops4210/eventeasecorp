@@ -1,13 +1,16 @@
 import { createClient } from '@supabase/supabase-js';
 
 // --- SUPABASE CLIENT INITIALIZATION ---
-// CORRECTED: We are directly using your credentials to ensure they are loaded correctly.
+// This is the direct, hardcoded approach.
+// The keys are now a permanent part of your application code.
 const supabaseUrl = "https://vjdsijuyzhhlofmlzexe.supabase.co";
-const supabaseAnonKey = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZqZHNpanV5emhobG9mbWx6ZXhlIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTU4NzcwNDQsImV4cCI6MjA3MTQ1MzA0NH0.T7pK7N0whtHSkXIXcttNFfyQMqtHlIQbVhYAe7s6UrM";
+const supabaseAnonKey = "eyJhbGciOiJIUzINIIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZqZHNpanV5emhobG9mbWx6ZXhlIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTU4NzcwNDQsImV4cCI6MjA3MTQ1MzA0NH0.T7pK7N0whtHSkXIXcttNFfyQMqtHlIQbVhYAe7s6UrM";
 
 export const supabase = createClient(supabaseUrl, supabaseAnonKey);
 
+
 // --- DATABASE TYPES ---
+// (The rest of your file remains the same)
 export interface UserProfile {
   id: string;
   username: string;
