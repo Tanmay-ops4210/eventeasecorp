@@ -1,204 +1,253 @@
-import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
-import { User, AuthState, UserRole } from '../types/user';
-import { useApp } from './AppContext';
-import { supabase } from '../lib/supabase';
-import { firebaseAuthService } from '../lib/firebaseAuth';
-import { User as FirebaseUser } from 'firebase/auth';
+-- EventEase Supabase Schema (Firebase Auth Integration)
+-- This schema is designed to work with an external authentication provider like Firebase.
+-- User profiles are created and managed from the application code.
 
-interface AuthContextType extends AuthState {
-  login: (email: string, password: string) => Promise<void>;
-  register: (email: string, password: string, name: string, role: UserRole) => Promise<void>;
-  logout: () => void;
-  updateUser: (userData: Partial<User>) => void;
-  profile: any | null;
-  isEmailVerified: boolean;
-  resendVerification: () => Promise<void>;
-  resetPassword: (email: string) => Promise<void>;
-  firebaseUser: FirebaseUser | null;
-}
+-- ----------------------------------------------------------------
+-- 1. EXTENSIONS & TYPES
+-- ----------------------------------------------------------------
 
-const AuthContext = createContext<AuthContextType | undefined>(undefined);
+-- Enable the pgcrypto extension for UUID generation if not already enabled.
+CREATE EXTENSION IF NOT EXISTS "uuid-ossp" WITH SCHEMA "extensions";
 
-export const useAuth = () => {
-  const context = useContext(AuthContext);
-  if (context === undefined) {
-    throw new Error('useAuth must be used within an AuthProvider');
-  }
-  return context;
-};
+-- Conditionally create custom types only if they don't already exist.
+DO $$
+BEGIN
+    IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'user_role') THEN
+        CREATE TYPE public.user_role AS ENUM ('attendee', 'organizer', 'sponsor', 'admin');
+    END IF;
+    IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'event_status') THEN
+        CREATE TYPE public.event_status AS ENUM ('draft', 'published', 'ongoing', 'completed', 'cancelled');
+    END IF;
+    IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'lead_status') THEN
+        CREATE TYPE public.lead_status AS ENUM ('new', 'contacted', 'qualified', 'converted');
+    END IF;
+END$$;
 
-interface AuthProviderProps {
-  children: ReactNode;
-}
 
-export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
-  const [authState, setAuthState] = useState<AuthState>({
-    user: null,
-    isAuthenticated: false,
-    isLoading: true,
-  });
-  const [profile, setProfile] = useState<any | null>(null);
-  const [firebaseUser, setFirebaseUser] = useState<FirebaseUser | null>(null);
-  const { setCurrentView } = useApp();
+-- ----------------------------------------------------------------
+-- 2. TABLES
+-- ----------------------------------------------------------------
 
-  const loadUserProfile = async (fbUser: FirebaseUser) => {
-    try {
-      const { data: userProfile, error } = await supabase
-        .from('profiles')
-        .select('*')
-        .eq('id', fbUser.uid)
-        .single();
+-- Create tables only if they do not already exist.
+CREATE TABLE IF NOT EXISTS public.profiles (
+  -- The 'id' is the Primary Key and will be populated with the Firebase Auth user's UID.
+  -- CORRECTED: Changed from UUID to TEXT to store Firebase UIDs.
+  id TEXT PRIMARY KEY,
+  username TEXT NOT NULL,
+  full_name TEXT,
+  avatar_url TEXT,
+  role user_role NOT NULL DEFAULT 'attendee',
+  plan TEXT DEFAULT 'free',
+  company TEXT,
+  title TEXT,
+  updated_at TIMESTAMPTZ DEFAULT NOW(),
+  -- Added for consistency
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  email TEXT
+);
+COMMENT ON TABLE public.profiles IS 'Stores public profile information for each user, linked by Firebase UID.';
 
-      if (error) {
-        console.error('Supabase profile fetch error:', error.message);
-        // This can happen if the profile creation failed during registration.
-        // Logging out prevents the user from being stuck in a broken state.
-        logout();
-        return;
-      }
-      
-      if (userProfile) {
-        const mappedUser: User = {
-          _id: fbUser.uid,
-          email: fbUser.email || '',
-          name: userProfile.full_name,
-          role: userProfile.role as UserRole,
-          plan: userProfile.plan || 'FREE',
-          createdAt: userProfile.created_at,
-          updatedAt: userProfile.updated_at,
-        };
+CREATE TABLE IF NOT EXISTS public.events (
+  id UUID PRIMARY KEY DEFAULT extensions.uuid_generate_v4(),
+  -- CORRECTED: Changed organizer_id to TEXT to match profiles.id
+  organizer_id TEXT NOT NULL REFERENCES public.profiles(id) ON DELETE CASCADE,
+  title TEXT NOT NULL,
+  description TEXT,
+  full_description TEXT,
+  category TEXT,
+  event_date DATE,
+  start_time TIME,
+  end_time TIME,
+  venue_name TEXT,
+  venue_address TEXT,
+  image_url TEXT,
+  status event_status NOT NULL DEFAULT 'draft',
+  visibility TEXT DEFAULT 'public',
+  max_attendees INTEGER,
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  updated_at TIMESTAMPTZ DEFAULT NOW()
+);
 
-        setAuthState({
-          user: mappedUser,
-          isAuthenticated: true,
-          isLoading: false,
-        });
-        setProfile(userProfile);
-        localStorage.setItem('eventease_user', JSON.stringify(mappedUser));
-      } else {
-         console.error('No profile found for user:', fbUser.uid);
-         logout();
-      }
-    } catch (error) {
-      console.error('Error loading user profile:', error);
-      setAuthState({ user: null, isAuthenticated: false, isLoading: false });
-    }
-  };
-  
-  useEffect(() => {
-    const unsubscribe = firebaseAuthService.onAuthStateChanged(async (fbUser) => {
-      setFirebaseUser(fbUser);
-      
-      if (fbUser) {
-        setAuthState(prev => ({ ...prev, isLoading: true }));
-        await loadUserProfile(fbUser);
-      } else {
-        setAuthState({ user: null, isAuthenticated: false, isLoading: false });
-        setProfile(null);
-        localStorage.removeItem('eventease_user');
-      }
-    });
+CREATE TABLE IF NOT EXISTS public.ticket_types (
+  id UUID PRIMARY KEY DEFAULT extensions.uuid_generate_v4(),
+  event_id UUID NOT NULL REFERENCES public.events(id) ON DELETE CASCADE,
+  name TEXT NOT NULL,
+  description TEXT,
+  price NUMERIC(10, 2) NOT NULL,
+  quantity INTEGER NOT NULL,
+  sale_start_date TIMESTAMPTZ,
+  sale_end_date TIMESTAMPTZ,
+  is_active BOOLEAN DEFAULT TRUE
+);
 
-    return unsubscribe;
-  }, []);
+CREATE TABLE IF NOT EXISTS public.attendees (
+  id UUID PRIMARY KEY DEFAULT extensions.uuid_generate_v4(),
+  event_id UUID NOT NULL REFERENCES public.events(id) ON DELETE CASCADE,
+  -- CORRECTED: Changed user_id to TEXT
+  user_id TEXT NOT NULL REFERENCES public.profiles(id) ON DELETE CASCADE,
+  ticket_type_id UUID NOT NULL REFERENCES public.ticket_types(id) ON DELETE CASCADE,
+  registration_date TIMESTAMPTZ DEFAULT NOW(),
+  check_in_status TEXT DEFAULT 'pending',
+  payment_status TEXT DEFAULT 'completed'
+);
 
-  const login = async (email: string, password: string) => {
-    setAuthState(prev => ({ ...prev, isLoading: true }));
-    try {
-      const result = await firebaseAuthService.signIn(email, password);
-      if (!result.success) {
-        throw new Error(result.error);
-      }
-      // onAuthStateChanged will handle the rest
-    } catch (error) {
-      setAuthState(prev => ({ ...prev, isLoading: false }));
-      throw error;
-    }
-  };
+CREATE TABLE IF NOT EXISTS public.speakers (
+  id UUID PRIMARY KEY DEFAULT extensions.uuid_generate_v4(),
+  name TEXT NOT NULL,
+  title TEXT,
+  company TEXT,
+  bio TEXT,
+  full_bio TEXT,
+  image_url TEXT,
+  expertise TEXT[],
+  location TEXT,
+  rating NUMERIC(2, 1),
+  social_links JSONB,
+  featured BOOLEAN DEFAULT FALSE
+);
 
-  const register = async (email: string, password: string, name: string, role: UserRole) => {
-    setAuthState(prev => ({ ...prev, isLoading: true }));
-    try {
-      const result = await firebaseAuthService.register({ email, password, name, role });
-      if (!result.success) {
-        throw new Error(result.error);
-      }
-      // onAuthStateChanged will handle the rest
-    } catch (error) {
-      setAuthState(prev => ({ ...prev, isLoading: false }));
-      throw error;
-    }
-  };
+CREATE TABLE IF NOT EXISTS public.event_speakers (
+  id UUID PRIMARY KEY DEFAULT extensions.uuid_generate_v4(),
+  event_id UUID NOT NULL REFERENCES public.events(id) ON DELETE CASCADE,
+  speaker_id UUID NOT NULL REFERENCES public.speakers(id) ON DELETE CASCADE,
+  UNIQUE(event_id, speaker_id)
+);
 
-  const logout = () => {
-    firebaseAuthService.signOut();
-  };
+CREATE TABLE IF NOT EXISTS public.sponsors (
+  id UUID PRIMARY KEY DEFAULT extensions.uuid_generate_v4(),
+  name TEXT NOT NULL,
+  logo_url TEXT,
+  tier TEXT,
+  website TEXT,
+  industry TEXT
+);
 
-  const updateUser = (userData: Partial<User>) => {
-    if (authState.user) {
-      const updatedUser = { ...authState.user, ...userData };
-      localStorage.setItem('eventease_user', JSON.stringify(updatedUser));
-      setAuthState(prev => ({ ...prev, user: updatedUser }));
-      
-      firebaseAuthService.updateUserProfile({
-        full_name: updatedUser.name,
-        username: updatedUser.name,
-        role: updatedUser.role
-      });
-    }
-  };
+CREATE TABLE IF NOT EXISTS public.event_sponsors (
+  id UUID PRIMARY KEY DEFAULT extensions.uuid_generate_v4(),
+  event_id UUID NOT NULL REFERENCES public.events(id) ON DELETE CASCADE,
+  sponsor_id UUID NOT NULL REFERENCES public.sponsors(id) ON DELETE CASCADE,
+  UNIQUE(event_id, sponsor_id)
+);
 
-  const resendVerification = async () => {
-    const result = await firebaseAuthService.resendEmailVerification();
-    if (!result.success) {
-      throw new Error(result.error);
-    }
-  };
+CREATE TABLE IF NOT EXISTS public.booths (
+  id UUID PRIMARY KEY DEFAULT extensions.uuid_generate_v4(),
+  sponsor_id UUID NOT NULL REFERENCES public.sponsors(id) ON DELETE CASCADE,
+  event_id UUID NOT NULL REFERENCES public.events(id) ON DELETE CASCADE,
+  primary_color TEXT,
+  secondary_color TEXT,
+  banner_url TEXT,
+  description TEXT,
+  contact_info JSONB,
+  UNIQUE(sponsor_id, event_id)
+);
 
-  const resetPassword = async (email: string) => {
-    const result = await firebaseAuthService.resetPassword(email);
-    if (!result.success) {
-      throw new Error(result.error);
-    }
-  };
+CREATE TABLE IF NOT EXISTS public.leads (
+  id UUID PRIMARY KEY DEFAULT extensions.uuid_generate_v4(),
+  sponsor_id UUID NOT NULL REFERENCES public.sponsors(id) ON DELETE CASCADE,
+  event_id UUID NOT NULL REFERENCES public.events(id) ON DELETE CASCADE,
+  name TEXT NOT NULL,
+  email TEXT NOT NULL,
+  company TEXT,
+  title TEXT,
+  phone TEXT,
+  notes TEXT,
+  status lead_status NOT NULL DEFAULT 'new'
+);
 
-  useEffect(() => {
-    if (authState.isAuthenticated && profile && !authState.isLoading) {
-      if (profile.role === 'admin' || firebaseUser?.email === 'tanmay365210mogabeera@gmail.com') {
-        setCurrentView('admin-dashboard');
-      } else {
-        switch (profile.role) {
-          case 'organizer':
-            setCurrentView('organizer-dashboard');
-            break;
-          case 'sponsor':
-            setCurrentView('sponsor-dashboard');
-            break;
-          case 'attendee':
-          default:
-            setCurrentView('attendee-dashboard');
-            break;
-        }
-      }
-    }
-  }, [authState.isAuthenticated, profile, authState.isLoading, firebaseUser?.email, setCurrentView]);
+CREATE TABLE IF NOT EXISTS public.blog_articles (
+  id UUID PRIMARY KEY DEFAULT extensions.uuid_generate_v4(),
+  slug TEXT UNIQUE NOT NULL,
+  title TEXT NOT NULL,
+  excerpt TEXT,
+  content TEXT,
+  -- CORRECTED: Changed author_id to TEXT
+  author_id TEXT REFERENCES public.profiles(id),
+  published_date DATE,
+  category TEXT,
+  image_url TEXT,
+  featured BOOLEAN DEFAULT FALSE,
+  tags TEXT[]
+);
 
-  return (
-    <AuthContext.Provider
-      value={{
-        ...authState,
-        profile,
-        firebaseUser,
-        isEmailVerified: firebaseUser?.emailVerified || false,
-        login,
-        register,
-        logout,
-        updateUser,
-        resendVerification,
-        resetPassword,
-      }}
-    >
-      {children}
-    </AuthContext.Provider>
-  );
-};
+CREATE TABLE IF NOT EXISTS public.resources (
+  id UUID PRIMARY KEY DEFAULT extensions.uuid_generate_v4(),
+  title TEXT NOT NULL,
+  description TEXT,
+  type TEXT,
+  category TEXT,
+  download_url TEXT,
+  image_url TEXT,
+  featured BOOLEAN DEFAULT FALSE
+);
+
+CREATE TABLE IF NOT EXISTS public.press_releases (
+  id UUID PRIMARY KEY DEFAULT extensions.uuid_generate_v4(),
+  title TEXT NOT NULL,
+  release_date DATE,
+  excerpt TEXT,
+  full_content TEXT,
+  download_url TEXT
+);
+
+CREATE TABLE IF NOT EXISTS public.notifications (
+  id UUID PRIMARY KEY DEFAULT extensions.uuid_generate_v4(),
+  -- CORRECTED: Changed user_id to TEXT
+  user_id TEXT NOT NULL REFERENCES public.profiles(id) ON DELETE CASCADE,
+  title TEXT NOT NULL,
+  message TEXT,
+  is_read BOOLEAN DEFAULT FALSE,
+  created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+
+-- ----------------------------------------------------------------
+-- 3. ROW LEVEL SECURITY (RLS)
+-- ----------------------------------------------------------------
+
+-- Enable RLS on all relevant tables
+ALTER TABLE public.profiles ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.events ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.ticket_types ENABLE ROW LEVEL SECURITY;
+-- (Enable for other tables as needed)
+
+-- **NEW POLICY**: Allows new users to be created.
+DROP POLICY IF EXISTS "Public profiles are writable." ON public.profiles;
+CREATE POLICY "Public profiles are writable."
+ON public.profiles FOR INSERT
+WITH CHECK (true);
+
+-- Allow public read access on certain tables.
+DROP POLICY IF EXISTS "Allow public read access to profiles" ON public.profiles;
+CREATE POLICY "Allow public read access to profiles" ON public.profiles FOR SELECT USING (true);
+
+DROP POLICY IF EXISTS "Allow public read access to published events" ON public.events;
+CREATE POLICY "Allow public read access to published events" ON public.events FOR SELECT USING (status = 'published');
+
+DROP POLICY IF EXISTS "Allow public read access to tickets of published events" ON public.ticket_types;
+CREATE POLICY "Allow public read access to tickets of published events" ON public.ticket_types FOR SELECT USING (
+  EXISTS (SELECT 1 FROM public.events WHERE events.id = ticket_types.event_id AND events.status = 'published')
+);
+
+DROP POLICY IF EXISTS "Allow read access to all speakers" ON public.speakers;
+CREATE POLICY "Allow read access to all speakers" ON public.speakers FOR SELECT USING (true);
+
+
+-- ----------------------------------------------------------------
+-- 4. TRIGGERS - UTILITY
+-- ----------------------------------------------------------------
+
+-- Function to automatically update 'updated_at' timestamps.
+CREATE OR REPLACE FUNCTION public.update_updated_at_column()
+RETURNS TRIGGER AS $$
+BEGIN
+  NEW.updated_at = NOW();
+  RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+-- Apply the trigger to tables that have an 'updated_at' column.
+DROP TRIGGER IF EXISTS handle_updated_at ON public.profiles;
+CREATE TRIGGER handle_updated_at BEFORE UPDATE ON public.profiles FOR EACH ROW EXECUTE FUNCTION public.update_updated_at_column();
+
+DROP TRIGGER IF EXISTS handle_updated_at ON public.events;
+CREATE TRIGGER handle_updated_at BEFORE UPDATE ON public.events FOR EACH ROW EXECUTE FUNCTION public.update_updated_at_column();
