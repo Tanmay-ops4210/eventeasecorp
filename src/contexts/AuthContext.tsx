@@ -1,7 +1,7 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { User, AuthState, UserRole } from '../types/user';
 import { useApp } from './AppContext';
-import { supabase } from '../lib/supabaseClient'; // CORRECTED IMPORT
+import { supabase } from '../lib/SupabaseClient'; // CORRECTED IMPORT
 import { firebaseAuthService } from '../lib/firebaseAuth';
 import { User as FirebaseUser } from 'firebase/auth';
 
