@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useApp } from '../../contexts/AppContext';
-import { db, Event } from '../../lib/supabase';
+import { db, Event } from '../../lib/supabaseclient';
 import { Search, Filter, CheckCircle, XCircle, AlertTriangle, Eye } from 'lucide-react';
 
 const EventOversightPage: React.FC = () => {
