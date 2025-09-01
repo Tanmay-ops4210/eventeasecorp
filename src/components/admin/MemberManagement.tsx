@@ -10,7 +10,7 @@ import {
   AlertTriangle,
   X
 } from 'lucide-react';
-import { AppUser, Event, db } from '../../lib/supabase';
+import { AppUser, Event, db } from '../../lib/supabaseclient';
 import '../../styles/admin-panel.css';
 
 interface MemberManagementProps {
