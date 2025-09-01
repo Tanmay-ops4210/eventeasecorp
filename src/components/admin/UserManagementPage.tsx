@@ -14,7 +14,7 @@ import {
   MoreVertical,
   ChevronDown
 } from 'lucide-react';
-import { AppUser, Event, db } from '../../lib/supabaseclient';
+import { AppUser, Event, db } from '../../lib/SupabaseClient';
 import '../../styles/admin-panel.css';
 
 interface MemberManagementProps {
