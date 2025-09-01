@@ -2,31 +2,31 @@
   # Complete RLS Policies for All Tables
 
   1. New Policies
-    - Add comprehensive RLS policies for all tables
-    - Ensure proper access control for different user roles
-    - Enable frontend data access while maintaining security
+     - Add comprehensive RLS policies for all tables
+     - Ensure proper access control for different user roles
+     - Enable frontend data access while maintaining security
 
   2. Security
-    - Organizers can manage their own events and related data
-    - Sponsors can manage their own booth and leads
-    - Attendees can view public data and manage their registrations
-    - Admins have full access to all data
+     - Organizers can manage their own events and related data
+     - Sponsors can manage their own booth and leads
+     - Attendees can view public data and manage their registrations
+     - Admins have full access to all data
 
   3. Tables Covered
-    - profiles: User profile management
-    - events: Event creation and management
-    - ticket_types: Ticket management for events
-    - attendees: Event registration management
-    - speakers: Speaker directory access
-    - event_speakers: Speaker-event associations
-    - sponsors: Sponsor directory access
-    - event_sponsors: Sponsor-event associations
-    - booths: Sponsor booth customization
-    - leads: Sponsor lead management
-    - blog_articles: Blog content management
-    - resources: Resource library access
-    - press_releases: Press release management
-    - notifications: User notification system
+     - profiles: User profile management
+     - events: Event creation and management
+     - ticket_types: Ticket management for events
+     - attendees: Event registration management
+     - speakers: Speaker directory access
+     - event_speakers: Speaker-event associations
+     - sponsors: Sponsor directory access
+     - event_sponsors: Sponsor-event associations
+     - booths: Sponsor booth customization
+     - leads: Sponsor lead management
+     - blog_articles: Blog content management
+     - resources: Resource library access
+     - press_releases: Press release management
+     - notifications: User notification system
 */
 
 -- ================================================================
@@ -49,8 +49,8 @@ WITH CHECK (true);
 DROP POLICY IF EXISTS "Users can update own profile" ON public.profiles;
 CREATE POLICY "Users can update own profile" 
 ON public.profiles FOR UPDATE 
-USING (id = current_setting('request.jwt.claims', true)::json->>'sub')
-WITH CHECK (id = current_setting('request.jwt.claims', true)::json->>'sub');
+USING (id = (current_setting('request.jwt.claims', true)::json->>'sub')::uuid)
+WITH CHECK (id = (current_setting('request.jwt.claims', true)::json->>'sub')::uuid);
 
 -- Allow admins to manage all profiles
 DROP POLICY IF EXISTS "Admins can manage all profiles" ON public.profiles;
@@ -59,7 +59,7 @@ ON public.profiles FOR ALL
 USING (
   EXISTS (
     SELECT 1 FROM public.profiles 
-    WHERE id = current_setting('request.jwt.claims', true)::json->>'sub' 
+    WHERE id = (current_setting('request.jwt.claims', true)::json->>'sub')::uuid 
     AND role = 'admin'
   )
 );
@@ -81,7 +81,7 @@ ON public.events FOR INSERT
 WITH CHECK (
   EXISTS (
     SELECT 1 FROM public.profiles 
-    WHERE id = current_setting('request.jwt.claims', true)::json->>'sub' 
+    WHERE id = (current_setting('request.jwt.claims', true)::json->>'sub')::uuid 
     AND role IN ('organizer', 'admin')
   )
 );
@@ -91,10 +91,10 @@ DROP POLICY IF EXISTS "Organizers can manage own events" ON public.events;
 CREATE POLICY "Organizers can manage own events" 
 ON public.events FOR ALL 
 USING (
-  organizer_id = current_setting('request.jwt.claims', true)::json->>'sub' OR
+  organizer_id = (current_setting('request.jwt.claims', true)::json->>'sub')::uuid OR
   EXISTS (
     SELECT 1 FROM public.profiles 
-    WHERE id = current_setting('request.jwt.claims', true)::json->>'sub' 
+    WHERE id = (current_setting('request.jwt.claims', true)::json->>'sub')::uuid 
     AND role = 'admin'
   )
 );
@@ -124,10 +124,10 @@ USING (
     SELECT 1 FROM public.events 
     WHERE events.id = ticket_types.event_id 
     AND (
-      events.organizer_id = current_setting('request.jwt.claims', true)::json->>'sub' OR
+      events.organizer_id = (current_setting('request.jwt.claims', true)::json->>'sub')::uuid OR
       EXISTS (
         SELECT 1 FROM public.profiles 
-        WHERE id = current_setting('request.jwt.claims', true)::json->>'sub' 
+        WHERE id = (current_setting('request.jwt.claims', true)::json->>'sub')::uuid 
         AND role = 'admin'
       )
     )
@@ -143,15 +143,15 @@ DROP POLICY IF EXISTS "Attendees can view own registrations" ON public.attendees
 CREATE POLICY "Attendees can view own registrations" 
 ON public.attendees FOR SELECT 
 USING (
-  user_id = current_setting('request.jwt.claims', true)::json->>'sub' OR
+  user_id = (current_setting('request.jwt.claims', true)::json->>'sub')::uuid OR
   EXISTS (
     SELECT 1 FROM public.events 
     WHERE events.id = attendees.event_id 
-    AND events.organizer_id = current_setting('request.jwt.claims', true)::json->>'sub'
+    AND events.organizer_id = (current_setting('request.jwt.claims', true)::json->>'sub')::uuid
   ) OR
   EXISTS (
     SELECT 1 FROM public.profiles 
-    WHERE id = current_setting('request.jwt.claims', true)::json->>'sub' 
+    WHERE id = (current_setting('request.jwt.claims', true)::json->>'sub')::uuid 
     AND role = 'admin'
   )
 );
@@ -161,7 +161,7 @@ DROP POLICY IF EXISTS "Users can register for events" ON public.attendees;
 CREATE POLICY "Users can register for events" 
 ON public.attendees FOR INSERT 
 WITH CHECK (
-  user_id = current_setting('request.jwt.claims', true)::json->>'sub' AND
+  user_id = (current_setting('request.jwt.claims', true)::json->>'sub')::uuid AND
   EXISTS (
     SELECT 1 FROM public.events 
     WHERE events.id = attendees.event_id 
@@ -174,15 +174,15 @@ DROP POLICY IF EXISTS "Users can update own registrations" ON public.attendees;
 CREATE POLICY "Users can update own registrations" 
 ON public.attendees FOR UPDATE 
 USING (
-  user_id = current_setting('request.jwt.claims', true)::json->>'sub' OR
+  user_id = (current_setting('request.jwt.claims', true)::json->>'sub')::uuid OR
   EXISTS (
     SELECT 1 FROM public.events 
     WHERE events.id = attendees.event_id 
-    AND events.organizer_id = current_setting('request.jwt.claims', true)::json->>'sub'
+    AND events.organizer_id = (current_setting('request.jwt.claims', true)::json->>'sub')::uuid
   ) OR
   EXISTS (
     SELECT 1 FROM public.profiles 
-    WHERE id = current_setting('request.jwt.claims', true)::json->>'sub' 
+    WHERE id = (current_setting('request.jwt.claims', true)::json->>'sub')::uuid 
     AND role = 'admin'
   )
 );
@@ -192,10 +192,10 @@ DROP POLICY IF EXISTS "Users can cancel own registrations" ON public.attendees;
 CREATE POLICY "Users can cancel own registrations" 
 ON public.attendees FOR DELETE 
 USING (
-  user_id = current_setting('request.jwt.claims', true)::json->>'sub' OR
+  user_id = (current_setting('request.jwt.claims', true)::json->>'sub')::uuid OR
   EXISTS (
     SELECT 1 FROM public.profiles 
-    WHERE id = current_setting('request.jwt.claims', true)::json->>'sub' 
+    WHERE id = (current_setting('request.jwt.claims', true)::json->>'sub')::uuid 
     AND role = 'admin'
   )
 );
@@ -217,7 +217,7 @@ ON public.speakers FOR ALL
 USING (
   EXISTS (
     SELECT 1 FROM public.profiles 
-    WHERE id = current_setting('request.jwt.claims', true)::json->>'sub' 
+    WHERE id = (current_setting('request.jwt.claims', true)::json->>'sub')::uuid 
     AND role = 'admin'
   )
 );
@@ -229,7 +229,7 @@ ON public.speakers FOR INSERT
 WITH CHECK (
   EXISTS (
     SELECT 1 FROM public.profiles 
-    WHERE id = current_setting('request.jwt.claims', true)::json->>'sub' 
+    WHERE id = (current_setting('request.jwt.claims', true)::json->>'sub')::uuid 
     AND role IN ('organizer', 'admin')
   )
 );
@@ -253,10 +253,10 @@ USING (
     SELECT 1 FROM public.events 
     WHERE events.id = event_speakers.event_id 
     AND (
-      events.organizer_id = current_setting('request.jwt.claims', true)::json->>'sub' OR
+      events.organizer_id = (current_setting('request.jwt.claims', true)::json->>'sub')::uuid OR
       EXISTS (
         SELECT 1 FROM public.profiles 
-        WHERE id = current_setting('request.jwt.claims', true)::json->>'sub' 
+        WHERE id = (current_setting('request.jwt.claims', true)::json->>'sub')::uuid 
         AND role = 'admin'
       )
     )
@@ -280,7 +280,7 @@ ON public.sponsors FOR ALL
 USING (
   EXISTS (
     SELECT 1 FROM public.profiles 
-    WHERE id = current_setting('request.jwt.claims', true)::json->>'sub' 
+    WHERE id = (current_setting('request.jwt.claims', true)::json->>'sub')::uuid 
     AND role IN ('sponsor', 'admin')
   )
 );
@@ -303,11 +303,11 @@ USING (
   EXISTS (
     SELECT 1 FROM public.events 
     WHERE events.id = event_sponsors.event_id 
-    AND events.organizer_id = current_setting('request.jwt.claims', true)::json->>'sub'
+    AND events.organizer_id = (current_setting('request.jwt.claims', true)::json->>'sub')::uuid
   ) OR
   EXISTS (
     SELECT 1 FROM public.profiles 
-    WHERE id = current_setting('request.jwt.claims', true)::json->>'sub' 
+    WHERE id = (current_setting('request.jwt.claims', true)::json->>'sub')::uuid 
     AND role IN ('sponsor', 'admin')
   )
 );
@@ -332,7 +332,7 @@ USING (
     WHERE sponsors.id = booths.sponsor_id 
     AND EXISTS (
       SELECT 1 FROM public.profiles 
-      WHERE id = current_setting('request.jwt.claims', true)::json->>'sub' 
+      WHERE id = (current_setting('request.jwt.claims', true)::json->>'sub')::uuid 
       AND role IN ('sponsor', 'admin')
     )
   )
@@ -352,7 +352,7 @@ USING (
     WHERE sponsors.id = leads.sponsor_id 
     AND EXISTS (
       SELECT 1 FROM public.profiles 
-      WHERE id = current_setting('request.jwt.claims', true)::json->>'sub' 
+      WHERE id = (current_setting('request.jwt.claims', true)::json->>'sub')::uuid 
       AND role IN ('sponsor', 'admin')
     )
   )
@@ -373,10 +373,10 @@ DROP POLICY IF EXISTS "Authors can manage own articles" ON public.blog_articles;
 CREATE POLICY "Authors can manage own articles" 
 ON public.blog_articles FOR ALL 
 USING (
-  author_id = current_setting('request.jwt.claims', true)::json->>'sub' OR
+  author_id = (current_setting('request.jwt.claims', true)::json->>'sub')::uuid OR
   EXISTS (
     SELECT 1 FROM public.profiles 
-    WHERE id = current_setting('request.jwt.claims', true)::json->>'sub' 
+    WHERE id = (current_setting('request.jwt.claims', true)::json->>'sub')::uuid 
     AND role = 'admin'
   )
 );
@@ -388,7 +388,7 @@ ON public.blog_articles FOR INSERT
 WITH CHECK (
   EXISTS (
     SELECT 1 FROM public.profiles 
-    WHERE id = current_setting('request.jwt.claims', true)::json->>'sub' 
+    WHERE id = (current_setting('request.jwt.claims', true)::json->>'sub')::uuid 
     AND role IN ('admin', 'organizer')
   )
 );
@@ -410,7 +410,7 @@ ON public.resources FOR ALL
 USING (
   EXISTS (
     SELECT 1 FROM public.profiles 
-    WHERE id = current_setting('request.jwt.claims', true)::json->>'sub' 
+    WHERE id = (current_setting('request.jwt.claims', true)::json->>'sub')::uuid 
     AND role = 'admin'
   )
 );
@@ -432,7 +432,7 @@ ON public.press_releases FOR ALL
 USING (
   EXISTS (
     SELECT 1 FROM public.profiles 
-    WHERE id = current_setting('request.jwt.claims', true)::json->>'sub' 
+    WHERE id = (current_setting('request.jwt.claims', true)::json->>'sub')::uuid 
     AND role = 'admin'
   )
 );
@@ -446,10 +446,10 @@ DROP POLICY IF EXISTS "Users can read own notifications" ON public.notifications
 CREATE POLICY "Users can read own notifications" 
 ON public.notifications FOR SELECT 
 USING (
-  user_id = current_setting('request.jwt.claims', true)::json->>'sub' OR
+  user_id = (current_setting('request.jwt.claims', true)::json->>'sub')::uuid OR
   EXISTS (
     SELECT 1 FROM public.profiles 
-    WHERE id = current_setting('request.jwt.claims', true)::json->>'sub' 
+    WHERE id = (current_setting('request.jwt.claims', true)::json->>'sub')::uuid 
     AND role = 'admin'
   )
 );
@@ -465,10 +465,10 @@ DROP POLICY IF EXISTS "Users can update own notifications" ON public.notificatio
 CREATE POLICY "Users can update own notifications" 
 ON public.notifications FOR UPDATE 
 USING (
-  user_id = current_setting('request.jwt.claims', true)::json->>'sub' OR
+  user_id = (current_setting('request.jwt.claims', true)::json->>'sub')::uuid OR
   EXISTS (
     SELECT 1 FROM public.profiles 
-    WHERE id = current_setting('request.jwt.claims', true)::json->>'sub' 
+    WHERE id = (current_setting('request.jwt.claims', true)::json->>'sub')::uuid 
     AND role = 'admin'
   )
 );
@@ -478,10 +478,10 @@ DROP POLICY IF EXISTS "Users can delete own notifications" ON public.notificatio
 CREATE POLICY "Users can delete own notifications" 
 ON public.notifications FOR DELETE 
 USING (
-  user_id = current_setting('request.jwt.claims', true)::json->>'sub' OR
+  user_id = (current_setting('request.jwt.claims', true)::json->>'sub')::uuid OR
   EXISTS (
     SELECT 1 FROM public.profiles 
-    WHERE id = current_setting('request.jwt.claims', true)::json->>'sub' 
+    WHERE id = (current_setting('request.jwt.claims', true)::json->>'sub')::uuid 
     AND role = 'admin'
   )
 );
@@ -526,7 +526,7 @@ USING (true);
 -- ================================================================
 
 -- Create a helper function to check user roles
-CREATE OR REPLACE FUNCTION public.get_user_role(user_id TEXT)
+CREATE OR REPLACE FUNCTION public.get_user_role(user_id UUID)
 RETURNS TEXT AS $$
 BEGIN
   RETURN (
@@ -538,7 +538,7 @@ END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
 
 -- Create a helper function to check if user is admin
-CREATE OR REPLACE FUNCTION public.is_admin(user_id TEXT)
+CREATE OR REPLACE FUNCTION public.is_admin(user_id UUID)
 RETURNS BOOLEAN AS $$
 BEGIN
   RETURN (
