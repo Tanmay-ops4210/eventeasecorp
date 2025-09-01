@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Lock, User, Eye, EyeOff, Shield, AlertCircle } from 'lucide-react';
-import { adminAuth } from '../../lib/supabaseClient';
+import { adminAuth } from '../../lib/firebaseAuthHelpers';
 import '../../styles/admin-panel.css';
 
 interface AdminLoginProps {

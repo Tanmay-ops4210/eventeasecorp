@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { adminAuth } from '../lib/supabase';
+import { adminAuth } from '../lib/firebaseAuthHelpers';
 import AdminLogin from './admin/AdminLogin';
 import AdminDashboard from './admin/AdminDashboard';
 

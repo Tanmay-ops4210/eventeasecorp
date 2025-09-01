@@ -1,6 +1,9 @@
 import { firebaseAuthService } from './firebaseAuth';
-import { supabase } from './supabaseClient';
+import { supabase, adminAuth } from './supabaseClient';
 import { UserRole } from '../types/user';
+
+// Export adminAuth for components that need it
+export { adminAuth };
 
 /**
  * Helper functions for Firebase Auth integration with Supabase database
