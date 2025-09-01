@@ -162,25 +162,6 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     }
   };
 
-  useEffect(() => {
-    if (authState.isAuthenticated && profile && !authState.isLoading) {
-      if (profile.role === 'admin' || firebaseUser?.email === 'tanmay365210mogabeera@gmail.com') {
-        setCurrentView('admin-dashboard');
-      } else {
-        switch (profile.role) {
-          case 'organizer':
-            setCurrentView('organizer-dashboard');
-            break;
-          case 'sponsor':
-            setCurrentView('sponsor-dashboard');
-            break;
-          case 'attendee':
-          default:
-            setCurrentView('attendee-dashboard');
-            break;
-        }
-      }
-    }
   }, [authState.isAuthenticated, profile, authState.isLoading, firebaseUser?.email, setCurrentView]);
 
   return (
