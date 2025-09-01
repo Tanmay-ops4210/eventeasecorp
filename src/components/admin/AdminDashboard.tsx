@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useApp } from '../../contexts/AppContext';
 import { useAuth } from '../../contexts/AuthContext';
-import { db, AppUser, Event } from '../../lib/supabase.ts';
+import { db, AppUser, Event } from '../../lib/supabaseclient';
 import {
   Users, Calendar, FileText, TrendingUp, Activity,
   ArrowUp, ArrowDown, BarChart3, Shield, Menu, X
