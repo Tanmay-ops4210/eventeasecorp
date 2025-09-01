@@ -1,8 +1,8 @@
 import { createClient } from '@supabase/supabase-js';
 
 // This is the correct way to read environment variables in a Vite project.
-const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
-const supabaseKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
+const supabaseUrl = import.meta.env.NEXT_SUPABASE_URL;
+const supabaseKey = import.meta.env.NEXT_SUPABASE_ANON_KEY;
 
 // This will log a warning instead of crashing the app if the keys are missing.
 if (!supabaseUrl || !supabaseKey) {
