@@ -63,8 +63,8 @@ const BoothCustomizationPage = lazy(() => import('./components/sponsor/BoothCust
 const LeadCapturePage = lazy(() => import('./components/sponsor/LeadCapturePage'));
 const SponsorAnalyticsPage = lazy(() => import('./components/sponsor/SponsorAnalyticsPage'));
 const SponsorToolsPage = lazy(() => import('./components/sponsor/SponsorToolsPage'));
-const AdminDashboard = lazy(() => import('./components/admin/AdminDashboard'));
-const EventOversightPage = lazy(() => import('./components/admin/EventOversightPage'));
+const AdminDashboard = lazy(() => import('./components/admin/AdminDashboard.tsx'));
+const EventOversightPage = lazy(() => import('./components/admin/EventOversightPage.tsx'));
 const ContentManagementPage = lazy(() => import('./components/admin/ContentManagementPage'));
 
 
