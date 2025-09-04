@@ -54,14 +54,7 @@ type AppView =
   | 'lead-capture'
   | 'sponsor-analytics'
   | 'sponsor-tools'
-  | 'sponsor-settings'
-  // Admin Module
-  | 'admin-dashboard'
-  | 'user-management'
-  | 'event-oversight'
-  | 'monetization'
-  | 'content-management'
-  | 'system-health';
+  | 'sponsor-settings';
 
 interface AppContextType {
   currentView: AppView;

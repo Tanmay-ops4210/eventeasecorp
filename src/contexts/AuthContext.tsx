@@ -1,20 +1,17 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
-import { User, AuthState, UserRole } from '../types/user';
-import { useApp } from './AppContext';
-import { supabase } from '../lib/supabaseClient'; // CORRECTED IMPORT
-import { firebaseAuthService } from '../lib/firebaseAuth';
-import { User as FirebaseUser } from 'firebase/auth';
+import { AppUser, sessionManager } from '../lib/supabaseClient';
+import { attendeeService } from '../services/attendeeService';
+import { organizerService } from '../services/organizerService';
+import { sponsorService } from '../services/sponsorService';
 
-interface AuthContextType extends AuthState {
-  login: (email: string, password: string) => Promise<void>;
-  register: (email: string, password: string, name: string, role: UserRole) => Promise<void>;
+interface AuthContextType {
+  user: AppUser | null;
+  isAuthenticated: boolean;
+  isLoading: boolean;
+  login: (email: string, password: string, role: 'attendee' | 'organizer' | 'sponsor') => Promise<void>;
+  register: (email: string, password: string, name: string, role: 'attendee' | 'organizer' | 'sponsor', company?: string) => Promise<void>;
   logout: () => void;
-  updateUser: (userData: Partial<User>) => void;
-  profile: any | null;
-  isEmailVerified: boolean;
-  resendVerification: () => Promise<void>;
-  resetPassword: (email: string) => Promise<void>;
-  firebaseUser: FirebaseUser | null;
+  updateUser: (userData: Partial<AppUser>) => void;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -32,171 +29,126 @@ interface AuthProviderProps {
 }
 
 export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
-  const [authState, setAuthState] = useState<AuthState>({
-    user: null,
-    isAuthenticated: false,
-    isLoading: true,
-  });
-  const [profile, setProfile] = useState<any | null>(null);
-  const [firebaseUser, setFirebaseUser] = useState<FirebaseUser | null>(null);
-  const { setCurrentView } = useApp();
+  const [user, setUser] = useState<AppUser | null>(null);
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
 
-  const loadUserProfile = async (fbUser: FirebaseUser) => {
-    try {
-      const { data: userProfile, error } = await supabase
-        .from('profiles')
-        .select('*')
-        .eq('id', fbUser.uid)
-        .single();
-
-      if (error) {
-        console.error('Supabase profile fetch error:', error.message);
-        // This can happen if the profile creation failed during registration.
-        // Logging out prevents the user from being stuck in a broken state.
-        logout();
-        return;
-      }
-      
-      if (userProfile) {
-        const mappedUser: User = {
-          _id: fbUser.uid,
-          email: fbUser.email || '',
-          name: userProfile.full_name,
-          role: userProfile.role as UserRole,
-          plan: userProfile.plan || 'FREE',
-          createdAt: userProfile.created_at,
-          updatedAt: userProfile.updated_at,
-        };
-
-        setAuthState({
-          user: mappedUser,
-          isAuthenticated: true,
-          isLoading: false,
-        });
-        setProfile(userProfile);
-        localStorage.setItem('eventease_user', JSON.stringify(mappedUser));
-      } else {
-         console.error('No profile found for user:', fbUser.uid);
-         logout();
-      }
-    } catch (error) {
-      console.error('Error loading user profile:', error);
-      setAuthState({ user: null, isAuthenticated: false, isLoading: false });
-    }
-  };
-  
   useEffect(() => {
-    const unsubscribe = firebaseAuthService.onAuthStateChanged(async (fbUser) => {
-      setFirebaseUser(fbUser);
-      
-      if (fbUser) {
-        setAuthState(prev => ({ ...prev, isLoading: true }));
-        await loadUserProfile(fbUser);
+    // Check for existing session on app load
+    const checkSession = () => {
+      if (sessionManager.isValidSession()) {
+        const storedUser = sessionManager.getUser();
+        if (storedUser) {
+          setUser(storedUser);
+          setIsAuthenticated(true);
+        }
       } else {
-        setAuthState({ user: null, isAuthenticated: false, isLoading: false });
-        setProfile(null);
-        localStorage.removeItem('eventease_user');
+        sessionManager.clearSession();
       }
-    });
+      setIsLoading(false);
+    };
 
-    return unsubscribe;
+    checkSession();
   }, []);
 
-  const login = async (email: string, password: string) => {
-    setAuthState(prev => ({ ...prev, isLoading: true }));
+  const login = async (email: string, password: string, role: 'attendee' | 'organizer' | 'sponsor') => {
+    setIsLoading(true);
     try {
-      const result = await firebaseAuthService.signIn(email, password);
-      if (!result.success) {
-        throw new Error(result.error);
+      let result;
+      
+      switch (role) {
+        case 'attendee':
+          result = await attendeeService.login({ email, password });
+          break;
+        case 'organizer':
+          result = await organizerService.login({ email, password });
+          break;
+        case 'sponsor':
+          result = await sponsorService.login({ email, password });
+          break;
+        default:
+          throw new Error('Invalid role specified');
       }
-      // onAuthStateChanged will handle the rest
+
+      if (result.success && result.user) {
+        setUser(result.user);
+        setIsAuthenticated(true);
+        sessionManager.setUser(result.user);
+      } else {
+        throw new Error(result.error || 'Login failed');
+      }
     } catch (error) {
-      setAuthState(prev => ({ ...prev, isLoading: false }));
+      setIsLoading(false);
       throw error;
+    } finally {
+      setIsLoading(false);
     }
   };
 
-  const register = async (email: string, password: string, name: string, role: UserRole) => {
-    setAuthState(prev => ({ ...prev, isLoading: true }));
+  const register = async (email: string, password: string, name: string, role: 'attendee' | 'organizer' | 'sponsor', company?: string) => {
+    setIsLoading(true);
     try {
-      const result = await firebaseAuthService.register({ email, password, name, role });
-      if (!result.success) {
-        throw new Error(result.error);
+      let result;
+      const registrationData = {
+        email,
+        password,
+        full_name: name,
+        company
+      };
+
+      switch (role) {
+        case 'attendee':
+          result = await attendeeService.register(registrationData);
+          break;
+        case 'organizer':
+          result = await organizerService.register(registrationData);
+          break;
+        case 'sponsor':
+          result = await sponsorService.register(registrationData);
+          break;
+        default:
+          throw new Error('Invalid role specified');
       }
-      // onAuthStateChanged will handle the rest
+
+      if (result.success && result.user) {
+        setUser(result.user);
+        setIsAuthenticated(true);
+        sessionManager.setUser(result.user);
+      } else {
+        throw new Error(result.error || 'Registration failed');
+      }
     } catch (error) {
-      setAuthState(prev => ({ ...prev, isLoading: false }));
+      setIsLoading(false);
       throw error;
+    } finally {
+      setIsLoading(false);
     }
   };
 
   const logout = () => {
-    firebaseAuthService.signOut();
+    setUser(null);
+    setIsAuthenticated(false);
+    sessionManager.clearSession();
   };
   
-  const updateUser = (userData: Partial<User>) => {
-    if (authState.user) {
-      const updatedUser = { ...authState.user, ...userData };
-      localStorage.setItem('eventease_user', JSON.stringify(updatedUser));
-      setAuthState(prev => ({ ...prev, user: updatedUser }));
-      
-      firebaseAuthService.updateUserProfile({
-        full_name: updatedUser.name,
-        username: updatedUser.name,
-        role: updatedUser.role
-      });
+  const updateUser = (userData: Partial<AppUser>) => {
+    if (user) {
+      const updatedUser = { ...user, ...userData };
+      setUser(updatedUser);
+      sessionManager.setUser(updatedUser);
     }
   };
-
-  const resendVerification = async () => {
-    const result = await firebaseAuthService.resendEmailVerification();
-    if (!result.success) {
-      throw new Error(result.error);
-    }
-  };
-
-  const resetPassword = async (email: string) => {
-    const result = await firebaseAuthService.resetPassword(email);
-    if (!result.success) {
-      throw new Error(result.error);
-    }
-  };
-
-
-  useEffect(() => {
-    if (authState.isAuthenticated && profile && !authState.isLoading) {
-      if (profile.role === 'admin' || firebaseUser?.email === 'tanmay365210mogabeera@gmail.com') {
-        setCurrentView('admin-dashboard');
-      } else {
-        switch (profile.role) {
-          case 'organizer':
-            setCurrentView('organizer-dashboard');
-            break;
-          case 'sponsor':
-            setCurrentView('sponsor-dashboard');
-            break;
-          case 'attendee':
-          default:
-            setCurrentView('attendee-dashboard');
-            break;
-        }
-      }
-    }
-  }, [authState.isAuthenticated, profile, authState.isLoading, firebaseUser?.email, setCurrentView]);
 
   return (
     <AuthContext.Provider
       value={{
-        ...authState,
-        profile,
-        firebaseUser,
-        isEmailVerified: firebaseUser?.emailVerified || false,
+        user,
+        isAuthenticated,
+        isLoading,
         login,
         register,
         logout,
         updateUser,
-        resendVerification,
-        resetPassword,
       }}
     >
       {children}

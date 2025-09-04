@@ -1,10 +1,8 @@
 import React, { Suspense, lazy } from 'react'; // Import Suspense and lazy
 import { AuthProvider, useAuth } from './contexts/AuthContext';
 import { AppProvider, useApp } from './contexts/AppContext';
-import { UserRole } from './types/user';
 import './index.css';
 import './components/chart-styles.css';
-import EmailVerificationBanner from './components/common/EmailVerificationBanner';
 import { Loader2 } from 'lucide-react'; // Import a loading icon
 
 // --- Layout Components ---
@@ -91,7 +89,6 @@ const AppContent: React.FC = () => {
                 case 'attendee': return <AttendeeNavigation />;
                 case 'organizer': return <OrganizerNavigation />;
                 case 'sponsor': return <SponsorNavigation />;
-                case 'admin': return <AdminNavigation />;
                 default: return <PublicNavigation />;
             }
         }
@@ -99,7 +96,7 @@ const AppContent: React.FC = () => {
     };
 
     const renderPage = () => {
-        const hasRole = (roles: UserRole[]) => isAuthenticated && user && roles.includes(user.role);
+        const hasRole = (roles: string[]) => isAuthenticated && user && roles.includes(user.role);
 
         switch (currentView) {
             // --- Public Views ---
@@ -158,15 +155,9 @@ const AppContent: React.FC = () => {
             case 'sponsor-analytics': return hasRole(['sponsor']) ? <SponsorAnalyticsPage /> : <HomePage />;
             case 'sponsor-tools': return hasRole(['sponsor']) ? <SponsorToolsPage /> : <HomePage />;
 
-            // Admin
-            case 'admin-dashboard': return hasRole(['admin']) ? <AdminDashboard /> : <HomePage />;
-            case 'user-management': return hasRole(['admin']) ? <UserManagementPage /> : <HomePage />;
-            case 'event-oversight': return hasRole(['admin']) ? <EventOversightPage /> : <HomePage />;
-            case 'content-management': return hasRole(['admin']) ? <ContentManagementPage /> : <HomePage />;
-
             // Shared (Multi-Role)
-            case 'my-events': return hasRole(['attendee', 'organizer']) ? <MyEventsPage /> : <HomePage />;
-            case 'notifications': return hasRole(['attendee', 'organizer', 'sponsor', 'admin']) ? <NotificationsPage /> : <HomePage />;
+            case 'my-events': return hasRole(['organizer']) ? <MyEventsPage /> : <HomePage />;
+            case 'notifications': return hasRole(['attendee', 'organizer', 'sponsor']) ? <NotificationsPage /> : <HomePage />;
 
             // Default fallback
             default:
@@ -183,7 +174,6 @@ const AppContent: React.FC = () => {
     return (
         <div className="min-h-screen bg-gray-50">
             {renderNavigation()}
-            <EmailVerificationBanner />
             {!isPublicView && <Breadcrumbs />}
             <main>
                 <Suspense fallback={<LoadingFallback />}>

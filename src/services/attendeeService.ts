@@ -1,44 +1,44 @@
 import { supabase } from '../lib/supabaseClient';
 
-export interface SponsorUser {
+export interface AttendeeUser {
   id: string;
   email: string;
   full_name: string;
   company?: string;
-  role: 'sponsor';
+  role: 'attendee';
   is_active: boolean;
   created_at: string;
   updated_at: string;
 }
 
-export interface SponsorRegistrationData {
+export interface AttendeeRegistrationData {
   email: string;
   password: string;
   full_name: string;
   company?: string;
 }
 
-export interface SponsorLoginData {
+export interface AttendeeLoginData {
   email: string;
   password: string;
 }
 
-class SponsorService {
-  private static instance: SponsorService;
+class AttendeeService {
+  private static instance: AttendeeService;
 
-  static getInstance(): SponsorService {
-    if (!SponsorService.instance) {
-      SponsorService.instance = new SponsorService();
+  static getInstance(): AttendeeService {
+    if (!AttendeeService.instance) {
+      AttendeeService.instance = new AttendeeService();
     }
-    return SponsorService.instance;
+    return AttendeeService.instance;
   }
 
-  async register(data: SponsorRegistrationData): Promise<{ success: boolean; user?: SponsorUser; error?: string }> {
+  async register(data: AttendeeRegistrationData): Promise<{ success: boolean; user?: AttendeeUser; error?: string }> {
     try {
       const { data: result, error } = await supabase.rpc('register_user', {
         p_email: data.email,
         p_password: data.password,
-        p_role: 'sponsor',
+        p_role: 'attendee',
         p_full_name: data.full_name,
         p_company: data.company || null
       });
@@ -57,7 +57,7 @@ class SponsorService {
     }
   }
 
-  async login(data: SponsorLoginData): Promise<{ success: boolean; user?: SponsorUser; error?: string }> {
+  async login(data: AttendeeLoginData): Promise<{ success: boolean; user?: AttendeeUser; error?: string }> {
     try {
       const { data: result, error } = await supabase.rpc('validate_login', {
         p_email: data.email,
@@ -72,9 +72,9 @@ class SponsorService {
         return { success: false, error: result.error };
       }
 
-      // Check if user is sponsor
-      if (result.user.role !== 'sponsor') {
-        return { success: false, error: 'Invalid credentials for sponsor login' };
+      // Check if user is attendee
+      if (result.user.role !== 'attendee') {
+        return { success: false, error: 'Invalid credentials for attendee login' };
       }
 
       return { success: true, user: result.user };
@@ -83,13 +83,13 @@ class SponsorService {
     }
   }
 
-  async getProfile(userId: string): Promise<{ success: boolean; user?: SponsorUser; error?: string }> {
+  async getProfile(userId: string): Promise<{ success: boolean; user?: AttendeeUser; error?: string }> {
     try {
       const { data, error } = await supabase
         .from('app_users')
         .select('*')
         .eq('id', userId)
-        .eq('role', 'sponsor')
+        .eq('role', 'attendee')
         .single();
 
       if (error) {
@@ -102,13 +102,13 @@ class SponsorService {
     }
   }
 
-  async updateProfile(userId: string, updates: Partial<SponsorUser>): Promise<{ success: boolean; error?: string }> {
+  async updateProfile(userId: string, updates: Partial<AttendeeUser>): Promise<{ success: boolean; error?: string }> {
     try {
       const { error } = await supabase
         .from('app_users')
         .update(updates)
         .eq('id', userId)
-        .eq('role', 'sponsor');
+        .eq('role', 'attendee');
 
       if (error) {
         return { success: false, error: error.message };
@@ -119,24 +119,6 @@ class SponsorService {
       return { success: false, error: 'Failed to update profile' };
     }
   }
-
-  async getMySponsorship(userId: string): Promise<{ success: boolean; sponsorship?: any; error?: string }> {
-    try {
-      const { data, error } = await supabase
-        .from('sponsors')
-        .select('*')
-        .eq('user_id', userId)
-        .single();
-
-      if (error && error.code !== 'PGRST116') { // Not found error
-        return { success: false, error: error.message };
-      }
-
-      return { success: true, sponsorship: data };
-    } catch (error) {
-      return { success: false, error: 'Failed to fetch sponsorship' };
-    }
-  }
 }
 
-export const sponsorService = SponsorService.getInstance();
+export const attendeeService = AttendeeService.getInstance();

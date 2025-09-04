@@ -1,60 +1,63 @@
 import { createClient } from '@supabase/supabase-js';
 
-// This is the correct way to read environment variables in a Vite project.
-const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
-const supabaseKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
+// Handle environment variables with fallbacks for development
+const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || 'https://placeholder-url.supabase.co';
+const supabaseKey = import.meta.env.VITE_SUPABASE_ANON_KEY || 'placeholder-key';
 
-// This will log a warning instead of crashing the app if the keys are missing.
-if (!supabaseUrl || !supabaseKey) {
-  console.warn("Supabase URL or Anon Key is missing. Make sure to set VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY in your environment variables.");
+// Create Supabase client with error handling
+export const supabase = createClient(supabaseUrl, supabaseKey, {
+  auth: {
+    persistSession: true,
+    autoRefreshToken: true,
+  }
+});
+
+// Check if we're in development and show helpful message
+if (supabaseUrl === 'https://placeholder-url.supabase.co' || supabaseKey === 'placeholder-key') {
+  console.info('Supabase configuration: Using placeholder values. Set VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY environment variables for full functionality.');
 }
 
-export const supabase = createClient(supabaseUrl || '', supabaseKey || '');
-
-// Types for the application
+// Unified user interface for all roles
 export interface AppUser {
   id: string;
-  username: string;
   email: string;
+  full_name: string;
+  role: 'attendee' | 'organizer' | 'sponsor';
+  company?: string;
+  avatar_url?: string;
+  is_active: boolean;
   created_at: string;
-  updated_at?: string;
-  role?: string;
-  status?: string;
+  updated_at: string;
 }
 
+// Event interface
 export interface Event {
   id: string;
-  event_name: string;
-  event_type: string;
-  event_date?: string;
-  user_id: string;
-  expected_attendees: number;
+  title: string;
+  description?: string;
+  category?: string;
+  date?: string;
+  time?: string;
+  organizer_id: string;
+  max_attendees?: number;
   current_attendees?: number;
+  status?: string;
+  created_at: string;
+  updated_at: string;
   app_users?: AppUser;
 }
 
-// Database operations wrapper
+// Unified database operations
 export const db = {
-  // User operations
+  // User operations for all roles
   async getAllUsers(): Promise<{ data: AppUser[] | null; error: any }> {
     try {
       const { data, error } = await supabase
-        .from('profiles')
+        .from('app_users')
         .select('*')
         .order('created_at', { ascending: false });
       
-      return { 
-        data: data?.map(profile => ({
-          id: profile.id,
-          username: profile.username || profile.full_name || 'Unknown',
-          email: profile.email || '',
-          created_at: profile.created_at,
-          updated_at: profile.updated_at,
-          role: profile.role,
-          status: 'active'
-        })) || null, 
-        error 
-      };
+      return { data, error };
     } catch (error) {
       return { data: null, error };
     }
@@ -63,58 +66,40 @@ export const db = {
   async getUserById(id: string): Promise<{ data: AppUser | null; error: any }> {
     try {
       const { data, error } = await supabase
-        .from('profiles')
+        .from('app_users')
         .select('*')
         .eq('id', id)
         .single();
       
-      if (error) return { data: null, error };
-      
-      return { 
-        data: data ? {
-          id: data.id,
-          username: data.username || data.full_name || 'Unknown',
-          email: data.email || '',
-          created_at: data.created_at,
-          updated_at: data.updated_at,
-          role: data.role,
-          status: 'active'
-        } : null, 
-        error: null 
-      };
+      return { data, error };
     } catch (error) {
       return { data: null, error };
     }
   },
 
-  async createUser(userData: { username: string; email: string }): Promise<{ data: AppUser | null; error: any }> {
+  async getUsersByRole(role: 'attendee' | 'organizer' | 'sponsor'): Promise<{ data: AppUser[] | null; error: any }> {
     try {
       const { data, error } = await supabase
-        .from('profiles')
-        .insert([{
-          username: userData.username,
-          email: userData.email,
-          full_name: userData.username,
-          role: 'attendee',
-          plan: 'free'
-        }])
+        .from('app_users')
+        .select('*')
+        .eq('role', role)
+        .order('created_at', { ascending: false });
+      
+      return { data, error };
+    } catch (error) {
+      return { data: null, error };
+    }
+  },
+
+  async createUser(userData: Partial<AppUser>): Promise<{ data: AppUser | null; error: any }> {
+    try {
+      const { data, error } = await supabase
+        .from('app_users')
+        .insert([userData])
         .select()
         .single();
       
-      if (error) return { data: null, error };
-      
-      return { 
-        data: data ? {
-          id: data.id,
-          username: data.username,
-          email: data.email,
-          created_at: data.created_at,
-          updated_at: data.updated_at,
-          role: data.role,
-          status: 'active'
-        } : null, 
-        error: null 
-      };
+      return { data, error };
     } catch (error) {
       return { data: null, error };
     }
@@ -123,31 +108,13 @@ export const db = {
   async updateUser(id: string, updates: Partial<AppUser>): Promise<{ data: AppUser | null; error: any }> {
     try {
       const { data, error } = await supabase
-        .from('profiles')
-        .update({
-          username: updates.username,
-          email: updates.email,
-          full_name: updates.username,
-          role: updates.role
-        })
+        .from('app_users')
+        .update(updates)
         .eq('id', id)
         .select()
         .single();
       
-      if (error) return { data: null, error };
-      
-      return { 
-        data: data ? {
-          id: data.id,
-          username: data.username,
-          email: data.email,
-          created_at: data.created_at,
-          updated_at: data.updated_at,
-          role: data.role,
-          status: 'active'
-        } : null, 
-        error: null 
-      };
+      return { data, error };
     } catch (error) {
       return { data: null, error };
     }
@@ -156,7 +123,7 @@ export const db = {
   async deleteUser(id: string): Promise<{ error: any }> {
     try {
       const { error } = await supabase
-        .from('profiles')
+        .from('app_users')
         .delete()
         .eq('id', id);
       
@@ -173,28 +140,11 @@ export const db = {
         .from('events')
         .select(`
           *,
-          app_users:profiles(username, email)
+          app_users:app_users!organizer_id(*)
         `)
         .order('created_at', { ascending: false });
       
-      return { 
-        data: data?.map(event => ({
-          id: event.id,
-          event_name: event.title || event.name || 'Untitled Event',
-          event_type: event.type || 'conference',
-          event_date: event.date || event.start_date,
-          user_id: event.organizer_id || event.user_id,
-          expected_attendees: event.max_attendees || 100,
-          current_attendees: event.current_attendees || 0,
-          app_users: event.app_users ? {
-            id: event.organizer_id || event.user_id,
-            username: event.app_users.username,
-            email: event.app_users.email,
-            created_at: new Date().toISOString()
-          } : undefined
-        })) || null, 
-        error 
-      };
+      return { data, error };
     } catch (error) {
       return { data: null, error };
     }
@@ -206,31 +156,12 @@ export const db = {
         .from('events')
         .select(`
           *,
-          app_users:profiles(username, email)
+          app_users:app_users!organizer_id(*)
         `)
         .eq('id', id)
         .single();
       
-      if (error) return { data: null, error };
-      
-      return { 
-        data: data ? {
-          id: data.id,
-          event_name: data.title || data.name || 'Untitled Event',
-          event_type: data.type || 'conference',
-          event_date: data.date || data.start_date,
-          user_id: data.organizer_id || data.user_id,
-          expected_attendees: data.max_attendees || 100,
-          current_attendees: data.current_attendees || 0,
-          app_users: data.app_users ? {
-            id: data.organizer_id || data.user_id,
-            username: data.app_users.username,
-            email: data.app_users.email,
-            created_at: new Date().toISOString()
-          } : undefined
-        } : null, 
-        error: null 
-      };
+      return { data, error };
     } catch (error) {
       return { data: null, error };
     }
@@ -240,30 +171,11 @@ export const db = {
     try {
       const { data, error } = await supabase
         .from('events')
-        .insert([{
-          title: eventData.event_name,
-          type: eventData.event_type,
-          date: eventData.event_date,
-          organizer_id: eventData.user_id,
-          max_attendees: eventData.expected_attendees
-        }])
+        .insert([eventData])
         .select()
         .single();
       
-      if (error) return { data: null, error };
-      
-      return { 
-        data: data ? {
-          id: data.id,
-          event_name: data.title,
-          event_type: data.type,
-          event_date: data.date,
-          user_id: data.organizer_id,
-          expected_attendees: data.max_attendees,
-          current_attendees: 0
-        } : null, 
-        error: null 
-      };
+      return { data, error };
     } catch (error) {
       return { data: null, error };
     }
@@ -273,30 +185,12 @@ export const db = {
     try {
       const { data, error } = await supabase
         .from('events')
-        .update({
-          title: updates.event_name,
-          type: updates.event_type,
-          date: updates.event_date,
-          max_attendees: updates.expected_attendees
-        })
+        .update(updates)
         .eq('id', id)
         .select()
         .single();
       
-      if (error) return { data: null, error };
-      
-      return { 
-        data: data ? {
-          id: data.id,
-          event_name: data.title,
-          event_type: data.type,
-          event_date: data.date,
-          user_id: data.organizer_id,
-          expected_attendees: data.max_attendees,
-          current_attendees: data.current_attendees || 0
-        } : null, 
-        error: null 
-      };
+      return { data, error };
     } catch (error) {
       return { data: null, error };
     }
@@ -316,27 +210,49 @@ export const db = {
   }
 };
 
-// Admin authentication wrapper
-export const adminAuth = {
-  async signIn(email: string, password: string) {
-    return await supabase.auth.signInWithPassword({ email, password });
+// Session management
+export const sessionManager = {
+  setUser(user: AppUser) {
+    localStorage.setItem('eventease_user', JSON.stringify(user));
+    localStorage.setItem('eventease_session', JSON.stringify({
+      userId: user.id,
+      role: user.role,
+      loginTime: new Date().toISOString()
+    }));
   },
 
-  async getCurrentSession() {
-    const { data: { session } } = await supabase.auth.getSession();
-    return session;
+  getUser(): AppUser | null {
+    try {
+      const userStr = localStorage.getItem('eventease_user');
+      return userStr ? JSON.parse(userStr) : null;
+    } catch {
+      return null;
+    }
   },
 
-  async getCurrentUser() {
-    const { data: { user } } = await supabase.auth.getUser();
-    return user;
+  getSession(): { userId: string; role: string; loginTime: string } | null {
+    try {
+      const sessionStr = localStorage.getItem('eventease_session');
+      return sessionStr ? JSON.parse(sessionStr) : null;
+    } catch {
+      return null;
+    }
   },
 
-  async signOut() {
-    return await supabase.auth.signOut();
+  clearSession() {
+    localStorage.removeItem('eventease_user');
+    localStorage.removeItem('eventease_session');
   },
 
-  isAdmin(user: any): boolean {
-    return user?.email === 'tanmay365210mogabeera@gmail.com';
+  isValidSession(): boolean {
+    const session = this.getSession();
+    if (!session) return false;
+
+    // Check if session is less than 24 hours old
+    const loginTime = new Date(session.loginTime);
+    const now = new Date();
+    const hoursDiff = (now.getTime() - loginTime.getTime()) / (1000 * 60 * 60);
+    
+    return hoursDiff < 24;
   }
 };

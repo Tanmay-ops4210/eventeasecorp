@@ -78,6 +78,10 @@ const PublicNavigation: React.FC = () => {
     }
   };
 
+  const handleLoginSuccess = (user: AppUser) => {
+    // User is already set in AuthContext, just close modal
+    setIsAuthModalOpen(false);
+  };
   const handleLogout = () => {
     logout();
     setShowProfileMenu(false);
@@ -249,6 +253,7 @@ const PublicNavigation: React.FC = () => {
       <AuthModal
         isOpen={isAuthModalOpen}
         onClose={() => setIsAuthModalOpen(false)}
+        onLoginSuccess={handleLoginSuccess}
       />
     </>
   );

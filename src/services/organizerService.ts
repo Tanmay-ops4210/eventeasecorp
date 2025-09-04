@@ -1,44 +1,44 @@
 import { supabase } from '../lib/supabaseClient';
 
-export interface SponsorUser {
+export interface OrganizerUser {
   id: string;
   email: string;
   full_name: string;
   company?: string;
-  role: 'sponsor';
+  role: 'organizer';
   is_active: boolean;
   created_at: string;
   updated_at: string;
 }
 
-export interface SponsorRegistrationData {
+export interface OrganizerRegistrationData {
   email: string;
   password: string;
   full_name: string;
   company?: string;
 }
 
-export interface SponsorLoginData {
+export interface OrganizerLoginData {
   email: string;
   password: string;
 }
 
-class SponsorService {
-  private static instance: SponsorService;
+class OrganizerService {
+  private static instance: OrganizerService;
 
-  static getInstance(): SponsorService {
-    if (!SponsorService.instance) {
-      SponsorService.instance = new SponsorService();
+  static getInstance(): OrganizerService {
+    if (!OrganizerService.instance) {
+      OrganizerService.instance = new OrganizerService();
     }
-    return SponsorService.instance;
+    return OrganizerService.instance;
   }
 
-  async register(data: SponsorRegistrationData): Promise<{ success: boolean; user?: SponsorUser; error?: string }> {
+  async register(data: OrganizerRegistrationData): Promise<{ success: boolean; user?: OrganizerUser; error?: string }> {
     try {
       const { data: result, error } = await supabase.rpc('register_user', {
         p_email: data.email,
         p_password: data.password,
-        p_role: 'sponsor',
+        p_role: 'organizer',
         p_full_name: data.full_name,
         p_company: data.company || null
       });
@@ -57,7 +57,7 @@ class SponsorService {
     }
   }
 
-  async login(data: SponsorLoginData): Promise<{ success: boolean; user?: SponsorUser; error?: string }> {
+  async login(data: OrganizerLoginData): Promise<{ success: boolean; user?: OrganizerUser; error?: string }> {
     try {
       const { data: result, error } = await supabase.rpc('validate_login', {
         p_email: data.email,
@@ -72,9 +72,9 @@ class SponsorService {
         return { success: false, error: result.error };
       }
 
-      // Check if user is sponsor
-      if (result.user.role !== 'sponsor') {
-        return { success: false, error: 'Invalid credentials for sponsor login' };
+      // Check if user is organizer
+      if (result.user.role !== 'organizer') {
+        return { success: false, error: 'Invalid credentials for organizer login' };
       }
 
       return { success: true, user: result.user };
@@ -83,13 +83,13 @@ class SponsorService {
     }
   }
 
-  async getProfile(userId: string): Promise<{ success: boolean; user?: SponsorUser; error?: string }> {
+  async getProfile(userId: string): Promise<{ success: boolean; user?: OrganizerUser; error?: string }> {
     try {
       const { data, error } = await supabase
         .from('app_users')
         .select('*')
         .eq('id', userId)
-        .eq('role', 'sponsor')
+        .eq('role', 'organizer')
         .single();
 
       if (error) {
@@ -102,13 +102,13 @@ class SponsorService {
     }
   }
 
-  async updateProfile(userId: string, updates: Partial<SponsorUser>): Promise<{ success: boolean; error?: string }> {
+  async updateProfile(userId: string, updates: Partial<OrganizerUser>): Promise<{ success: boolean; error?: string }> {
     try {
       const { error } = await supabase
         .from('app_users')
         .update(updates)
         .eq('id', userId)
-        .eq('role', 'sponsor');
+        .eq('role', 'organizer');
 
       if (error) {
         return { success: false, error: error.message };
@@ -120,23 +120,23 @@ class SponsorService {
     }
   }
 
-  async getMySponsorship(userId: string): Promise<{ success: boolean; sponsorship?: any; error?: string }> {
+  async getMyEvents(userId: string): Promise<{ success: boolean; events?: any[]; error?: string }> {
     try {
       const { data, error } = await supabase
-        .from('sponsors')
+        .from('events')
         .select('*')
-        .eq('user_id', userId)
-        .single();
+        .eq('organizer_id', userId)
+        .order('created_at', { ascending: false });
 
-      if (error && error.code !== 'PGRST116') { // Not found error
+      if (error) {
         return { success: false, error: error.message };
       }
 
-      return { success: true, sponsorship: data };
+      return { success: true, events: data || [] };
     } catch (error) {
-      return { success: false, error: 'Failed to fetch sponsorship' };
+      return { success: false, error: 'Failed to fetch events' };
     }
   }
 }
 
-export const sponsorService = SponsorService.getInstance();
+export const organizerService = OrganizerService.getInstance();

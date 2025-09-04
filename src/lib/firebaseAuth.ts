@@ -11,8 +11,13 @@ import {
   AuthError
 } from "firebase/auth";
 import { auth } from "./firebaseConfig";
-import { supabase } from "./supabaseClient";
-import { UserRole } from "../types/user";
+
+// Check if Firebase is available
+const isFirebaseAvailable = auth !== null;
+
+if (!isFirebaseAvailable) {
+  console.warn('Firebase Auth is not available. Using fallback authentication.');
+}
 
 // Types for Firebase Auth integration
 export interface FirebaseAuthUser {
@@ -54,6 +59,13 @@ export class FirebaseAuthService {
    * Register a new user with Firebase Auth and create profile in Supabase database
    */
   async register(data: RegistrationData): Promise<AuthResult> {
+    if (!isFirebaseAvailable || !auth) {
+      return {
+        success: false,
+        error: 'Firebase authentication is not available. Please check your environment configuration.'
+      };
+    }
+
     try {
       // Create user in Firebase
       const userCredential: UserCredential = await createUserWithEmailAndPassword(
@@ -68,23 +80,6 @@ export class FirebaseAuthService {
       await updateProfile(firebaseUser, {
         displayName: data.name
       });
-
-      // Create user profile in Supabase database
-      const { error: supabaseError } = await supabase
-        .from('profiles')
-        .insert([
-          {
-            id: firebaseUser.uid,
-            username: data.name,
-            full_name: data.name,
-            role: data.role,
-            plan: 'free'
-          }
-        ]);
-
-      if (supabaseError) {
-        console.error('Failed to create Supabase profile:', supabaseError);
-      }
 
       return {
         success: true,
@@ -102,6 +97,13 @@ export class FirebaseAuthService {
    * Sign in user with email and password
    */
   async signIn(email: string, password: string): Promise<AuthResult> {
+    if (!isFirebaseAvailable || !auth) {
+      return {
+        success: false,
+        error: 'Firebase authentication is not available. Please check your environment configuration.'
+      };
+    }
+
     try {
       const userCredential: UserCredential = await signInWithEmailAndPassword(
         auth,
@@ -110,32 +112,6 @@ export class FirebaseAuthService {
       );
 
       const firebaseUser = userCredential.user;
-
-      // Verify user exists in Supabase database
-      const { data: profile, error: profileError } = await supabase
-        .from('profiles')
-        .select('*')
-        .eq('id', firebaseUser.uid)
-        .single();
-
-      if (profileError || !profile) {
-        // Create profile if it doesn't exist (fallback)
-        const { error: createError } = await supabase
-          .from('profiles')
-          .insert([
-            {
-              id: firebaseUser.uid,
-              username: firebaseUser.displayName || firebaseUser.email?.split('@')[0] || 'User',
-              full_name: firebaseUser.displayName || '',
-              role: 'attendee' as UserRole,
-              plan: 'free'
-            }
-          ]);
-
-        if (createError) {
-          console.error('Failed to create profile:', createError);
-        }
-      }
 
       return {
         success: true,
@@ -153,6 +129,10 @@ export class FirebaseAuthService {
    * Sign out current user
    */
   async signOut(): Promise<{ success: boolean; error?: string }> {
+    if (!isFirebaseAvailable || !auth) {
+      return { success: true }; // Allow logout even if Firebase is not available
+    }
+
     try {
       await signOut(auth);
       return { success: true };
@@ -168,6 +148,13 @@ export class FirebaseAuthService {
    * Send password reset email
    */
   async resetPassword(email: string): Promise<{ success: boolean; error?: string }> {
+    if (!isFirebaseAvailable || !auth) {
+      return {
+        success: false,
+        error: 'Password reset is not available. Please contact support.'
+      };
+    }
+
     try {
       await sendPasswordResetEmail(auth, email);
       return { success: true };
@@ -183,6 +170,9 @@ export class FirebaseAuthService {
    * Get current authenticated user
    */
   getCurrentUser(): FirebaseUser | null {
+    if (!isFirebaseAvailable || !auth) {
+      return null;
+    }
     return auth.currentUser;
   }
 
@@ -194,37 +184,34 @@ export class FirebaseAuthService {
     profile: any;
     error?: string;
   }> {
+    if (!isFirebaseAvailable || !auth) {
+      return { firebaseUser: null, profile: null, error: 'Firebase not available' };
+    }
+
     const firebaseUser = this.getCurrentUser();
     
     if (!firebaseUser) {
       return { firebaseUser: null, profile: null };
     }
 
-    try {
-      const { data: profile, error } = await supabase
-        .from('profiles')
-        .select('*')
-        .eq('id', firebaseUser.uid)
-        .single();
-
-      return {
-        firebaseUser,
-        profile: error ? null : profile,
-        error: error?.message
-      };
-    } catch (error) {
-      return {
-        firebaseUser,
-        profile: null,
-        error: 'Failed to fetch user profile'
-      };
-    }
+    return {
+      firebaseUser,
+      profile: null,
+      error: 'Profile data not available'
+    };
   }
 
   /**
    * Resend email verification
    */
   async resendEmailVerification(): Promise<{ success: boolean; error?: string }> {
+    if (!isFirebaseAvailable || !auth) {
+      return {
+        success: false,
+        error: 'Email verification is not available.'
+      };
+    }
+
     try {
       const user = this.getCurrentUser();
       if (!user) {
@@ -245,6 +232,10 @@ export class FirebaseAuthService {
    * Listen to authentication state changes
    */
   onAuthStateChanged(callback: (user: FirebaseUser | null) => void): () => void {
+    if (!isFirebaseAvailable || !auth) {
+      // Return a no-op function if Firebase is not available
+      return () => {};
+    }
     return firebaseOnAuthStateChanged(auth, callback);
   }
 
@@ -254,10 +245,17 @@ export class FirebaseAuthService {
   async updateUserProfile(updates: {
     username?: string;
     full_name?: string;
-    role?: UserRole;
+    role?: string;
     company?: string;
     title?: string;
   }): Promise<{ success: boolean; error?: string }> {
+    if (!isFirebaseAvailable || !auth) {
+      return {
+        success: false,
+        error: 'Profile updates are not available.'
+      };
+    }
+
     try {
       const firebaseUser = this.getCurrentUser();
       if (!firebaseUser) {
@@ -269,16 +267,6 @@ export class FirebaseAuthService {
         await updateProfile(firebaseUser, {
           displayName: updates.full_name
         });
-      }
-
-      // Update Supabase profile
-      const { error } = await supabase
-        .from('profiles')
-        .update(updates)
-        .eq('id', firebaseUser.uid);
-
-      if (error) {
-        return { success: false, error: error.message };
       }
 
       return { success: true };

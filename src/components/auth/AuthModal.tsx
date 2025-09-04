@@ -1,16 +1,19 @@
 import React, { useState } from 'react';
-import { X, User, Mail, Lock, Eye, EyeOff } from 'lucide-react';
-import { useAuth } from '../../contexts/AuthContext';
-import { UserRole } from '../../types/user';
+import { X, User, Mail, Lock, Eye, EyeOff, Building } from 'lucide-react';
 import { useApp } from '../../contexts/AppContext';
+import { attendeeService } from '../../services/attendeeService';
+import { organizerService } from '../../services/organizerService';
+import { sponsorService } from '../../services/sponsorService';
 
 interface AuthModalProps {
   isOpen: boolean;
   onClose: () => void;
+  onLoginSuccess: (user: any) => void;
 }
 
-const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
-  const { login, register } = useAuth();
+type UserRole = 'attendee' | 'organizer' | 'sponsor';
+
+const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, onLoginSuccess }) => {
   const { setCurrentView } = useApp();
   const [isLoginMode, setIsLoginMode] = useState(true);
   const [showPassword, setShowPassword] = useState(false);
@@ -19,7 +22,8 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
     name: '',
     email: '',
     password: '',
-    confirmPassword: ''
+    confirmPassword: '',
+    company: ''
   });
   const [errors, setErrors] = useState<{ [key: string]: string }>({});
   const [isLoading, setIsLoading] = useState(false);
@@ -73,13 +77,95 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
     
     try {
       if (isLoginMode) {
-        await login(formData.email, formData.password);
-        setFormData({ name: '', email: '', password: '', confirmPassword: '' });
-        onClose();
+        // Handle login based on selected role
+        let result;
+        switch (selectedRole) {
+          case 'attendee':
+            result = await attendeeService.login({
+              email: formData.email,
+              password: formData.password
+            });
+            break;
+          case 'organizer':
+            result = await organizerService.login({
+              email: formData.email,
+              password: formData.password
+            });
+            break;
+          case 'sponsor':
+            result = await sponsorService.login({
+              email: formData.email,
+              password: formData.password
+            });
+            break;
+        }
+
+        if (result.success && result.user) {
+          // Store user in localStorage for session management
+          localStorage.setItem('eventease_user', JSON.stringify(result.user));
+          onLoginSuccess(result.user);
+          
+          // Redirect to appropriate dashboard
+          switch (result.user.role) {
+            case 'attendee':
+              setCurrentView('attendee-dashboard');
+              break;
+            case 'organizer':
+              setCurrentView('organizer-dashboard');
+              break;
+            case 'sponsor':
+              setCurrentView('sponsor-dashboard');
+              break;
+          }
+          
+          onClose();
+        } else {
+          setErrors({ general: result.error || 'Login failed' });
+        }
       } else {
-        await register(formData.email, formData.password, formData.name, selectedRole);
-        setFormData({ name: '', email: '', password: '', confirmPassword: '' });
-        onClose();
+        // Handle registration based on selected role
+        let result;
+        const registrationData = {
+          email: formData.email,
+          password: formData.password,
+          full_name: formData.name,
+          company: formData.company || undefined
+        };
+
+        switch (selectedRole) {
+          case 'attendee':
+            result = await attendeeService.register(registrationData);
+            break;
+          case 'organizer':
+            result = await organizerService.register(registrationData);
+            break;
+          case 'sponsor':
+            result = await sponsorService.register(registrationData);
+            break;
+        }
+
+        if (result.success && result.user) {
+          // Store user in localStorage for session management
+          localStorage.setItem('eventease_user', JSON.stringify(result.user));
+          onLoginSuccess(result.user);
+          
+          // Redirect to appropriate dashboard
+          switch (result.user.role) {
+            case 'attendee':
+              setCurrentView('attendee-dashboard');
+              break;
+            case 'organizer':
+              setCurrentView('organizer-dashboard');
+              break;
+            case 'sponsor':
+              setCurrentView('sponsor-dashboard');
+              break;
+          }
+          
+          onClose();
+        } else {
+          setErrors({ general: result.error || 'Registration failed' });
+        }
       }
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Authentication failed. Please try again.';
@@ -92,22 +178,37 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
   const toggleMode = () => {
     setIsLoginMode(!isLoginMode);
     setErrors({});
-    setFormData({ name: '', email: '', password: '', confirmPassword: '' });
+    setFormData({ name: '', email: '', password: '', confirmPassword: '', company: '' });
   };
 
   const roleOptions = [
-    { value: 'attendee', label: 'Attendee', description: 'Join and attend events' },
-    { value: 'organizer', label: 'Event Organizer', description: 'Create and manage events' },
-    { value: 'sponsor', label: 'Sponsor/Exhibitor', description: 'Sponsor events and showcase products' },
+    { 
+      value: 'attendee', 
+      label: 'Attendee', 
+      description: 'Join and attend events',
+      icon: User
+    },
+    { 
+      value: 'organizer', 
+      label: 'Event Organizer', 
+      description: 'Create and manage events',
+      icon: Calendar
+    },
+    { 
+      value: 'sponsor', 
+      label: 'Sponsor/Exhibitor', 
+      description: 'Sponsor events and showcase products',
+      icon: Building
+    },
   ];
   
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black bg-opacity-50 backdrop-blur-sm">
-      <div className="relative w-full max-w-md bg-white rounded-2xl shadow-2xl transform transition-all duration-300 scale-100">
+      <div className="relative w-full max-w-md bg-white rounded-2xl shadow-2xl transform transition-all duration-300 scale-100 max-h-screen overflow-y-auto">
         {/* Close Button */}
         <button
           onClick={onClose}
-          className="absolute top-4 right-4 p-2 text-gray-400 hover:text-gray-600 transition-colors duration-200"
+          className="absolute top-4 right-4 p-2 text-gray-400 hover:text-gray-600 transition-colors duration-200 z-10"
         >
           <X className="w-6 h-6" />
         </button>
@@ -125,6 +226,32 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
               {isLoginMode ? 'Sign in to access your account' : 'Create your account to get started'}
             </p>
           </div>
+
+          {/* Role Selection for Login */}
+          {isLoginMode && (
+            <div className="mb-6">
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Login as:
+              </label>
+              <div className="grid grid-cols-3 gap-2">
+                {roleOptions.map((role) => (
+                  <button
+                    key={role.value}
+                    type="button"
+                    onClick={() => setSelectedRole(role.value as UserRole)}
+                    className={`p-3 rounded-lg border-2 transition-all duration-200 ${
+                      selectedRole === role.value
+                        ? 'border-indigo-500 bg-indigo-50 text-indigo-700'
+                        : 'border-gray-200 hover:border-gray-300'
+                    }`}
+                  >
+                    <role.icon className="w-5 h-5 mx-auto mb-1" />
+                    <div className="text-xs font-medium">{role.label}</div>
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
 
           {/* Error Message */}
           {errors.general && (
@@ -154,7 +281,21 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
                   {errors.name && <p className="text-red-500 text-sm mt-1">{errors.name}</p>}
                 </div>
 
-                {/* Role Selection */}
+                <div>
+                  <div className="relative">
+                    <Building className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
+                    <input
+                      type="text"
+                      name="company"
+                      placeholder="Company (Optional)"
+                      value={formData.company}
+                      onChange={handleInputChange}
+                      className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-colors duration-200"
+                    />
+                  </div>
+                </div>
+
+                {/* Role Selection for Signup */}
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
                     I want to join as:
