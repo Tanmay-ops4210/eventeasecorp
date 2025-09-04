@@ -12,6 +12,10 @@ const PublicNavigation: React.FC = () => {
   const { isAuthenticated, user, logout } = useAuth();
 
   useEffect(() => {
+    const handleDashboardNavigation = (event: CustomEvent) => {
+      setCurrentView(event.detail);
+    };
+
     const handlePasswordResetNavigation = () => {
       setCurrentView('password-reset');
     };
@@ -27,6 +31,7 @@ const PublicNavigation: React.FC = () => {
       }
     };
 
+    window.addEventListener('navigate-to-dashboard', handleDashboardNavigation as EventListener);
     window.addEventListener('navigate-to-password-reset', handlePasswordResetNavigation);
     
     // Check for auth callback on page load
@@ -36,6 +41,7 @@ const PublicNavigation: React.FC = () => {
     }
 
     return () => {
+      window.removeEventListener('navigate-to-dashboard', handleDashboardNavigation as EventListener);
       window.removeEventListener('navigate-to-password-reset', handlePasswordResetNavigation);
     };
   }, [setCurrentView]);
@@ -79,7 +85,7 @@ const PublicNavigation: React.FC = () => {
   };
 
   const handleLoginSuccess = (user: AppUser) => {
-    // User is already set in AuthContext, just close modal
+    // User is already set in AuthContext via the auth services, just close modal
     setIsAuthModalOpen(false);
   };
   const handleLogout = () => {

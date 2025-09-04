@@ -74,6 +74,21 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         setUser(result.user);
         setIsAuthenticated(true);
         sessionManager.setUser(result.user);
+        
+        // Auto-redirect to appropriate dashboard after login
+        setTimeout(() => {
+          switch (result.user.role) {
+            case 'attendee':
+              window.dispatchEvent(new CustomEvent('navigate-to-dashboard', { detail: 'attendee-dashboard' }));
+              break;
+            case 'organizer':
+              window.dispatchEvent(new CustomEvent('navigate-to-dashboard', { detail: 'organizer-dashboard' }));
+              break;
+            case 'sponsor':
+              window.dispatchEvent(new CustomEvent('navigate-to-dashboard', { detail: 'sponsor-dashboard' }));
+              break;
+          }
+        }, 100);
       } else {
         throw new Error(result.error || 'Login failed');
       }
@@ -114,6 +129,21 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         setUser(result.user);
         setIsAuthenticated(true);
         sessionManager.setUser(result.user);
+        
+        // Auto-redirect to appropriate dashboard after registration
+        setTimeout(() => {
+          switch (result.user.role) {
+            case 'attendee':
+              window.dispatchEvent(new CustomEvent('navigate-to-dashboard', { detail: 'attendee-dashboard' }));
+              break;
+            case 'organizer':
+              window.dispatchEvent(new CustomEvent('navigate-to-dashboard', { detail: 'organizer-dashboard' }));
+              break;
+            case 'sponsor':
+              window.dispatchEvent(new CustomEvent('navigate-to-dashboard', { detail: 'sponsor-dashboard' }));
+              break;
+          }
+        }, 100);
       } else {
         throw new Error(result.error || 'Registration failed');
       }

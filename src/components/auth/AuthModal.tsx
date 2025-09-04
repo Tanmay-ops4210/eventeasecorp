@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { X, User, Mail, Lock, Eye, EyeOff, Building } from 'lucide-react';
 import { useApp } from '../../contexts/AppContext';
+import { useAuth } from '../../contexts/AuthContext';
 import { attendeeService } from '../../services/attendeeService';
 import { organizerService } from '../../services/organizerService';
 import { sponsorService } from '../../services/sponsorService';
@@ -15,6 +16,7 @@ type UserRole = 'attendee' | 'organizer' | 'sponsor';
 
 const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, onLoginSuccess }) => {
   const { setCurrentView } = useApp();
+  const { login, register } = useAuth();
   const [isLoginMode, setIsLoginMode] = useState(true);
   const [showPassword, setShowPassword] = useState(false);
   const [selectedRole, setSelectedRole] = useState<UserRole>('attendee');
@@ -77,95 +79,15 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, onLoginSuccess }
     
     try {
       if (isLoginMode) {
-        // Handle login based on selected role
-        let result;
-        switch (selectedRole) {
-          case 'attendee':
-            result = await attendeeService.login({
-              email: formData.email,
-              password: formData.password
-            });
-            break;
-          case 'organizer':
-            result = await organizerService.login({
-              email: formData.email,
-              password: formData.password
-            });
-            break;
-          case 'sponsor':
-            result = await sponsorService.login({
-              email: formData.email,
-              password: formData.password
-            });
-            break;
-        }
-
-        if (result.success && result.user) {
-          // Store user in localStorage for session management
-          localStorage.setItem('eventease_user', JSON.stringify(result.user));
-          onLoginSuccess(result.user);
-          
-          // Redirect to appropriate dashboard
-          switch (result.user.role) {
-            case 'attendee':
-              setCurrentView('attendee-dashboard');
-              break;
-            case 'organizer':
-              setCurrentView('organizer-dashboard');
-              break;
-            case 'sponsor':
-              setCurrentView('sponsor-dashboard');
-              break;
-          }
-          
-          onClose();
-        } else {
-          setErrors({ general: result.error || 'Login failed' });
-        }
+        // Use AuthContext login method
+        await login(formData.email, formData.password, selectedRole);
+        onLoginSuccess({} as any); // The actual user is set in AuthContext
+        onClose();
       } else {
-        // Handle registration based on selected role
-        let result;
-        const registrationData = {
-          email: formData.email,
-          password: formData.password,
-          full_name: formData.name,
-          company: formData.company || undefined
-        };
-
-        switch (selectedRole) {
-          case 'attendee':
-            result = await attendeeService.register(registrationData);
-            break;
-          case 'organizer':
-            result = await organizerService.register(registrationData);
-            break;
-          case 'sponsor':
-            result = await sponsorService.register(registrationData);
-            break;
-        }
-
-        if (result.success && result.user) {
-          // Store user in localStorage for session management
-          localStorage.setItem('eventease_user', JSON.stringify(result.user));
-          onLoginSuccess(result.user);
-          
-          // Redirect to appropriate dashboard
-          switch (result.user.role) {
-            case 'attendee':
-              setCurrentView('attendee-dashboard');
-              break;
-            case 'organizer':
-              setCurrentView('organizer-dashboard');
-              break;
-            case 'sponsor':
-              setCurrentView('sponsor-dashboard');
-              break;
-          }
-          
-          onClose();
-        } else {
-          setErrors({ general: result.error || 'Registration failed' });
-        }
+        // Use AuthContext register method
+        await register(formData.email, formData.password, formData.name, selectedRole, formData.company);
+        onLoginSuccess({} as any); // The actual user is set in AuthContext
+        onClose();
       }
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Authentication failed. Please try again.';
