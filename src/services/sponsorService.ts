@@ -1,4 +1,5 @@
 import { supabase } from '../lib/supabaseClient';
+import { Sponsor, SponsorListResponse } from '../types/sponsor';
 
 export interface SponsorUser {
   id: string;
@@ -117,6 +118,94 @@ class SponsorService {
       return { success: true };
     } catch (error) {
       return { success: false, error: 'Failed to update profile' };
+    }
+  }
+
+  async getSponsors(page: number = 1, limit: number = 12, tier?: string): Promise<SponsorListResponse> {
+    try {
+      let query = supabase
+        .from('sponsors')
+        .select('*', { count: 'exact' });
+
+      if (tier) {
+        query = query.eq('tier', tier.toLowerCase());
+      }
+
+      const { data, error, count } = await query
+        .range((page - 1) * limit, page * limit - 1)
+        .order('name');
+
+      if (error) {
+        throw new Error(error.message);
+      }
+
+      const sponsors: Sponsor[] = (data || []).map(sponsor => ({
+        id: sponsor.id,
+        name: sponsor.name,
+        logo: sponsor.logo_url || 'https://images.pexels.com/photos/3184291/pexels-photo-3184291.jpeg?auto=compress&cs=tinysrgb&w=400',
+        tier: sponsor.tier || 'bronze',
+        website: sponsor.website || '#',
+        industry: sponsor.industry || 'Technology',
+        description: `Leading ${sponsor.industry || 'technology'} company providing innovative solutions.`,
+        partnership: 'Event Partner',
+        benefits: [
+          'Brand visibility throughout the event',
+          'Access to networking opportunities',
+          'Lead generation and customer acquisition'
+        ],
+        socialLinks: {
+          linkedin: '#',
+          twitter: '#'
+        },
+        promotionalVideo: null
+      }));
+
+      return {
+        sponsors,
+        total: count || 0,
+        page,
+        limit,
+        hasMore: (count || 0) > page * limit
+      };
+    } catch (error) {
+      throw new Error('Failed to fetch sponsors');
+    }
+  }
+
+  async searchSponsors(searchTerm: string): Promise<Sponsor[]> {
+    try {
+      const { data, error } = await supabase
+        .from('sponsors')
+        .select('*')
+        .or(`name.ilike.%${searchTerm}%,industry.ilike.%${searchTerm}%`)
+        .order('name');
+
+      if (error) {
+        throw new Error(error.message);
+      }
+
+      return (data || []).map(sponsor => ({
+        id: sponsor.id,
+        name: sponsor.name,
+        logo: sponsor.logo_url || 'https://images.pexels.com/photos/3184291/pexels-photo-3184291.jpeg?auto=compress&cs=tinysrgb&w=400',
+        tier: sponsor.tier || 'bronze',
+        website: sponsor.website || '#',
+        industry: sponsor.industry || 'Technology',
+        description: `Leading ${sponsor.industry || 'technology'} company providing innovative solutions.`,
+        partnership: 'Event Partner',
+        benefits: [
+          'Brand visibility throughout the event',
+          'Access to networking opportunities',
+          'Lead generation and customer acquisition'
+        ],
+        socialLinks: {
+          linkedin: '#',
+          twitter: '#'
+        },
+        promotionalVideo: null
+      }));
+    } catch (error) {
+      throw new Error('Failed to search sponsors');
     }
   }
 
