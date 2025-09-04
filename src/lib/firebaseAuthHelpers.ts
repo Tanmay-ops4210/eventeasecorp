@@ -1,6 +1,6 @@
 import { firebaseAuthService } from './firebaseAuth';
 import { supabase, adminAuth } from './supabaseClient';
-import { UserRole } from '../types/user';
+import { UserRole, UserProfile } from '../types/user';
 
 // Export adminAuth for components that need it
 export { adminAuth };
@@ -91,7 +91,11 @@ export const hasPermission = async (permission: string): Promise<boolean> => {
 /**
  * Sync Firebase user data with Supabase profile
  */
-export const syncUserProfile = async (firebaseUser: any): Promise<void> => {
+export const syncUserProfile = async (
+  firebaseUser: any, 
+  role?: UserRole, 
+  company?: string
+): Promise<void> => {
   try {
     const { data: existingProfile } = await supabase
       .from('profiles')
@@ -108,8 +112,9 @@ export const syncUserProfile = async (firebaseUser: any): Promise<void> => {
             id: firebaseUser.uid,
             username: firebaseUser.displayName || firebaseUser.email?.split('@')[0] || 'User',
             full_name: firebaseUser.displayName || '',
-            role: 'attendee' as UserRole,
-            plan: 'free'
+            role: role || 'attendee' as UserRole,
+            plan: 'free',
+            company: company || null
           }
         ]);
     } else {
@@ -118,6 +123,14 @@ export const syncUserProfile = async (firebaseUser: any): Promise<void> => {
       
       if (firebaseUser.displayName && firebaseUser.displayName !== existingProfile.full_name) {
         updates.full_name = firebaseUser.displayName;
+      }
+      
+      if (role && role !== existingProfile.role) {
+        updates.role = role;
+      }
+      
+      if (company && company !== existingProfile.company) {
+        updates.company = company;
       }
       
       if (Object.keys(updates).length > 0) {

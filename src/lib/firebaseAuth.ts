@@ -258,7 +258,7 @@ export class FirebaseAuthService {
 
     try {
       const firebaseUser = this.getCurrentUser();
-      if (!firebaseUser) {
+  register: async ({ email, password, name, role }: RegisterData & { role?: string }): Promise<AuthResult> => {
         return { success: false, error: 'No user is currently signed in' };
       }
 

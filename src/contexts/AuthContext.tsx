@@ -1,8 +1,7 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { AppUser, sessionManager } from '../lib/supabaseClient';
-import { attendeeService } from '../services/attendeeService';
-import { organizerService } from '../services/organizerService';
-import { sponsorService } from '../services/sponsorService';
+import { firebaseAuthService } from '../lib/firebaseAuth';
+import { getUserProfile, syncUserProfile } from '../lib/firebaseAuthHelpers';
 
 interface AuthContextType {
   user: AppUser | null;
@@ -54,30 +53,47 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const login = async (email: string, password: string, role: 'attendee' | 'organizer' | 'sponsor') => {
     setIsLoading(true);
     try {
-      let result;
-      
-      switch (role) {
-        case 'attendee':
-          result = await attendeeService.login({ email, password });
-          break;
-        case 'organizer':
-          result = await organizerService.login({ email, password });
-          break;
-        case 'sponsor':
-          result = await sponsorService.login({ email, password });
-          break;
-        default:
-          throw new Error('Invalid role specified');
-      }
+      const result = await firebaseAuthService.signIn(email, password);
 
       if (result.success && result.user) {
-        setUser(result.user);
+        // Sync user profile with Supabase
+        await syncUserProfile(result.user, role);
+        
+        // Get complete user profile from Supabase
+        const profile = await getUserProfile(result.user.uid);
+        
+        if (profile) {
+          const appUser: AppUser = {
+            id: result.user.uid,
+            email: result.user.email || '',
+            full_name: profile.full_name || '',
+            role: profile.role as 'attendee' | 'organizer' | 'sponsor',
+            company: profile.company || undefined,
+            avatar_url: profile.avatar_url || undefined,
+            plan: profile.plan || 'free'
+          };
+          
+          setUser(appUser);
+          sessionManager.setUser(appUser);
+        } else {
+          // Fallback if profile fetch fails
+          const appUser: AppUser = {
+            id: result.user.uid,
+            email: result.user.email || '',
+            full_name: result.user.displayName || '',
+            role: role,
+            plan: 'free'
+          };
+          
+          setUser(appUser);
+          sessionManager.setUser(appUser);
+        }
+        
         setIsAuthenticated(true);
-        sessionManager.setUser(result.user);
         
         // Auto-redirect to appropriate dashboard after login
         setTimeout(() => {
-          switch (result.user.role) {
+          switch (role) {
             case 'attendee':
               window.dispatchEvent(new CustomEvent('navigate-to-dashboard', { detail: 'attendee-dashboard' }));
               break;
@@ -103,36 +119,53 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const register = async (email: string, password: string, name: string, role: 'attendee' | 'organizer' | 'sponsor', company?: string) => {
     setIsLoading(true);
     try {
-      let result;
-      const registrationData = {
+      const result = await firebaseAuthService.register({
         email,
         password,
-        full_name: name,
-        company
-      };
-
-      switch (role) {
-        case 'attendee':
-          result = await attendeeService.register(registrationData);
-          break;
-        case 'organizer':
-          result = await organizerService.register(registrationData);
-          break;
-        case 'sponsor':
-          result = await sponsorService.register(registrationData);
-          break;
-        default:
-          throw new Error('Invalid role specified');
-      }
+        name,
+        role
+      });
 
       if (result.success && result.user) {
-        setUser(result.user);
+        // Sync user profile with Supabase including role and company
+        await syncUserProfile(result.user, role, company);
+        
+        // Get complete user profile from Supabase
+        const profile = await getUserProfile(result.user.uid);
+        
+        if (profile) {
+          const appUser: AppUser = {
+            id: result.user.uid,
+            email: result.user.email || '',
+            full_name: profile.full_name || name,
+            role: profile.role as 'attendee' | 'organizer' | 'sponsor',
+            company: profile.company || company,
+            avatar_url: profile.avatar_url || undefined,
+            plan: profile.plan || 'free'
+          };
+          
+          setUser(appUser);
+          sessionManager.setUser(appUser);
+        } else {
+          // Fallback if profile fetch fails
+          const appUser: AppUser = {
+            id: result.user.uid,
+            email: result.user.email || '',
+            full_name: name,
+            role: role,
+            company: company,
+            plan: 'free'
+          };
+          
+          setUser(appUser);
+          sessionManager.setUser(appUser);
+        }
+        
         setIsAuthenticated(true);
-        sessionManager.setUser(result.user);
         
         // Auto-redirect to appropriate dashboard after registration
         setTimeout(() => {
-          switch (result.user.role) {
+          switch (role) {
             case 'attendee':
               window.dispatchEvent(new CustomEvent('navigate-to-dashboard', { detail: 'attendee-dashboard' }));
               break;
@@ -156,6 +189,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   };
 
   const logout = () => {
+    firebaseAuthService.signOut();
     setUser(null);
     setIsAuthenticated(false);
     sessionManager.clearSession();
