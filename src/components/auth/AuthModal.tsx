@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { X, User, Mail, Lock, Eye, EyeOff, Building } from 'lucide-react';
+import { X, User, Mail, Lock, Eye, EyeOff, Building, Calendar } from 'lucide-react';
 import { useApp } from '../../contexts/AppContext';
 import { useAuth } from '../../contexts/AuthContext';
 import { attendeeService } from '../../services/attendeeService';
