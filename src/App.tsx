@@ -44,19 +44,19 @@ const LiveEventPage = lazy(() => import('./components/attendee/LiveEventPage'));
 const SessionRoomPage = lazy(() => import('./components/attendee/SessionRoomPage'));
 const ExpoHallPage = lazy(() => import('./components/attendee/ExpoHallPage'));
 const ResourceLibraryPage = lazy(() => import('./components/attendee/ResourceLibraryPage'));
-const OrganizerDashboard = lazy(() => import('./components/organizer/OrganizerDashboard'));
-const EventBuilderPage = lazy(() => import('./components/organizer/EventBuilderPage'));
+const OrganizerDashboard = lazy(() => import('./components/organizer/RealOrganizerDashboard'));
+const EventBuilderPage = lazy(() => import('./components/organizer/RealEventBuilderPage'));
 const EventSettingsPage = lazy(() => import('./components/organizer/EventSettingsPage'));
 const LandingCustomizerPage = lazy(() => import('./components/organizer/LandingCustomizerPage'));
 const AgendaManagerPage = lazy(() => import('./components/organizer/AgendaManagerPage'));
 const VenueManagerPage = lazy(() => import('./components/organizer/VenueManagerPage'));
-const TicketingPage = lazy(() => import('./components/organizer/TicketingPage'));
+const TicketingPage = lazy(() => import('./components/organizer/RealTicketingPage'));
 const DiscountCodesPage = lazy(() => import('./components/organizer/DiscountCodesPage'));
-const EmailCampaignsPage = lazy(() => import('./components/organizer/EmailCampaignsPage'));
-const AttendeeManagementPage = lazy(() => import('./components/organizer/AttendeeManagementPage'));
+const EmailCampaignsPage = lazy(() => import('./components/organizer/RealEmailCampaignsPage'));
+const AttendeeManagementPage = lazy(() => import('./components/organizer/RealAttendeeManagementPage'));
 const SpeakerPortalPage = lazy(() => import('./components/organizer/SpeakerPortalPage'));
 const StaffRolesPage = lazy(() => import('./components/organizer/StaffRolesPage'));
-const AnalyticsPage = lazy(() => import('./components/organizer/AnalyticsPage'));
+const AnalyticsPage = lazy(() => import('./components/organizer/RealAnalyticsPage'));
 const OrganizerSettingsPage = lazy(() => import('./components/organizer/OrganizerSettingsPage'));
 const SponsorDashboard = lazy(() => import('./components/sponsor/SponsorDashboard'));
 const BoothCustomizationPage = lazy(() => import('./components/sponsor/BoothCustomizationPage'));
@@ -155,7 +155,7 @@ const AppContent: React.FC = () => {
             case 'sponsor-tools': return hasRole(['sponsor']) ? <SponsorToolsPage /> : <HomePage />;
 
             // Shared (Multi-Role)
-            case 'my-events': return hasRole(['organizer']) ? <MyEventsPage /> : <HomePage />;
+            case 'my-events': return hasRole(['organizer']) ? React.createElement(lazy(() => import('./components/organizer/RealMyEventsPage'))) : <HomePage />;
             case 'notifications': return hasRole(['attendee', 'organizer', 'sponsor']) ? <NotificationsPage /> : <HomePage />;
 
             // Default fallback
