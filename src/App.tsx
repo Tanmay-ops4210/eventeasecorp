@@ -58,6 +58,10 @@ const SpeakerPortalPage = lazy(() => import('./components/organizer/SpeakerPorta
 const StaffRolesPage = lazy(() => import('./components/organizer/StaffRolesPage'));
 const AnalyticsPage = lazy(() => import('./components/organizer/RealAnalyticsPage'));
 const OrganizerSettingsPage = lazy(() => import('./components/organizer/OrganizerSettingsPage'));
+
+// Real Organizer Components
+const RealMyEventsPage = lazy(() => import('./components/organizer/RealMyEventsPage'));
+
 const SponsorDashboard = lazy(() => import('./components/sponsor/SponsorDashboard'));
 const BoothCustomizationPage = lazy(() => import('./components/sponsor/BoothCustomizationPage'));
 const LeadCapturePage = lazy(() => import('./components/sponsor/LeadCapturePage'));
@@ -155,7 +159,7 @@ const AppContent: React.FC = () => {
             case 'sponsor-tools': return hasRole(['sponsor']) ? <SponsorToolsPage /> : <HomePage />;
 
             // Shared (Multi-Role)
-            case 'my-events': return hasRole(['organizer']) ? React.createElement(lazy(() => import('./components/organizer/RealMyEventsPage'))) : <HomePage />;
+            case 'my-events': return hasRole(['organizer']) ? <RealMyEventsPage /> : <HomePage />;
             case 'notifications': return hasRole(['attendee', 'organizer', 'sponsor']) ? <NotificationsPage /> : <HomePage />;
 
             // Default fallback
