@@ -5,7 +5,7 @@ export interface RealEvent {
   organizer_id: string;
   title: string;
   description?: string;
-  date: string;
+  event_date: string;
   time: string;
   end_time?: string;
   location: string;
@@ -83,7 +83,7 @@ export interface RealMarketingCampaign {
 export interface EventFormData {
   title: string;
   description?: string;
-  date: string;
+  event_date: string;
   time: string;
   end_time?: string;
   location: string;
@@ -459,7 +459,7 @@ class RealEventService {
 
       const totalEvents = events?.length || 0;
       const publishedEvents = events?.filter(e => e.status === 'published').length || 0;
-      const draftEvents = events?.filter(e => e.status === 'draft').length || 0;
+        e.status === 'published' && new Date(e.event_date) > new Date()
       const upcomingEvents = events?.filter(e => e.status === 'published').length || 0;
       const completedEvents = events?.filter(e => e.status === 'completed').length || 0;
       
