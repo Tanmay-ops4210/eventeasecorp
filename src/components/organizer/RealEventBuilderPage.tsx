@@ -16,7 +16,7 @@ const RealEventBuilderPage: React.FC = () => {
   const [eventData, setEventData] = useState<EventFormData>({
     title: '',
     description: '',
-    date: '',
+    event_date: '',
     time: '',
     end_time: '',
     location: '',
@@ -46,14 +46,14 @@ const RealEventBuilderPage: React.FC = () => {
       newErrors.title = 'Event title is required';
     }
 
-    if (!eventData.date) {
-      newErrors.date = 'Event date is required';
+    if (!eventData.event_date) {
+      newErrors.event_date = 'Event date is required';
     } else {
-      const eventDate = new Date(eventData.date);
+      const eventDate = new Date(eventData.event_date);
       const today = new Date();
       today.setHours(0, 0, 0, 0);
       if (eventDate < today) {
-        newErrors.date = 'Event date cannot be in the past';
+        newErrors.event_date = 'Event date cannot be in the past';
       }
     }
 
@@ -101,7 +101,7 @@ const RealEventBuilderPage: React.FC = () => {
     }
   };
 
-  const isFormValid = eventData.title.trim() && eventData.date && eventData.time && eventData.location.trim() && eventData.capacity > 0;
+  const isFormValid = eventData.title.trim() && eventData.event_date && eventData.time && eventData.location.trim() && eventData.capacity > 0;
 
   return (
     <div className="min-h-screen bg-gray-50 pt-20">
@@ -186,14 +186,14 @@ const RealEventBuilderPage: React.FC = () => {
                   <label className="block text-sm font-medium text-gray-700 mb-2">Event Date *</label>
                   <input
                     type="date"
-                    value={eventData.date}
-                    onChange={(e) => handleInputChange('date', e.target.value)}
+                    value={eventData.event_date}
+                    onChange={(e) => handleInputChange('event_date', e.target.value)}
                     min={new Date().toISOString().split('T')[0]}
                     className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-colors duration-200 ${
-                      errors.date ? 'border-red-500' : 'border-gray-300'
+                      errors.event_date ? 'border-red-500' : 'border-gray-300'
                     }`}
                   />
-                  {errors.date && <p className="text-red-500 text-sm mt-1">{errors.date}</p>}
+                  {errors.event_date && <p className="text-red-500 text-sm mt-1">{errors.event_date}</p>}
                 </div>
 
                 <div>
@@ -398,7 +398,7 @@ const RealEventBuilderPage: React.FC = () => {
                       <div className="flex items-center space-x-2">
                         <Calendar className="w-4 h-4" />
                         <span>
-                          {eventData.date ? new Date(eventData.date).toLocaleDateString() : 'Date TBD'}
+                          {eventData.event_date ? new Date(eventData.event_date).toLocaleDateString() : 'Date TBD'}
                           {eventData.time && ` at ${eventData.time}`}
                           {eventData.end_time && ` - ${eventData.end_time}`}
                         </span>

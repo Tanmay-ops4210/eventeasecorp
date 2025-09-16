@@ -337,7 +337,7 @@ const RealMyEventsPage: React.FC = () => {
                   <div className="space-y-2 mb-4">
                     <div className="flex items-center space-x-2 text-sm text-gray-600">
                       <Calendar className="w-4 h-4" />
-                      <span>{new Date(event.date).toLocaleDateString()}</span>
+                      <span>{new Date(event.event_date).toLocaleDateString()}</span>
                       <span>at {event.time}</span>
                     </div>
                     <div className="flex items-center space-x-2 text-sm text-gray-600">
