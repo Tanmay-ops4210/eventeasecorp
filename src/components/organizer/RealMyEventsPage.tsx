@@ -51,7 +51,6 @@ const RealMyEventsPage: React.FC = () => {
     return matchesSearch && matchesStatus;
   });
 
-  // Pagination logic
   const totalPages = Math.ceil(filteredEvents.length / eventsPerPage);
   const startIndex = (currentPage - 1) * eventsPerPage;
   const endIndex = startIndex + eventsPerPage;
@@ -64,7 +63,6 @@ const RealMyEventsPage: React.FC = () => {
     }
   };
 
-  // Reset to page 1 when filters change
   useEffect(() => {
     setCurrentPage(1);
   }, [searchTerm, statusFilter]);
@@ -175,7 +173,6 @@ const RealMyEventsPage: React.FC = () => {
   return (
     <div className="min-h-screen bg-gray-50 pt-20">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {/* Header */}
         <div className="flex items-center justify-between mb-8">
           <h1 className="text-3xl font-bold text-gray-900">My Events</h1>
           <button
@@ -187,7 +184,6 @@ const RealMyEventsPage: React.FC = () => {
           </button>
         </div>
 
-        {/* Search and Filters */}
         <div className="bg-white rounded-2xl shadow-lg p-6 mb-8">
           <div className="flex flex-col lg:flex-row gap-4 mb-4">
             <div className="flex-1 relative">
@@ -213,38 +209,8 @@ const RealMyEventsPage: React.FC = () => {
               </select>
             </div>
           </div>
-
-          {/* Bulk Actions */}
-          {selectedEvents.length > 0 && (
-            <div className="flex items-center justify-between p-4 bg-indigo-50 rounded-lg">
-              <span className="text-sm font-medium text-indigo-700">
-                {selectedEvents.length} event(s) selected
-              </span>
-              <div className="flex space-x-2">
-                <button
-                  onClick={() => {/* Bulk publish */}}
-                  className="px-3 py-1 bg-green-600 text-white rounded text-sm hover:bg-green-700"
-                >
-                  Publish
-                </button>
-                <button
-                  onClick={() => {/* Bulk delete */}}
-                  className="px-3 py-1 bg-red-600 text-white rounded text-sm hover:bg-red-700"
-                >
-                  Delete
-                </button>
-                <button
-                  onClick={() => setSelectedEvents([])}
-                  className="px-3 py-1 bg-gray-600 text-white rounded text-sm hover:bg-gray-700"
-                >
-                  Clear
-                </button>
-              </div>
-            </div>
-          )}
         </div>
 
-        {/* Page Navigation */}
         {totalPages > 1 && (
           <div className="flex items-center justify-between bg-white rounded-lg shadow-sm p-4 mb-6">
             <button
@@ -283,7 +249,6 @@ const RealMyEventsPage: React.FC = () => {
           </div>
         )}
 
-        {/* Events Grid */}
         {isLoading ? (
           <div className="flex items-center justify-center py-20">
             <div className="text-center">
@@ -299,7 +264,6 @@ const RealMyEventsPage: React.FC = () => {
                 className="bg-white rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 overflow-hidden"
                 style={{ animationDelay: `${index * 0.1}s` }}
               >
-                {/* Event Image */}
                 <div className="relative">
                   <img
                     src={event.image_url || 'https://images.pexels.com/photos/3184291/pexels-photo-3184291.jpeg?auto=compress&cs=tinysrgb&w=800'}
@@ -328,12 +292,10 @@ const RealMyEventsPage: React.FC = () => {
                   </div>
                 </div>
 
-                {/* Event Details */}
                 <div className="p-6">
                   <h3 className="text-lg font-bold text-gray-900 mb-2 line-clamp-2">{event.title}</h3>
                   <p className="text-gray-600 text-sm mb-4 line-clamp-2">{event.description || 'No description provided'}</p>
 
-                  {/* Event Info */}
                   <div className="space-y-2 mb-4">
                     <div className="flex items-center space-x-2 text-sm text-gray-600">
                       <Calendar className="w-4 h-4" />
@@ -346,15 +308,13 @@ const RealMyEventsPage: React.FC = () => {
                     </div>
                     <div className="flex items-center space-x-2 text-sm text-gray-600">
                       <MapPin className="w-4 h-4" />
-                      <span className="line-clamp-1">{event.location}</span>
+                      <span className="line-clamp-1">{event.venue}</span>
                     </div>
                   </div>
 
-                  {/* Quick Actions */}
                   <div className="flex items-center justify-between">
                     <div className="flex space-x-2">
                       <button
-                        onClick={() => {/* Navigate to event edit */}}
                         className="p-2 text-gray-600 hover:text-indigo-600 hover:bg-indigo-50 rounded-lg transition-colors duration-200"
                         title="Edit Event"
                       >
@@ -383,7 +343,6 @@ const RealMyEventsPage: React.FC = () => {
                       </button>
                     </div>
 
-                    {/* Status Actions */}
                     <div className="flex space-x-1">
                       {event.status === 'draft' && (
                         <button
@@ -429,31 +388,11 @@ const RealMyEventsPage: React.FC = () => {
                       </button>
                     </div>
                   </div>
-
-                  {/* Management Links */}
-                  <div className="mt-4 pt-4 border-t border-gray-200">
-                    <div className="grid grid-cols-2 gap-2">
-                      <button
-                        onClick={() => setCurrentView('email-campaigns')}
-                        className="flex items-center space-x-2 text-xs text-gray-600 hover:text-indigo-600 transition-colors duration-200"
-                      >
-                        <Mail className="w-3 h-3" />
-                        <span>Marketing</span>
-                      </button>
-                      <button
-                        onClick={() => setCurrentView('event-settings')}
-                        className="flex items-center space-x-2 text-xs text-gray-600 hover:text-indigo-600 transition-colors duration-200"
-                      >
-                        <Settings className="w-3 h-3" />
-                        <span>Settings</span>
-                      </button>
-                    </div>
-                  </div>
                 </div>
               </div>
             ))}
           </div>
-        ) : filteredEvents.length === 0 && !isLoading ? (
+        ) : (
           <div className="text-center py-20">
             <div className="bg-white rounded-2xl p-12 shadow-lg">
               <Calendar className="w-16 h-16 text-gray-400 mx-auto mb-4" />
@@ -474,62 +413,8 @@ const RealMyEventsPage: React.FC = () => {
               </button>
             </div>
           </div>
-        ) : (
-          <div className="text-center py-20">
-            <div className="bg-white rounded-2xl p-12 shadow-lg">
-              <Calendar className="w-16 h-16 text-gray-400 mx-auto mb-4" />
-              <h3 className="text-xl font-semibold text-gray-900 mb-2">
-                No events on this page
-              </h3>
-              <p className="text-gray-600 mb-6">
-                Try navigating to a different page or adjusting your filters
-              </p>
-            </div>
-          </div>
         )}
-
-        {/* Bottom Page Navigation */}
-        {totalPages > 1 && currentEvents.length > 0 && (
-          <div className="mt-8">
-            <div className="flex items-center justify-between bg-white rounded-lg shadow-sm p-4">
-              <button
-                onClick={() => handlePageChange(currentPage - 1)}
-                disabled={currentPage === 1}
-                className="flex items-center space-x-2 px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors duration-200"
-              >
-                <ArrowLeft className="w-4 h-4" />
-                <span>Previous</span>
-              </button>
-              
-              <div className="flex items-center space-x-2">
-                {Array.from({ length: totalPages }, (_, index) => (
-                  <button
-                    key={index + 1}
-                    onClick={() => handlePageChange(index + 1)}
-                    className={`w-8 h-8 rounded-lg font-medium transition-colors duration-200 ${
-                      currentPage === index + 1
-                        ? 'bg-indigo-600 text-white'
-                        : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                    }`}
-                  >
-                    {index + 1}
-                  </button>
-                ))}
-              </div>
-              
-              <button
-                onClick={() => handlePageChange(currentPage + 1)}
-                disabled={currentPage === totalPages}
-                className="flex items-center space-x-2 px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors duration-200"
-              >
-                <span>Next</span>
-                <ArrowRight className="w-4 h-4" />
-              </button>
-            </div>
-          </div>
-        )}
-
-        {/* Delete Confirmation Modal */}
+        
         {showDeleteModal && eventToDelete && (
           <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black bg-opacity-50 backdrop-blur-sm">
             <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full p-6">
@@ -539,7 +424,7 @@ const RealMyEventsPage: React.FC = () => {
                 </div>
                 <h3 className="text-xl font-bold text-gray-900 mb-2">Delete Event</h3>
                 <p className="text-gray-600 mb-6">
-                  Are you sure you want to delete this event? This action cannot be undone and will remove all associated data including tickets and attendees.
+                  Are you sure you want to delete this event? This action cannot be undone.
                 </p>
                 <div className="flex space-x-4">
                   <button
@@ -555,7 +440,7 @@ const RealMyEventsPage: React.FC = () => {
                     onClick={() => handleDeleteEvent(eventToDelete)}
                     className="flex-1 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700"
                   >
-                    Delete Event
+                    Delete
                   </button>
                 </div>
               </div>
