@@ -8,7 +8,7 @@ export interface RealEvent {
   event_date: string;
   time: string;
   end_time?: string;
-  location: string;
+  venue: string;
   capacity: number;
   image_url?: string;
   category: string;
@@ -86,7 +86,7 @@ export interface EventFormData {
   event_date: string;
   time: string;
   end_time?: string;
-  location: string;
+  venue: string;
   capacity: number;
   image_url?: string;
   category: string;
@@ -441,32 +441,34 @@ class RealEventService {
     try {
       const { data: events, error: eventsError } = await supabase
         .from('events')
-        .select('id, status, created_at')
+        .select('id, status, event_date, capacity')
         .eq('organizer_id', organizerId);
-
+  
       if (eventsError) {
         return { success: false, error: eventsError.message };
       }
-
+  
       const { data: analytics, error: analyticsError } = await supabase
         .from('event_analytics')
         .select('registrations, revenue')
         .in('event_id', events?.map(e => e.id) || []);
-
+  
       if (analyticsError) {
         return { success: false, error: analyticsError.message };
       }
-
+  
       const totalEvents = events?.length || 0;
       const publishedEvents = events?.filter(e => e.status === 'published').length || 0;
+      const draftEvents = events?.filter(e => e.status === 'draft').length || 0;
+      const upcomingEvents = events?.filter(e => 
         e.status === 'published' && new Date(e.event_date) > new Date()
-      const upcomingEvents = events?.filter(e => e.status === 'published').length || 0;
+      ).length || 0;
       const completedEvents = events?.filter(e => e.status === 'completed').length || 0;
       
       const totalTicketsSold = analytics?.reduce((sum, a) => sum + (a.registrations || 0), 0) || 0;
       const totalRevenue = analytics?.reduce((sum, a) => sum + (a.revenue || 0), 0) || 0;
       const averageAttendance = totalEvents > 0 ? totalTicketsSold / totalEvents : 0;
-
+  
       const stats: DashboardStats = {
         totalEvents,
         publishedEvents,
@@ -477,7 +479,7 @@ class RealEventService {
         completedEvents,
         averageAttendance
       };
-
+  
       return { success: true, stats };
     } catch (error) {
       return { success: false, error: 'Failed to fetch dashboard stats' };
