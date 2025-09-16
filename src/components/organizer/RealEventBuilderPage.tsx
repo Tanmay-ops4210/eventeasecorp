@@ -1,137 +1,209 @@
 import React, { useState } from 'react';
 import { useApp } from '../../contexts/AppContext';
 import { useAuth } from '../../contexts/AuthContext';
-import { Save, ArrowLeft, Loader2, Check } from 'lucide-react';
+import {
+Save, Calendar, MapPin, Users, DollarSign, Image, Type,
+ArrowLeft, ArrowRight, Check, AlertTriangle, Loader2,
+Eye, Globe, Lock, Settings
+} from 'lucide-react';
 import { realEventService, EventFormData } from '../../services/realEventService';
 
 const RealEventBuilderPage: React.FC = () => {
-  const { setBreadcrumbs, setCurrentView } = useApp();
-  const { user } = useAuth();
-  const [isLoading, setIsLoading] = useState(false);
-  const [errors, setErrors] = useState<Record<string, string>>({});
-  const [eventData, setEventData] = useState<EventFormData>({
-    title: '',
-    description: '',
-    event_date: '',
-    time: '',
-    end_time: '',
+const { setBreadcrumbs, setCurrentView } = useApp();
+const { user } = useAuth();
+const [isLoading, setIsLoading] = useState(false);
+const [errors, setErrors] = useState<Record<string, string>>({});
+const [eventData, setEventData] = useState<EventFormData>({
+title: '',
+description: '',
+event_date: '',
+time: '',
+end_time: '',
+    location: '',
     venue: '',
-    capacity: 100,
-    image_url: '',
-    category: 'conference',
-    visibility: 'public'
-  });
+capacity: 100,
+image_url: 'https://images.pexels.com/photos/3184291/pexels-photo-3184291.jpeg?auto=compress&cs=tinysrgb&w=800',
+category: 'conference',
+@@ -33,7 +33,6 @@
+const handleInputChange = (field: keyof EventFormData, value: string | number) => {
+setEventData(prev => ({ ...prev, [field]: value }));
 
-  React.useEffect(() => {
-    setBreadcrumbs(['Create Event']);
-  }, [setBreadcrumbs]);
+    // Clear error when user starts typing
+if (errors[field]) {
+setErrors(prev => ({ ...prev, [field]: '' }));
+}
+@@ -61,8 +60,8 @@
+newErrors.time = 'Event time is required';
+}
 
-  const handleInputChange = (field: keyof EventFormData, value: string | number) => {
-    setEventData(prev => ({ ...prev, [field]: value }));
-    if (errors[field]) {
-      setErrors(prev => ({ ...prev, [field]: '' }));
-    }
-  };
+    if (!eventData.location.trim()) {
+      newErrors.location = 'Event location is required';
+    if (!eventData.venue.trim()) {
+      newErrors.venue = 'Event location is required';
+}
 
-  const validateForm = (): boolean => {
-    const newErrors: Record<string, string> = {};
-    if (!eventData.title.trim()) newErrors.title = 'Event title is required';
-    if (!eventData.event_date) newErrors.event_date = 'Event date is required';
-    if (!eventData.time) newErrors.time = 'Event time is required';
-    if (!eventData.venue.trim()) newErrors.venue = 'Venue or location is required';
-    if (eventData.capacity < 1) newErrors.capacity = 'Capacity must be at least 1';
-    setErrors(newErrors);
-    return Object.keys(newErrors).length === 0;
-  };
-
-  const handleSave = async () => {
-    if (!validateForm() || !user) return;
-
-    setIsLoading(true);
-    const result = await realEventService.createEvent(eventData, user.id);
-    setIsLoading(false);
-
-    if (result.success) {
-      alert('Event created successfully! You will be redirected to the dashboard.');
-      setCurrentView('dashboard'); // Redirect to see the real-time update
-    } else {
-      alert(`Error: ${result.error}`);
-    }
-  };
-
-  return (
-    <div className="min-h-screen bg-gray-50 pt-20">
-      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <div className="flex items-center justify-between mb-8">
-          <h1 className="text-3xl font-bold text-gray-900">Create New Event</h1>
-          <button onClick={() => setCurrentView('dashboard')} className="flex items-center space-x-2 text-gray-600 hover:text-gray-900">
-            <ArrowLeft className="w-4 h-4" />
-            <span>Back to Dashboard</span>
-          </button>
-        </div>
-
-        <div className="bg-white rounded-2xl shadow-lg p-8 space-y-8">
-          {/* Form Fields */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-             <div>
-                <label className="block text-sm font-medium text-gray-700">Event Title *</label>
-                <input type="text" value={eventData.title} onChange={(e) => handleInputChange('title', e.target.value)} className={`w-full mt-1 p-2 border ${errors.title ? 'border-red-500' : 'border-gray-300'} rounded-md`}/>
-                {errors.title && <p className="text-red-500 text-sm mt-1">{errors.title}</p>}
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700">Category</label>
-                <select value={eventData.category} onChange={(e) => handleInputChange('category', e.target.value)} className="w-full mt-1 p-2 border border-gray-300 rounded-md">
-                    <option value="conference">Conference</option>
-                    <option value="workshop">Workshop</option>
-                    <option value="networking">Networking</option>
-                    <option value="other">Other</option>
-                </select>
-              </div>
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-gray-700">Description</label>
-            <textarea value={eventData.description} onChange={(e) => handleInputChange('description', e.target.value)} rows={4} className="w-full mt-1 p-2 border border-gray-300 rounded-md"/>
-          </div>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div>
-              <label className="block text-sm font-medium text-gray-700">Event Date *</label>
-              <input type="date" value={eventData.event_date} onChange={(e) => handleInputChange('event_date', e.target.value)} className={`w-full mt-1 p-2 border ${errors.event_date ? 'border-red-500' : 'border-gray-300'} rounded-md`}/>
-              {errors.event_date && <p className="text-red-500 text-sm mt-1">{errors.event_date}</p>}
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700">Start Time *</label>
-              <input type="time" value={eventData.time} onChange={(e) => handleInputChange('time', e.target.value)} className={`w-full mt-1 p-2 border ${errors.time ? 'border-red-500' : 'border-gray-300'} rounded-md`}/>
-              {errors.time && <p className="text-red-500 text-sm mt-1">{errors.time}</p>}
-            </div>
-          </div>
-           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div>
-                <label className="block text-sm font-medium text-gray-700">Venue / Location *</label>
-                <input type="text" value={eventData.venue} onChange={(e) => handleInputChange('venue', e.target.value)} className={`w-full mt-1 p-2 border ${errors.venue ? 'border-red-500' : 'border-gray-300'} rounded-md`}/>
-                {errors.venue && <p className="text-red-500 text-sm mt-1">{errors.venue}</p>}
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700">Capacity *</label>
-                <input type="number" value={eventData.capacity} onChange={(e) => handleInputChange('capacity', parseInt(e.target.value))} min="1" className={`w-full mt-1 p-2 border ${errors.capacity ? 'border-red-500' : 'border-gray-300'} rounded-md`}/>
-                {errors.capacity && <p className="text-red-500 text-sm mt-1">{errors.capacity}</p>}
-              </div>
-          </div>
-
-          {/* Action Buttons */}
-          <div className="flex justify-end pt-6 border-t">
-            <button
-              onClick={handleSave}
-              disabled={isLoading}
-              className="flex items-center space-x-2 px-6 py-3 bg-indigo-600 text-white rounded-lg shadow-md hover:bg-indigo-700 disabled:opacity-50 transition-all"
-            >
-              {isLoading ? <Loader2 className="w-5 h-5 animate-spin" /> : <Save className="w-5 h-5" />}
-              <span>Save Event</span>
-            </button>
-          </div>
-        </div>
-      </div>
-    </div>
-  );
+if (eventData.capacity < 1) {
+@@ -101,12 +100,11 @@
+}
 };
 
+  const isFormValid = eventData.title.trim() && eventData.event_date && eventData.time && eventData.location.trim() && eventData.capacity > 0;
+  const isFormValid = eventData.title.trim() && eventData.event_date && eventData.time && eventData.venue.trim() && eventData.capacity > 0;
+
+return (
+<div className="min-h-screen bg-gray-50 pt-20">
+<div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        {/* Header */}
+<div className="flex items-center justify-between mb-8">
+<h1 className="text-3xl font-bold text-gray-900">Create New Event</h1>
+<button
+@@ -118,10 +116,8 @@
+</button>
+</div>
+
+        {/* Form */}
+<div className="bg-white rounded-2xl shadow-lg p-8">
+<div className="space-y-8">
+            {/* Basic Information */}
+<div>
+<h2 className="text-xl font-bold text-gray-900 mb-6 flex items-center space-x-2">
+<Type className="w-5 h-5" />
+@@ -174,7 +170,6 @@
+</div>
+</div>
+
+            {/* Date & Time */}
+<div>
+<h2 className="text-xl font-bold text-gray-900 mb-6 flex items-center space-x-2">
+<Calendar className="w-5 h-5" />
+@@ -224,7 +219,6 @@
+</div>
+</div>
+
+            {/* Location & Capacity */}
+<div>
+<h2 className="text-xl font-bold text-gray-900 mb-6 flex items-center space-x-2">
+<MapPin className="w-5 h-5" />
+@@ -233,17 +227,17 @@
+
+<div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+<div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Location *</label>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Venue *</label>
+<input
+type="text"
+                    value={eventData.location}
+                    onChange={(e) => handleInputChange('location', e.target.value)}
+                    value={eventData.venue}
+                    onChange={(e) => handleInputChange('venue', e.target.value)}
+className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-colors duration-200 ${
+                      errors.location ? 'border-red-500' : 'border-gray-300'
+                      errors.venue ? 'border-red-500' : 'border-gray-300'
+                   }`}
+placeholder="Enter venue name and address"
+/>
+                  {errors.location && <p className="text-red-500 text-sm mt-1">{errors.location}</p>}
+                  {errors.venue && <p className="text-red-500 text-sm mt-1">{errors.venue}</p>}
+</div>
+
+<div>
+@@ -266,7 +260,6 @@
+</div>
+</div>
+
+            {/* Visual & Settings */}
+<div>
+<h2 className="text-xl font-bold text-gray-900 mb-6 flex items-center space-x-2">
+<Settings className="w-5 h-5" />
+@@ -357,85 +350,8 @@
+</div>
+</div>
+</div>
+
+            {/* Event Preview */}
+            <div>
+              <h2 className="text-xl font-bold text-gray-900 mb-6 flex items-center space-x-2">
+                <Eye className="w-5 h-5" />
+                <span>Event Preview</span>
+              </h2>
+              
+              <div className="bg-gray-50 rounded-lg p-6">
+                <div className="bg-white rounded-lg shadow-lg overflow-hidden max-w-md mx-auto">
+                  <img
+                    src={eventData.image_url || 'https://images.pexels.com/photos/3184291/pexels-photo-3184291.jpeg?auto=compress&cs=tinysrgb&w=800'}
+                    alt={eventData.title || 'Event preview'}
+                    className="w-full h-48 object-cover"
+                    onError={(e) => {
+                      e.currentTarget.src = 'https://images.pexels.com/photos/3184291/pexels-photo-3184291.jpeg?auto=compress&cs=tinysrgb&w=800';
+                    }}
+                  />
+                  <div className="p-6">
+                    <div className="flex items-center space-x-2 mb-3">
+                      <span className="bg-indigo-100 text-indigo-600 px-3 py-1 rounded-full text-xs font-medium capitalize">
+                        {eventData.category}
+                      </span>
+                      <span className={`px-3 py-1 rounded-full text-xs font-medium ${
+                        eventData.visibility === 'public' ? 'bg-green-100 text-green-600' :
+                        eventData.visibility === 'private' ? 'bg-red-100 text-red-600' :
+                        'bg-orange-100 text-orange-600'
+                      }`}>
+                        {eventData.visibility}
+                      </span>
+                    </div>
+                    <h4 className="text-lg font-bold text-gray-900 mb-2">
+                      {eventData.title || 'Event Title'}
+                    </h4>
+                    <p className="text-gray-600 text-sm mb-4">
+                      {eventData.description || 'Event description will appear here'}
+                    </p>
+                    <div className="space-y-2 text-sm text-gray-500">
+                      <div className="flex items-center space-x-2">
+                        <Calendar className="w-4 h-4" />
+                        <span>
+                          {eventData.event_date ? new Date(eventData.event_date).toLocaleDateString() : 'Date TBD'}
+                          {eventData.time && ` at ${eventData.time}`}
+                          {eventData.end_time && ` - ${eventData.end_time}`}
+                        </span>
+                      </div>
+                      <div className="flex items-center space-x-2">
+                        <MapPin className="w-4 h-4" />
+                        <span>{eventData.location || 'Location TBD'}</span>
+                      </div>
+                      <div className="flex items-center space-x-2">
+                        <Users className="w-4 h-4" />
+                        <span>Up to {eventData.capacity} attendees</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+</div>
+
+          {/* Form Validation Summary */}
+          {Object.keys(errors).length > 0 && (
+            <div className="mt-8 bg-red-50 border border-red-200 rounded-lg p-4">
+              <div className="flex items-start space-x-3">
+                <AlertTriangle className="w-5 h-5 text-red-600 mt-0.5" />
+                <div>
+                  <h4 className="font-medium text-red-800">Please fix the following errors:</h4>
+                  <ul className="text-sm text-red-700 mt-2 space-y-1">
+                    {Object.entries(errors).map(([field, error]) => (
+                      <li key={field}>• {error}</li>
+                    ))}
+                  </ul>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Action Buttons */}
+<div className="mt-8 flex items-center justify-between pt-6 border-t border-gray-200">
+<div className="text-sm text-gray-500">
+{isFormValid ? (
+@@ -474,4 +390,4 @@
+);
+};
+
+export default RealEventBuilderPage;
 export default RealEventBuilderPage;
