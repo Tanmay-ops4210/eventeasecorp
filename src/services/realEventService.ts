@@ -8,7 +8,7 @@ export interface RealEvent {
   event_date: string;
   time: string;
   end_time?: string;
-  venue: string;
+  venue: string; // Corrected from 'location' in the previous fix
   capacity: number;
   image_url?: string;
   category: string;
@@ -86,7 +86,7 @@ export interface EventFormData {
   event_date: string;
   time: string;
   end_time?: string;
-  venue: string;
+  venue: string; // Corrected from 'location' in the previous fix
   capacity: number;
   image_url?: string;
   category: string;
@@ -127,25 +127,87 @@ class RealEventService {
     return RealEventService.instance;
   }
 
+  /**
+   * Maps a database event object (with start_date) to the frontend RealEvent object (with date and time).
+   * @param dbEvent - The event object from the Supabase database.
+   * @returns A RealEvent object formatted for the frontend.
+   */
+  private mapDbEventToRealEvent(dbEvent: any): RealEvent {
+    const startDate = new Date(dbEvent.start_date || dbEvent.created_at);
+    const endDate = dbEvent.end_date ? new Date(dbEvent.end_date) : null;
+
+    const formatTime = (date: Date | null): string | undefined => {
+      if (!date) return undefined;
+      return date.toTimeString().split(' ')[0].substring(0, 5); // HH:MM
+    };
+
+    return {
+      id: dbEvent.id,
+      organizer_id: dbEvent.organizer_id,
+      title: dbEvent.title,
+      description: dbEvent.description,
+      event_date: startDate.toISOString().split('T')[0], // YYYY-MM-DD
+      time: formatTime(startDate)!,
+      end_time: formatTime(endDate),
+      venue: dbEvent.venue || dbEvent.location, // Handle both 'venue' and 'location' for compatibility
+      capacity: dbEvent.capacity || 100, // Default value if not in schema
+      image_url: dbEvent.image_url,
+      category: dbEvent.category || 'conference', // Default value if not in schema
+      status: dbEvent.status,
+      visibility: dbEvent.visibility || 'public', // Default value if not in schema
+      created_at: dbEvent.created_at,
+      updated_at: dbEvent.updated_at,
+    };
+  }
+  
+  /**
+   * Maps frontend EventFormData to a database-compatible object.
+   * @param eventData - The form data from the frontend.
+   * @param organizerId - The ID of the organizer.
+   * @returns An object ready for insertion into the Supabase 'events' table.
+   */
+  private mapEventFormToDb(eventData: Partial<EventFormData>, organizerId?: string) {
+      const { event_date, time, end_time, title, description, venue, image_url } = eventData;
+      const dbData: any = {};
+
+      if(organizerId) dbData.organizer_id = organizerId;
+      if(title) dbData.title = title;
+      if(description) dbData.description = description;
+      if(venue) dbData.venue = venue;
+      if(image_url) dbData.image_url = image_url;
+
+      if (event_date && time) {
+          dbData.start_date = new Date(`${event_date}T${time}`).toISOString();
+      }
+      
+      if (event_date && end_time) {
+          dbData.end_date = new Date(`${event_date}T${end_time}`).toISOString();
+      } else if (event_date && time) {
+          dbData.end_date = new Date(`${event_date}T${time}`).toISOString(); // Default end_date to start_date
+      }
+
+      return dbData;
+  }
+
   // Event CRUD operations
   async createEvent(eventData: EventFormData, organizerId: string): Promise<{ success: boolean; event?: RealEvent; error?: string }> {
     try {
+      const dbData = this.mapEventFormToDb(eventData, organizerId);
+
       const { data, error } = await supabase
         .from('events')
-        .insert([{
-          ...eventData,
-          organizer_id: organizerId
-        }])
-        .select()
+        .insert([dbData])
+        .select('*')
         .single();
 
       if (error) {
         return { success: false, error: error.message };
       }
 
-      return { success: true, event: data };
+      return { success: true, event: this.mapDbEventToRealEvent(data) };
     } catch (error) {
-      return { success: false, error: 'Failed to create event' };
+      const message = error instanceof Error ? error.message : 'An unexpected error occurred';
+      return { success: false, error: `Failed to create event: ${message}` };
     }
   }
 
@@ -161,12 +223,14 @@ class RealEventService {
         return { success: false, error: error.message };
       }
 
-      return { success: true, events: data || [] };
+      const mappedEvents = (data || []).map(dbEvent => this.mapDbEventToRealEvent(dbEvent));
+      return { success: true, events: mappedEvents };
     } catch (error) {
-      return { success: false, error: 'Failed to fetch events' };
+      const message = error instanceof Error ? error.message : 'An unexpected error occurred';
+      return { success: false, error: `Failed to fetch events: ${message}` };
     }
   }
-
+  
   async getEventById(eventId: string): Promise<{ success: boolean; event?: RealEvent; error?: string }> {
     try {
       const { data, error } = await supabase
@@ -179,17 +243,20 @@ class RealEventService {
         return { success: false, error: error.message };
       }
 
-      return { success: true, event: data };
+      return { success: true, event: this.mapDbEventToRealEvent(data) };
     } catch (error) {
-      return { success: false, error: 'Failed to fetch event' };
+      const message = error instanceof Error ? error.message : 'An unexpected error occurred';
+      return { success: false, error: `Failed to fetch event: ${message}` };
     }
   }
 
   async updateEvent(eventId: string, updates: Partial<EventFormData>): Promise<{ success: boolean; event?: RealEvent; error?: string }> {
     try {
+      const dbUpdates = this.mapEventFormToDb(updates);
+      
       const { data, error } = await supabase
         .from('events')
-        .update(updates)
+        .update(dbUpdates)
         .eq('id', eventId)
         .select()
         .single();
@@ -198,11 +265,67 @@ class RealEventService {
         return { success: false, error: error.message };
       }
 
-      return { success: true, event: data };
+      return { success: true, event: this.mapDbEventToRealEvent(data) };
     } catch (error) {
-      return { success: false, error: 'Failed to update event' };
+        const message = error instanceof Error ? error.message : 'An unexpected error occurred';
+        return { success: false, error: `Failed to update event: ${message}` };
     }
   }
+  
+  async getDashboardStats(organizerId: string): Promise<{ success: boolean; stats?: DashboardStats; error?: string }> {
+    try {
+      const { data: events, error: eventsError } = await supabase
+        .from('events')
+        .select('id, status, start_date, capacity') // Use start_date
+        .eq('organizer_id', organizerId);
+  
+      if (eventsError) {
+        return { success: false, error: eventsError.message };
+      }
+  
+      const { data: analytics, error: analyticsError } = await supabase
+        .from('event_analytics')
+        .select('registrations, revenue')
+        .in('event_id', events?.map(e => e.id) || []);
+  
+      if (analyticsError) {
+        return { success: false, error: analyticsError.message };
+      }
+  
+      const totalEvents = events?.length || 0;
+      const publishedEvents = events?.filter(e => e.status === 'published').length || 0;
+      const draftEvents = events?.filter(e => e.status === 'draft').length || 0;
+      const upcomingEvents = events?.filter(e => 
+        e.status === 'published' && new Date(e.start_date) > new Date() // Use start_date
+      ).length || 0;
+      const completedEvents = events?.filter(e => e.status === 'completed').length || 0;
+      
+      const totalTicketsSold = analytics?.reduce((sum, a) => sum + (a.registrations || 0), 0) || 0;
+      const totalRevenue = analytics?.reduce((sum, a) => sum + (a.revenue || 0), 0) || 0;
+      const averageAttendance = totalEvents > 0 ? totalTicketsSold / totalEvents : 0;
+  
+      const stats: DashboardStats = {
+        totalEvents,
+        publishedEvents,
+        draftEvents,
+        totalTicketsSold,
+        totalRevenue,
+        upcomingEvents,
+        completedEvents,
+        averageAttendance
+      };
+  
+      return { success: true, stats };
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'An unexpected error occurred';
+      return { success: false, error: `Failed to fetch dashboard stats: ${message}` };
+    }
+  }
+  
+  // Omitted other methods for brevity as they don't relate to the error...
+  // (deleteEvent, publishEvent, hideEvent, showEvent, ticket methods, etc.)
+  
+  // --- [Original methods that don't need changes can go here] ---
 
   async deleteEvent(eventId: string): Promise<{ success: boolean; error?: string }> {
     try {
@@ -271,8 +394,7 @@ class RealEventService {
       return { success: false, error: 'Failed to show event' };
     }
   }
-
-  // Ticket management
+  
   async createTicketType(eventId: string, ticketData: TicketFormData): Promise<{ success: boolean; ticket?: RealTicketType; error?: string }> {
     try {
       const { data, error } = await supabase
@@ -331,7 +453,6 @@ class RealEventService {
 
   async deleteTicketType(ticketId: string): Promise<{ success: boolean; error?: string }> {
     try {
-      // Check if any tickets have been sold
       const { data: soldTickets } = await supabase
         .from('ticket_types')
         .select('sold')
@@ -357,7 +478,6 @@ class RealEventService {
     }
   }
 
-  // Attendee management
   async getEventAttendees(eventId: string): Promise<{ success: boolean; attendees?: RealAttendee[]; error?: string }> {
     try {
       const { data, error } = await supabase
@@ -397,7 +517,6 @@ class RealEventService {
     }
   }
 
-  // Analytics
   async getEventAnalytics(eventId: string): Promise<{ success: boolean; analytics?: RealEventAnalytics; error?: string }> {
     try {
       const { data, error } = await supabase
@@ -436,57 +555,6 @@ class RealEventService {
     }
   }
 
-  // Dashboard stats
-  async getDashboardStats(organizerId: string): Promise<{ success: boolean; stats?: DashboardStats; error?: string }> {
-    try {
-      const { data: events, error: eventsError } = await supabase
-        .from('events')
-        .select('id, status, event_date, capacity')
-        .eq('organizer_id', organizerId);
-  
-      if (eventsError) {
-        return { success: false, error: eventsError.message };
-      }
-  
-      const { data: analytics, error: analyticsError } = await supabase
-        .from('event_analytics')
-        .select('registrations, revenue')
-        .in('event_id', events?.map(e => e.id) || []);
-  
-      if (analyticsError) {
-        return { success: false, error: analyticsError.message };
-      }
-  
-      const totalEvents = events?.length || 0;
-      const publishedEvents = events?.filter(e => e.status === 'published').length || 0;
-      const draftEvents = events?.filter(e => e.status === 'draft').length || 0;
-      const upcomingEvents = events?.filter(e => 
-        e.status === 'published' && new Date(e.event_date) > new Date()
-      ).length || 0;
-      const completedEvents = events?.filter(e => e.status === 'completed').length || 0;
-      
-      const totalTicketsSold = analytics?.reduce((sum, a) => sum + (a.registrations || 0), 0) || 0;
-      const totalRevenue = analytics?.reduce((sum, a) => sum + (a.revenue || 0), 0) || 0;
-      const averageAttendance = totalEvents > 0 ? totalTicketsSold / totalEvents : 0;
-  
-      const stats: DashboardStats = {
-        totalEvents,
-        publishedEvents,
-        draftEvents,
-        totalTicketsSold,
-        totalRevenue,
-        upcomingEvents,
-        completedEvents,
-        averageAttendance
-      };
-  
-      return { success: true, stats };
-    } catch (error) {
-      return { success: false, error: 'Failed to fetch dashboard stats' };
-    }
-  }
-
-  // Marketing campaigns
   async createMarketingCampaign(eventId: string, campaignData: Omit<RealMarketingCampaign, 'id' | 'event_id' | 'created_at' | 'open_rate' | 'click_rate'>): Promise<{ success: boolean; campaign?: RealMarketingCampaign; error?: string }> {
     try {
       const { data, error } = await supabase
@@ -560,7 +628,6 @@ class RealEventService {
     }
   }
 
-  // Real-time subscriptions
   subscribeToEventUpdates(organizerId: string, callback: (payload: any) => void) {
     return supabase
       .channel('events-changes')
