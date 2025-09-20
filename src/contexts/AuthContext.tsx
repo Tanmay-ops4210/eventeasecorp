@@ -1,7 +1,9 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
-// NEW: Import supabase client for auth and sessionManager
-import { supabase, sessionManager } from '../lib/supabaseClient';
-// NEW: Import AppUser from its new, dedicated types file to fix the build error
+// Import supabase client for auth
+import { supabase } from '../lib/supabaseClient';
+// Import sessionManager from its dedicated file
+import { sessionManager } from '../lib/sessionManager';
+// Import AppUser from its dedicated types file
 import type { AppUser } from '../types/database';
 import { firebaseAuthService } from '../lib/firebaseAuth';
 import { getUserProfile, syncUserProfile } from '../lib/firebaseAuthHelpers';
