@@ -1,12 +1,10 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
-// Import supabase client for auth
 import { supabase } from '../lib/supabaseClient';
-// Import sessionManager from its dedicated file
 import { sessionManager } from '../lib/sessionManager';
-// Import AppUser from its dedicated types file
 import type { AppUser } from '../types/database';
 import { firebaseAuthService } from '../lib/firebaseAuth';
 import { getUserProfile, syncUserProfile } from '../lib/firebaseAuthHelpers';
+import { getAuth } from 'firebase/auth';
 
 interface AuthContextType {
   user: AppUser | null;
@@ -22,9 +20,7 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export const useAuth = () => {
   const context = useContext(AuthContext);
-  if (context === undefined) {
-    throw new Error('useAuth must be used within an AuthProvider');
-  }
+  if (!context) throw new Error('useAuth must be used within an AuthProvider');
   return context;
 };
 
@@ -37,8 +33,9 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
 
+  const auth = getAuth();
+
   useEffect(() => {
-    // Your original session logic is unchanged.
     const checkSession = () => {
       if (sessionManager.isValidSession()) {
         const storedUser = sessionManager.getUser();
@@ -51,7 +48,6 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       }
       setIsLoading(false);
     };
-
     checkSession();
   }, []);
 
@@ -59,74 +55,50 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     setIsLoading(true);
     try {
       const result = await firebaseAuthService.signIn(email, password);
+      if (!result.success || !result.user) throw new Error(result.error || 'Login failed');
 
-      if (result.success && result.user) {
-        // NEW STEP: Get Firebase token and sign in to Supabase to get the correct UUID
-        const firebaseToken = await result.user.getIdToken();
-        const { data: supabaseData, error: supabaseError } = await supabase.auth.signInWithIdToken({
-          provider: 'google', // Or your configured provider (e.g., 'apple', 'facebook')
-          token: firebaseToken,
-        });
+      // ✅ Get the actual Firebase User
+      const firebaseUser = auth.currentUser;
+      if (!firebaseUser) throw new Error('Firebase user not found');
 
-        if (supabaseError) throw supabaseError;
-        if (!supabaseData.user) throw new Error("Could not create Supabase session.");
+      const firebaseToken = await firebaseUser.getIdToken();
 
-        // Now we use the correct Supabase user ID (the UUID)
-        const supabaseUserId = supabaseData.user.id;
+      // ✅ Sign in to Supabase with ID token
+      const { data: supabaseData, error: supabaseError } = await supabase.auth.signInWithIdToken({
+        provider: 'google', // your provider if using social login
+        token: firebaseToken,
+      });
 
-        // Sync the profile using the correct Supabase UUID
-        await syncUserProfile({ ...result.user, uid: supabaseUserId }, role);
+      if (supabaseError) throw supabaseError;
+      if (!supabaseData.user) throw new Error('Could not create Supabase session.');
 
-        const profile = await getUserProfile(supabaseUserId);
+      const supabaseUserId = supabaseData.user.id;
 
-        if (profile) {
-          const appUser: AppUser = {
-            id: supabaseUserId, // UPDATED: Use the Supabase UUID
-            email: result.user.email || '',
-            full_name: profile.full_name || '',
-            role: profile.role as 'attendee' | 'organizer' | 'sponsor',
-            company: profile.company || undefined,
-            avatar_url: profile.avatar_url || undefined,
-            plan: profile.plan || 'free'
-          };
-          
-          setUser(appUser);
-          sessionManager.setUser(appUser);
-        } else {
-          // Fallback if profile fetch fails
-          const appUser: AppUser = {
-            id: supabaseUserId, // UPDATED: Use the Supabase UUID
-            email: result.user.email || '',
-            full_name: result.user.displayName || '',
-            role: role,
-            plan: 'free'
-          };
-          
-          setUser(appUser);
-          sessionManager.setUser(appUser);
-        }
-        
-        setIsAuthenticated(true);
-        
-        // Your redirect logic is unchanged
-        setTimeout(() => {
-          switch (role) {
-            case 'attendee':
-              window.dispatchEvent(new CustomEvent('navigate-to-dashboard', { detail: 'attendee-dashboard' }));
-              break;
-            case 'organizer':
-              window.dispatchEvent(new CustomEvent('navigate-to-dashboard', { detail: 'organizer-dashboard' }));
-              break;
-            case 'sponsor':
-              window.dispatchEvent(new CustomEvent('navigate-to-dashboard', { detail: 'sponsor-dashboard' }));
-              break;
-          }
-        }, 100);
-      } else {
-        throw new Error(result.error || 'Login failed');
-      }
+      // ✅ Sync Firebase profile to Supabase
+      await syncUserProfile({ ...result.user, uid: supabaseUserId }, role);
+      const profile = await getUserProfile(supabaseUserId);
+
+      const appUser: AppUser = {
+        id: supabaseUserId,
+        email: result.user.email || '',
+        full_name: profile?.full_name || result.user.displayName || '',
+        role: profile?.role as 'attendee' | 'organizer' | 'sponsor' || role,
+        company: profile?.company,
+        avatar_url: profile?.avatar_url,
+        plan: profile?.plan || 'free',
+      };
+
+      setUser(appUser);
+      sessionManager.setUser(appUser);
+      setIsAuthenticated(true);
+
+      // ✅ Dispatch dashboard navigation
+      setTimeout(() => {
+        const eventDetail = role === 'attendee' ? 'attendee-dashboard' : role === 'organizer' ? 'organizer-dashboard' : 'sponsor-dashboard';
+        window.dispatchEvent(new CustomEvent('navigate-to-dashboard', { detail: eventDetail }));
+      }, 100);
+
     } catch (error) {
-      setIsLoading(false);
       throw error;
     } finally {
       setIsLoading(false);
@@ -137,75 +109,49 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     setIsLoading(true);
     try {
       const result = await firebaseAuthService.register({ email, password, name, role });
+      if (!result.success || !result.user) throw new Error(result.error || 'Registration failed');
 
-      if (result.success && result.user) {
-        // NEW STEP: Get Firebase token and sign in to Supabase to get the correct UUID
-        const firebaseToken = await result.user.getIdToken();
-        const { data: supabaseData, error: supabaseError } = await supabase.auth.signInWithIdToken({
-          provider: 'google', // Or your configured provider
-          token: firebaseToken,
-        });
+      // ✅ Get the actual Firebase User
+      const firebaseUser = auth.currentUser;
+      if (!firebaseUser) throw new Error('Firebase user not found');
 
-        if (supabaseError) throw supabaseError;
-        if (!supabaseData.user) throw new Error("Could not create Supabase user.");
-        
-        // Now we use the correct Supabase user ID (the UUID)
-        const supabaseUserId = supabaseData.user.id;
+      const firebaseToken = await firebaseUser.getIdToken();
 
-        // Sync the profile using the correct Supabase UUID
-        await syncUserProfile({ ...result.user, uid: supabaseUserId }, role, company);
-        
-        const profile = await getUserProfile(supabaseUserId);
-        
-        if (profile) {
-          const appUser: AppUser = {
-            id: supabaseUserId, // UPDATED: Use the Supabase UUID
-            email: result.user.email || '',
-            full_name: profile.full_name || name,
-            role: profile.role as 'attendee' | 'organizer' | 'sponsor',
-            company: profile.company || company,
-            avatar_url: profile.avatar_url || undefined,
-            plan: profile.plan || 'free'
-          };
-          
-          setUser(appUser);
-          sessionManager.setUser(appUser);
-        } else {
-          // Fallback if profile fetch fails
-          const appUser: AppUser = {
-            id: supabaseUserId, // UPDATED: Use the Supabase UUID
-            email: result.user.email || '',
-            full_name: name,
-            role: role,
-            company: company,
-            plan: 'free'
-          };
-          
-          setUser(appUser);
-          sessionManager.setUser(appUser);
-        }
-        
-        setIsAuthenticated(true);
-        
-        // Your redirect logic is unchanged
-        setTimeout(() => {
-          switch (role) {
-            case 'attendee':
-              window.dispatchEvent(new CustomEvent('navigate-to-dashboard', { detail: 'attendee-dashboard' }));
-              break;
-            case 'organizer':
-              window.dispatchEvent(new CustomEvent('navigate-to-dashboard', { detail: 'organizer-dashboard' }));
-              break;
-            case 'sponsor':
-              window.dispatchEvent(new CustomEvent('navigate-to-dashboard', { detail: 'sponsor-dashboard' }));
-              break;
-          }
-        }, 100);
-      } else {
-        throw new Error(result.error || 'Registration failed');
-      }
+      // ✅ Sign in to Supabase with ID token
+      const { data: supabaseData, error: supabaseError } = await supabase.auth.signInWithIdToken({
+        provider: 'google',
+        token: firebaseToken,
+      });
+
+      if (supabaseError) throw supabaseError;
+      if (!supabaseData.user) throw new Error('Could not create Supabase user.');
+
+      const supabaseUserId = supabaseData.user.id;
+
+      // ✅ Sync Firebase profile to Supabase
+      await syncUserProfile({ ...result.user, uid: supabaseUserId }, role, company);
+      const profile = await getUserProfile(supabaseUserId);
+
+      const appUser: AppUser = {
+        id: supabaseUserId,
+        email: result.user.email || '',
+        full_name: profile?.full_name || name,
+        role: profile?.role as 'attendee' | 'organizer' | 'sponsor' || role,
+        company: profile?.company || company,
+        avatar_url: profile?.avatar_url,
+        plan: profile?.plan || 'free',
+      };
+
+      setUser(appUser);
+      sessionManager.setUser(appUser);
+      setIsAuthenticated(true);
+
+      setTimeout(() => {
+        const eventDetail = role === 'attendee' ? 'attendee-dashboard' : role === 'organizer' ? 'organizer-dashboard' : 'sponsor-dashboard';
+        window.dispatchEvent(new CustomEvent('navigate-to-dashboard', { detail: eventDetail }));
+      }, 100);
+
     } catch (error) {
-      setIsLoading(false);
       throw error;
     } finally {
       setIsLoading(false);
@@ -214,12 +160,12 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
   const logout = async () => {
     await firebaseAuthService.signOut();
-    await supabase.auth.signOut(); // NEW: Sign out from Supabase as well
+    await supabase.auth.signOut();
     setUser(null);
     setIsAuthenticated(false);
     sessionManager.clearSession();
   };
-  
+
   const updateUser = (userData: Partial<AppUser>) => {
     if (user) {
       const updatedUser = { ...user, ...userData };
@@ -229,17 +175,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   };
 
   return (
-    <AuthContext.Provider
-      value={{
-        user,
-        isAuthenticated,
-        isLoading,
-        login,
-        register,
-        logout,
-        updateUser,
-      }}
-    >
+    <AuthContext.Provider value={{ user, isAuthenticated, isLoading, login, register, logout, updateUser }}>
       {children}
     </AuthContext.Provider>
   );
