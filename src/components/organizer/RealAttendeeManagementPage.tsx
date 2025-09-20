@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { useApp } from '../../contexts/AppContext';
 import { useAuth } from '../../contexts/AuthContext';
-import { 
-  Users, Search, Filter, Download, Mail, CheckCircle, 
+import {
+  Users, Search, Filter, Download, Mail, CheckCircle,
   XCircle, Clock, Eye, MoreVertical, UserCheck, AlertCircle,
   Loader2, Calendar, MapPin, DollarSign, Ticket
 } from 'lucide-react';
@@ -20,7 +20,7 @@ const RealAttendeeManagementPage: React.FC = () => {
   const [paymentFilter, setPaymentFilter] = useState<'all' | 'pending' | 'completed' | 'refunded'>('all');
   const [selectedAttendees, setSelectedAttendees] = useState<string[]>([]);
 
-  React.useEffect(() => {
+  useEffect(() => {
     setBreadcrumbs(['Attendee Management']);
     loadEvents();
   }, [setBreadcrumbs, user]);
@@ -83,8 +83,8 @@ const RealAttendeeManagementPage: React.FC = () => {
   };
 
   const handleSelectAttendee = (attendeeId: string) => {
-    setSelectedAttendees(prev => 
-      prev.includes(attendeeId) 
+    setSelectedAttendees(prev =>
+      prev.includes(attendeeId)
         ? prev.filter(id => id !== attendeeId)
         : [...prev, attendeeId]
     );
@@ -92,8 +92,8 @@ const RealAttendeeManagementPage: React.FC = () => {
 
   const handleSelectAll = () => {
     setSelectedAttendees(
-      selectedAttendees.length === filteredAttendees.length 
-        ? [] 
+      selectedAttendees.length === filteredAttendees.length
+        ? []
         : filteredAttendees.map(attendee => attendee.id)
     );
   };
@@ -123,7 +123,7 @@ const RealAttendeeManagementPage: React.FC = () => {
 
   const filteredAttendees = attendees.filter(attendee => {
     const matchesSearch = (attendee.user?.full_name || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         (attendee.user?.email || '').toLowerCase().includes(searchTerm.toLowerCase());
+      (attendee.user?.email || '').toLowerCase().includes(searchTerm.toLowerCase());
     const matchesStatus = statusFilter === 'all' || attendee.check_in_status === statusFilter;
     const matchesPayment = paymentFilter === 'all' || attendee.payment_status === paymentFilter;
     return matchesSearch && matchesStatus && matchesPayment;
@@ -292,7 +292,7 @@ const RealAttendeeManagementPage: React.FC = () => {
                       </tr>
                     </thead>
                     <tbody className="bg-white divide-y divide-gray-200">
-                      {filteredAttendees.map((attendee, index) => (
+                      {filteredAttendees.map((attendee) => (
                         <tr key={attendee.id} className="hover:bg-gray-50">
                           <td className="px-6 py-4">
                             <input
@@ -338,11 +338,10 @@ const RealAttendeeManagementPage: React.FC = () => {
                           <td className="px-6 py-4">
                             <div className="flex items-center space-x-2">
                               {getPaymentIcon(attendee.payment_status)}
-                              <span className={`px-2 py-1 rounded-full text-xs font-medium capitalize ${
-                                attendee.payment_status === 'completed' ? 'bg-green-100 text-green-800' :
+                              <span className={`px-2 py-1 rounded-full text-xs font-medium capitalize ${attendee.payment_status === 'completed' ? 'bg-green-100 text-green-800' :
                                 attendee.payment_status === 'refunded' ? 'bg-red-100 text-red-800' :
-                                'bg-yellow-100 text-yellow-800'
-                              }`}>
+                                  'bg-yellow-100 text-yellow-800'
+                                }`}>
                                 {attendee.payment_status}
                               </span>
                             </div>
@@ -350,7 +349,7 @@ const RealAttendeeManagementPage: React.FC = () => {
                           <td className="px-6 py-4">
                             <div className="flex space-x-2">
                               <button
-                                onClick={() => {/* View attendee details */}}
+                                onClick={() => {/* View attendee details */ }}
                                 className="p-1 text-gray-600 hover:text-indigo-600 transition-colors duration-200"
                                 title="View Details"
                               >
@@ -373,12 +372,15 @@ const RealAttendeeManagementPage: React.FC = () => {
               ) : (
                 <div className="text-center py-12">
                   <Users className="w-16 h-16 text-gray-400 mx-auto mb-4" />
-                  <h3 className="text-lg font-semibold text-gray-900 mb-2">No attendees found</h3>
+                  <h3 className="text-lg font-semibold text-gray-900 mb-2">
+                    {searchTerm || statusFilter !== 'all' || paymentFilter !== 'all'
+                      ? 'No attendees match your criteria'
+                      : 'No one has registered yet'}
+                  </h3>
                   <p className="text-gray-600">
                     {searchTerm || statusFilter !== 'all' || paymentFilter !== 'all'
-                  onClick={() => setCurrentView('event-builder')}
-                      : 'No one has registered for this event yet'
-                    }
+                      ? 'Try adjusting your search or filter settings.'
+                      : 'When someone registers, their information will appear here.'}
                   </p>
                 </div>
               )}
@@ -402,7 +404,7 @@ const RealAttendeeManagementPage: React.FC = () => {
                       Check In All
                     </button>
                     <button
-                      onClick={() => {/* Bulk email */}}
+                      onClick={() => {/* Bulk email */ }}
                       className="px-3 py-1 bg-blue-600 text-white rounded text-sm hover:bg-blue-700"
                     >
                       Send Email
