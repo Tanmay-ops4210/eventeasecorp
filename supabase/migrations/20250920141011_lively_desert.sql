@@ -3,30 +3,6 @@
 
   This migration fixes the database schema issues and ensures proper table structure
   for the event management system organizer flow.
-
-  ## Changes Made
-
-  1. **Events Table Updates**
-     - Add missing 'date' column (mapped from event_date)
-     - Ensure all required columns for organizer flow
-     - Add proper indexing for performance
-
-  2. **Table Relationships**
-     - Ensure proper foreign key relationships
-     - Add junction tables where needed
-     - Update RLS policies for security
-
-  3. **New/Updated Tables**
-     - events: Core event information
-     - ticket_types: Event ticket configurations  
-     - attendees: Event registrations
-     - event_analytics: Performance tracking
-     - marketing_campaigns: Email/marketing campaigns
-
-  ## Security
-  - Enable RLS on all tables
-  - Add policies for organizers to manage their events
-  - Add policies for attendees to view/register for events
 */
 
 -- First, let's add the missing 'date' column to events table if it doesn't exist
@@ -423,22 +399,6 @@ LEFT JOIN (
 -- Grant access to the view
 GRANT SELECT ON events_with_stats TO public;
 
--- Create RLS policy for the view
-CREATE POLICY "View access follows events table policies"
-  ON events_with_stats
-  FOR SELECT
-  TO public
-  USING (
-    -- Same logic as events table policies
-    status = 'published' AND visibility = 'public'
-    OR organizer_id = auth.uid()
-    OR EXISTS (
-      SELECT 1 FROM profiles 
-      WHERE profiles.id = auth.uid() 
-      AND profiles.role = 'admin'
-    )
-  );
-
 -- Add helpful functions for the organizer flow
 CREATE OR REPLACE FUNCTION get_event_dashboard_stats(organizer_uuid UUID)
 RETURNS JSON AS $$
@@ -567,7 +527,6 @@ END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
 
 GRANT EXECUTE ON FUNCTION register_for_event(UUID, UUID, UUID) TO public;
-GRANT EXECUTE ON FUNCTION register_for_event(UUID, UUID) TO public;
 
 -- Add comments to tables for documentation
 COMMENT ON TABLE event_analytics IS 'Stores analytics data for events including views, registrations, and revenue';
