@@ -1,3 +1,5 @@
+// src/types/database.ts
+
 export interface AppUser {
   id: string;
   username: string;
@@ -6,6 +8,11 @@ export interface AppUser {
   updated_at?: string;
   role?: string;
   status?: string;
+  // Properties from your AuthContext AppUser
+  full_name?: string;
+  company?: string;
+  avatar_url?: string;
+  plan?: string;
 }
 
 export interface Event {
