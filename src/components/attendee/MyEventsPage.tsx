@@ -1,12 +1,12 @@
 import React, { useState, useEffect } from 'react';
+import { useAuth } from '../../contexts/AuthContext';
 import { useApp } from '../../contexts/AppContext';
 import { 
   Plus, Edit, Trash2, Eye, Copy, Filter, Search, Calendar,
   Users, DollarSign, MoreVertical, AlertTriangle, CheckCircle,
   Clock, Globe, Loader2, ArrowLeft, ArrowRight, MapPin
 } from 'lucide-react';
-import { OrganizerEvent } from '../../types/organizerEvent';
-import { organizerEventService } from '../../services/organizerEventService';
+import { realEventService, RealEvent } from '../../services/realEventService';
 
 interface EventPageNavigationProps {
   currentPage: number;
@@ -60,7 +60,8 @@ const EventPageNavigation: React.FC<EventPageNavigationProps> = ({
 
 const MyEventsPage: React.FC = () => {
   const { setBreadcrumbs, setCurrentView } = useApp();
-  const [events, setEvents] = useState<OrganizerEvent[]>([]);
+  const { user } = useAuth();
+  const [events, setEvents] = useState<RealEvent[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState<'all' | 'draft' | 'published' | 'completed'>('all');
@@ -72,10 +73,16 @@ const MyEventsPage: React.FC = () => {
   const [eventsPerPage] = useState(6);
 
   const fetchEvents = async () => {
+    if (!user) return;
+    
     setIsLoading(true);
     try {
-      const myEvents = await organizerEventService.getMyEvents();
-      setEvents(myEvents);
+      const result = await realEventService.getMyEvents(user.id);
+      if (result.success && result.events) {
+        setEvents(result.events);
+      } else {
+        console.error('Failed to fetch events:', result.error);
+      }
     } catch (error) {
       console.error('Failed to fetch events:', error);
     }
@@ -85,11 +92,11 @@ const MyEventsPage: React.FC = () => {
   useEffect(() => {
     setBreadcrumbs(['My Events']);
     fetchEvents();
-  }, [setBreadcrumbs]);
+  }, [setBreadcrumbs, user]);
 
   const filteredEvents = events.filter(event => {
     const matchesSearch = event.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         event.description.toLowerCase().includes(searchTerm.toLowerCase());
+                         (event.description || '').toLowerCase().includes(searchTerm.toLowerCase());
     const matchesStatus = statusFilter === 'all' || event.status === statusFilter;
     return matchesSearch && matchesStatus;
   });
@@ -130,11 +137,12 @@ const MyEventsPage: React.FC = () => {
 
   const handleDeleteEvent = async (eventId: string) => {
     try {
-      const result = await organizerEventService.deleteEvent(eventId);
+      const result = await realEventService.deleteEvent(eventId);
       if (result.success) {
         await fetchEvents();
         setShowDeleteModal(false);
         setEventToDelete(null);
+        alert('Event deleted successfully!');
       } else {
         alert(result.error || 'Failed to delete event');
       }
@@ -143,54 +151,17 @@ const MyEventsPage: React.FC = () => {
     }
   };
 
-  const handleDuplicateEvent = async (eventId: string) => {
+  const handlePublishEvent = async (eventId: string) => {
     try {
-      const result = await organizerEventService.duplicateEvent(eventId);
+      const result = await realEventService.publishEvent(eventId);
       if (result.success) {
         await fetchEvents();
-        alert('Event duplicated successfully!');
+        alert('Event published successfully!');
       } else {
-        alert(result.error || 'Failed to duplicate event');
+        alert(result.error || 'Failed to publish event');
       }
     } catch (error) {
-      alert('Failed to duplicate event');
-    }
-  };
-
-  const handleBulkDelete = async () => {
-    if (selectedEvents.length === 0) return;
-    
-    if (confirm(`Are you sure you want to delete ${selectedEvents.length} event(s)?`)) {
-      try {
-        const result = await organizerEventService.bulkDeleteEvents(selectedEvents);
-        if (result.success) {
-          await fetchEvents();
-          setSelectedEvents([]);
-          setShowBulkActions(false);
-        } else {
-          alert(result.error || 'Failed to delete events');
-        }
-      } catch (error) {
-        alert('Failed to delete events');
-      }
-    }
-  };
-
-  const handleBulkStatusUpdate = async (status: OrganizerEvent['status']) => {
-    if (selectedEvents.length === 0) return;
-    
-    try {
-      const result = await organizerEventService.bulkUpdateEventStatus(selectedEvents, status);
-      if (result.success) {
-        await fetchEvents();
-        setSelectedEvents([]);
-        setShowBulkActions(false);
-        alert(`Events updated to ${status} successfully!`);
-      } else {
-        alert(result.error || 'Failed to update events');
-      }
-    } catch (error) {
-      alert('Failed to update events');
+      alert('Failed to publish event');
     }
   };
 
@@ -255,35 +226,6 @@ const MyEventsPage: React.FC = () => {
               </select>
             </div>
           </div>
-
-          {/* Bulk Actions */}
-          {selectedEvents.length > 0 && (
-            <div className="flex items-center justify-between p-4 bg-indigo-50 rounded-lg">
-              <span className="text-sm font-medium text-indigo-700">
-                {selectedEvents.length} event(s) selected
-              </span>
-              <div className="flex space-x-2">
-                <button
-                  onClick={() => handleBulkStatusUpdate('published')}
-                  className="px-3 py-1 bg-green-600 text-white rounded text-sm hover:bg-green-700"
-                >
-                  Publish
-                </button>
-                <button
-                  onClick={handleBulkDelete}
-                  className="px-3 py-1 bg-red-600 text-white rounded text-sm hover:bg-red-700"
-                >
-                  Delete
-                </button>
-                <button
-                  onClick={() => setSelectedEvents([])}
-                  className="px-3 py-1 bg-gray-600 text-white rounded text-sm hover:bg-gray-700"
-                >
-                  Clear
-                </button>
-              </div>
-            </div>
-          )}
         </div>
 
         {/* Page Navigation */}
@@ -314,9 +256,12 @@ const MyEventsPage: React.FC = () => {
                 {/* Event Image */}
                 <div className="relative">
                   <img
-                    src={event.image}
+                    src={event.image_url || 'https://images.pexels.com/photos/3184291/pexels-photo-3184291.jpeg?auto=compress&cs=tinysrgb&w=800'}
                     alt={event.title}
                     className="w-full h-48 object-cover"
+                    onError={(e) => {
+                      e.currentTarget.src = 'https://images.pexels.com/photos/3184291/pexels-photo-3184291.jpeg?auto=compress&cs=tinysrgb&w=800';
+                    }}
                   />
                   <div className="absolute top-4 left-4 flex space-x-2">
                     <span className={`px-3 py-1 rounded-full text-xs font-medium capitalize ${getStatusColor(event.status)}`}>
@@ -339,35 +284,22 @@ const MyEventsPage: React.FC = () => {
                 {/* Event Details */}
                 <div className="p-6">
                   <h3 className="text-lg font-bold text-gray-900 mb-2 line-clamp-2">{event.title}</h3>
-                  <p className="text-gray-600 text-sm mb-4 line-clamp-2">{event.description}</p>
+                  <p className="text-gray-600 text-sm mb-4 line-clamp-2">{event.description || 'No description provided'}</p>
 
                   {/* Event Info */}
                   <div className="space-y-2 mb-4">
                     <div className="flex items-center space-x-2 text-sm text-gray-600">
                       <Calendar className="w-4 h-4" />
-                      <span>{new Date(event.date).toLocaleDateString()}</span>
+                      <span>{new Date(event.event_date).toLocaleDateString()}</span>
+                      <span>at {event.time}</span>
                     </div>
                     <div className="flex items-center space-x-2 text-sm text-gray-600">
                       <Users className="w-4 h-4" />
-                      <span>{event.soldTickets} / {event.totalTickets} tickets sold</span>
+                      <span>Up to {event.capacity} attendees</span>
                     </div>
                     <div className="flex items-center space-x-2 text-sm text-gray-600">
-                      <DollarSign className="w-4 h-4" />
-                      <span>${event.revenue.toLocaleString()} revenue</span>
-                    </div>
-                  </div>
-
-                  {/* Progress Bar */}
-                  <div className="mb-4">
-                    <div className="flex justify-between text-xs text-gray-500 mb-1">
-                      <span>Ticket Sales</span>
-                      <span>{event.totalTickets > 0 ? Math.round((event.soldTickets / event.totalTickets) * 100) : 0}%</span>
-                    </div>
-                    <div className="w-full bg-gray-200 rounded-full h-2">
-                      <div
-                        className="bg-gradient-to-r from-indigo-600 to-purple-600 h-2 rounded-full transition-all duration-300"
-                        style={{ width: `${event.totalTickets > 0 ? (event.soldTickets / event.totalTickets) * 100 : 0}%` }}
-                      />
+                      <MapPin className="w-4 h-4" />
+                      <span className="line-clamp-1">{event.venue}</span>
                     </div>
                   </div>
 
@@ -382,11 +314,11 @@ const MyEventsPage: React.FC = () => {
                         <Edit className="w-4 h-4" />
                       </button>
                       <button
-                        onClick={() => handleDuplicateEvent(event.id)}
+                        onClick={() => setCurrentView('ticketing')}
                         className="p-2 text-gray-600 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors duration-200"
-                        title="Duplicate Event"
+                        title="Manage Tickets"
                       >
-                        <Copy className="w-4 h-4" />
+                        <DollarSign className="w-4 h-4" />
                       </button>
                       <button
                         onClick={() => {
@@ -399,13 +331,24 @@ const MyEventsPage: React.FC = () => {
                         <Trash2 className="w-4 h-4" />
                       </button>
                     </div>
-                    <button
-                      onClick={() => {/* Navigate to event details */}}
-                      className="flex items-center space-x-1 text-indigo-600 hover:text-indigo-700 font-medium text-sm"
-                    >
-                      <Eye className="w-4 h-4" />
-                      <span>View</span>
-                    </button>
+                    <div className="flex space-x-1">
+                      {event.status === 'draft' && (
+                        <button
+                          onClick={() => handlePublishEvent(event.id)}
+                          className="p-2 text-gray-600 hover:text-green-600 hover:bg-green-50 rounded-lg transition-colors duration-200"
+                          title="Publish Event"
+                        >
+                          <CheckCircle className="w-4 h-4" />
+                        </button>
+                      )}
+                      <button
+                        onClick={() => {/* Navigate to event details */}}
+                        className="flex items-center space-x-1 text-indigo-600 hover:text-indigo-700 font-medium text-sm"
+                      >
+                        <Eye className="w-4 h-4" />
+                        <span>View</span>
+                      </button>
+                    </div>
                   </div>
                 </div>
               </div>
@@ -457,37 +400,6 @@ const MyEventsPage: React.FC = () => {
           </div>
         )}
 
-        {/* Bulk Actions Bar */}
-        {selectedEvents.length > 0 && (
-          <div className="fixed bottom-6 left-1/2 transform -translate-x-1/2 bg-white rounded-full shadow-2xl border border-gray-200 px-6 py-3">
-            <div className="flex items-center space-x-4">
-              <span className="text-sm font-medium text-gray-700">
-                {selectedEvents.length} selected
-              </span>
-              <div className="flex space-x-2">
-                <button
-                  onClick={() => handleBulkStatusUpdate('published')}
-                  className="px-3 py-1 bg-green-600 text-white rounded text-sm hover:bg-green-700"
-                >
-                  Publish
-                </button>
-                <button
-                  onClick={handleBulkDelete}
-                  className="px-3 py-1 bg-red-600 text-white rounded text-sm hover:bg-red-700"
-                >
-                  Delete
-                </button>
-                <button
-                  onClick={() => setSelectedEvents([])}
-                  className="px-3 py-1 bg-gray-600 text-white rounded text-sm hover:bg-gray-700"
-                >
-                  Clear
-                </button>
-              </div>
-            </div>
-          </div>
-        )}
-
         {/* Delete Confirmation Modal */}
         {showDeleteModal && eventToDelete && (
           <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black bg-opacity-50 backdrop-blur-sm">
@@ -521,8 +433,8 @@ const MyEventsPage: React.FC = () => {
             </div>
           </div>
         )}
-        </div>
       </div>
+    </div>
   );
 };
 

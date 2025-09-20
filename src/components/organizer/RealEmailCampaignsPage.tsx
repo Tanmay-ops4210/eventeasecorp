@@ -306,7 +306,7 @@ const RealEmailCampaignsPage: React.FC = () => {
               <h3 className="text-xl font-semibold text-gray-900 mb-2">No published events found</h3>
               <p className="text-gray-600 mb-6">Create and publish an event to start marketing campaigns</p>
               <button
-                onClick={() => setBreadcrumbs(['Create Event'])}
+                onClick={() => setCurrentView('event-builder')}
                 className="bg-indigo-600 text-white px-6 py-3 rounded-lg hover:bg-indigo-700 transition-colors duration-200"
               >
                 Create Event

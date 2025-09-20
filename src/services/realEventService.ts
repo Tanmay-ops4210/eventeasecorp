@@ -133,22 +133,34 @@ class RealEventService {
    * @returns A RealEvent object formatted for the frontend.
    */
   private mapDbEventToRealEvent(dbEvent: any): RealEvent {
-    const startDate = new Date(dbEvent.start_date || dbEvent.created_at);
-    const endDate = dbEvent.end_date ? new Date(dbEvent.end_date) : null;
+    // Handle both old schema (start_date/end_date) and new schema (date/time)
+    let eventDate: string;
+    let eventTime: string;
+    let endTime: string | undefined;
 
-    const formatTime = (date: Date | null): string | undefined => {
-      if (!date) return undefined;
-      return date.toTimeString().split(' ')[0].substring(0, 5); // HH:MM
-    };
+    if (dbEvent.start_date) {
+      // Old schema with start_date/end_date
+      const startDate = new Date(dbEvent.start_date);
+      const endDate = dbEvent.end_date ? new Date(dbEvent.end_date) : null;
+      
+      eventDate = startDate.toISOString().split('T')[0];
+      eventTime = this.formatTime(startDate);
+      endTime = endDate ? this.formatTime(endDate) : undefined;
+    } else {
+      // New schema with separate date and time columns
+      eventDate = dbEvent.date || new Date().toISOString().split('T')[0];
+      eventTime = dbEvent.time || '09:00';
+      endTime = dbEvent.end_time;
+    }
 
     return {
       id: dbEvent.id,
       organizer_id: dbEvent.organizer_id,
       title: dbEvent.title,
       description: dbEvent.description,
-      event_date: startDate.toISOString().split('T')[0], // YYYY-MM-DD
-      time: formatTime(startDate)!,
-      end_time: formatTime(endDate),
+      event_date: eventDate,
+      time: eventTime,
+      end_time: endTime,
       venue: dbEvent.venue || dbEvent.location, // Handle both 'venue' and 'location' for compatibility
       capacity: dbEvent.capacity || 100, // Default value if not in schema
       image_url: dbEvent.image_url,
@@ -161,13 +173,20 @@ class RealEventService {
   }
   
   /**
+   * Helper method to format time from Date object
+   */
+  private formatTime(date: Date): string {
+    return date.toTimeString().split(' ')[0].substring(0, 5); // HH:MM
+  }
+
+  /**
    * Maps frontend EventFormData to a database-compatible object.
    * @param eventData - The form data from the frontend.
    * @param organizerId - The ID of the organizer.
    * @returns An object ready for insertion into the Supabase 'events' table.
    */
   private mapEventFormToDb(eventData: Partial<EventFormData>, organizerId?: string) {
-      const { event_date, time, end_time, title, description, venue, image_url } = eventData;
+      const { event_date, time, end_time, title, description, venue, image_url, category, visibility, capacity } = eventData;
       const dbData: any = {};
 
       if(organizerId) dbData.organizer_id = organizerId;
@@ -175,16 +194,14 @@ class RealEventService {
       if(description) dbData.description = description;
       if(venue) dbData.venue = venue;
       if(image_url) dbData.image_url = image_url;
+      if(category) dbData.category = category;
+      if(visibility) dbData.visibility = visibility;
+      if(capacity) dbData.capacity = capacity;
 
-      if (event_date && time) {
-          dbData.start_date = new Date(`${event_date}T${time}`).toISOString();
-      }
-      
-      if (event_date && end_time) {
-          dbData.end_date = new Date(`${event_date}T${end_time}`).toISOString();
-      } else if (event_date && time) {
-          dbData.end_date = new Date(`${event_date}T${time}`).toISOString(); // Default end_date to start_date
-      }
+      // Use the new schema column names
+      if (event_date) dbData.date = event_date;
+      if (time) dbData.time = time;
+      if (end_time) dbData.end_time = end_time;
 
       return dbData;
   }

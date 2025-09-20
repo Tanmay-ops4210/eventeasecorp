@@ -376,7 +376,7 @@ const RealAttendeeManagementPage: React.FC = () => {
                   <h3 className="text-lg font-semibold text-gray-900 mb-2">No attendees found</h3>
                   <p className="text-gray-600">
                     {searchTerm || statusFilter !== 'all' || paymentFilter !== 'all'
-                      ? 'Try adjusting your search criteria'
+                  onClick={() => setCurrentView('event-builder')}
                       : 'No one has registered for this event yet'
                     }
                   </p>

@@ -89,7 +89,7 @@ const RealEventBuilderPage: React.FC = () => {
         }
         
         alert(`Event ${status === 'draft' ? 'saved as draft' : 'created and published'} successfully!`);
-        setCurrentView('my-events');
+        setCurrentView('organizer-dashboard');
       } else {
         alert(result.error || 'Failed to create event');
       }
@@ -100,7 +100,12 @@ const RealEventBuilderPage: React.FC = () => {
     }
   };
 
-  const isFormValid = eventData.title.trim() && eventData.event_date && eventData.time && eventData.venue.trim() && eventData.capacity > 0;
+  const isFormValid = eventData.title.trim() && 
+                     eventData.event_date && 
+                     eventData.time && 
+                     eventData.venue.trim() && 
+                     eventData.capacity > 0 &&
+                     Object.keys(errors).length === 0;
 
   return (
     <div className="min-h-screen bg-gray-50 pt-20">

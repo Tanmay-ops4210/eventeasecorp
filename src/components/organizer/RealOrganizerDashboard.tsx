@@ -196,7 +196,7 @@ const RealOrganizerDashboard: React.FC = () => {
                       <div className="flex-1">
                         <h3 className="font-medium text-gray-900">{event.title}</h3>
                         <p className="text-sm text-gray-500">
-                          {new Date(event.event_date).toLocaleDateString()} • {event.location}
+                          {new Date(event.event_date).toLocaleDateString()} • {event.venue}
                         </p>
                       </div>
                       <div className="flex items-center space-x-2">

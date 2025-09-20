@@ -345,7 +345,7 @@ const RealAnalyticsPage: React.FC = () => {
               </p>
               {events.length === 0 && (
                 <button
-                  onClick={() => setBreadcrumbs(['Create Event'])}
+                  onClick={() => setCurrentView('event-builder')}
                   className="bg-indigo-600 text-white px-6 py-3 rounded-lg hover:bg-indigo-700 transition-colors duration-200"
                 >
                   Create Event

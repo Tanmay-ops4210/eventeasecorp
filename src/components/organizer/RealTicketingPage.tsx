@@ -109,7 +109,8 @@ const RealTicketingPage: React.FC = () => {
     return Object.keys(newErrors).length === 0;
   };
 
-  const handleFormSubmit = async () => {
+  const handleFormSubmit = async (e?: React.FormEvent) => {
+    if (e) e.preventDefault();
     if (!currentTicket || !selectedEvent) return;
     if (!validateForm(currentTicket)) return;
 
@@ -126,6 +127,7 @@ const RealTicketingPage: React.FC = () => {
         alert(`Ticket type ${isEditing ? 'updated' : 'created'} successfully!`);
         setShowForm(false);
         setIsEditing(false);
+        setEditingTicketId(null);
         fetchTicketTypes(selectedEvent.id);
       } else {
         alert(result.error || 'Failed to save ticket type');
