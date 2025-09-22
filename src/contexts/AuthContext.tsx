@@ -1,5 +1,4 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
-import { supabase } from '../lib/supabaseClient';
 import { sessionManager } from '../lib/sessionManager';
 import type { AppUser } from '../types/database';
 import { firebaseAuthService } from '../lib/firebaseAuth';
@@ -57,29 +56,18 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       const result = await firebaseAuthService.signIn(email, password);
       if (!result.success || !result.user) throw new Error(result.error || 'Login failed');
 
-      // ✅ Get the actual Firebase User
       const firebaseUser = auth.currentUser;
       if (!firebaseUser) throw new Error('Firebase user not found');
 
-      const firebaseToken = await firebaseUser.getIdToken();
-
-      // ✅ Sign in to Supabase with ID token
-      const { data: supabaseData, error: supabaseError } = await supabase.auth.signInWithIdToken({
-        provider: 'google', // your provider if using social login
-        token: firebaseToken,
-      });
-
-      if (supabaseError) throw supabaseError;
-      if (!supabaseData.user) throw new Error('Could not create Supabase session.');
-
-      const supabaseUserId = supabaseData.user.id;
-
-      // ✅ Sync Firebase profile to Supabase
-      await syncUserProfile({ ...result.user, uid: supabaseUserId }, role);
-      const profile = await getUserProfile(supabaseUserId);
+      // Use Firebase UID directly for Supabase operations
+      const firebaseUid = firebaseUser.uid;
+      
+      // Sync Firebase profile to Supabase using Firebase UID
+      await syncUserProfile({ ...result.user, uid: firebaseUid }, role);
+      const profile = await getUserProfile(firebaseUid);
 
       const appUser: AppUser = {
-        id: supabaseUserId,
+        id: firebaseUid,
         email: result.user.email || '',
         full_name: profile?.full_name || result.user.displayName || '',
         role: profile?.role as 'attendee' | 'organizer' | 'sponsor' || role,
@@ -92,7 +80,6 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       sessionManager.setUser(appUser);
       setIsAuthenticated(true);
 
-      // ✅ Dispatch dashboard navigation
       setTimeout(() => {
         const eventDetail = role === 'attendee' ? 'attendee-dashboard' : role === 'organizer' ? 'organizer-dashboard' : 'sponsor-dashboard';
         window.dispatchEvent(new CustomEvent('navigate-to-dashboard', { detail: eventDetail }));
@@ -111,29 +98,18 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       const result = await firebaseAuthService.register({ email, password, name, role });
       if (!result.success || !result.user) throw new Error(result.error || 'Registration failed');
 
-      // ✅ Get the actual Firebase User
       const firebaseUser = auth.currentUser;
       if (!firebaseUser) throw new Error('Firebase user not found');
 
-      const firebaseToken = await firebaseUser.getIdToken();
-
-      // ✅ Sign in to Supabase with ID token
-      const { data: supabaseData, error: supabaseError } = await supabase.auth.signInWithIdToken({
-        provider: 'google',
-        token: firebaseToken,
-      });
-
-      if (supabaseError) throw supabaseError;
-      if (!supabaseData.user) throw new Error('Could not create Supabase user.');
-
-      const supabaseUserId = supabaseData.user.id;
-
-      // ✅ Sync Firebase profile to Supabase
-      await syncUserProfile({ ...result.user, uid: supabaseUserId }, role, company);
-      const profile = await getUserProfile(supabaseUserId);
+      // Use Firebase UID directly for Supabase operations
+      const firebaseUid = firebaseUser.uid;
+      
+      // Sync Firebase profile to Supabase using Firebase UID
+      await syncUserProfile({ ...result.user, uid: firebaseUid }, role, company);
+      const profile = await getUserProfile(firebaseUid);
 
       const appUser: AppUser = {
-        id: supabaseUserId,
+        id: firebaseUid,
         email: result.user.email || '',
         full_name: profile?.full_name || name,
         role: profile?.role as 'attendee' | 'organizer' | 'sponsor' || role,
@@ -160,7 +136,6 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
   const logout = async () => {
     await firebaseAuthService.signOut();
-    await supabase.auth.signOut();
     setUser(null);
     setIsAuthenticated(false);
     sessionManager.clearSession();
