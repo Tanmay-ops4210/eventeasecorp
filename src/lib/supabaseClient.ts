@@ -8,15 +8,28 @@ import type { AppUser, Event } from '../types/database';
 const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
 const supabaseKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
 
-// ✅ Safety check
+// ✅ Enhanced safety check with better error handling
 if (!supabaseUrl || !supabaseKey) {
-  console.warn(
-    "Supabase URL or Anon Key is missing. Make sure to set VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY in your environment variables."
+  console.error(
+    "Supabase configuration missing:",
+    {
+      url: supabaseUrl ? "✓ Present" : "✗ Missing VITE_SUPABASE_URL",
+      key: supabaseKey ? "✓ Present" : "✗ Missing VITE_SUPABASE_ANON_KEY"
+    }
+  );
+  console.error(
+    "Please ensure VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY are set in your Vercel environment variables."
   );
 }
 
-// ✅ Export client
-export const supabase = createClient(supabaseUrl || '', supabaseKey || '');
+// ✅ Export client with fallback values to prevent initialization errors
+export const supabase = createClient(
+  supabaseUrl || 'https://placeholder.supabase.co', 
+  supabaseKey || 'placeholder-key'
+);
+
+// ✅ Add a flag to check if Supabase is properly configured
+export const isSupabaseConfigured = !!(supabaseUrl && supabaseKey);
 
 // ----------------------
 // Database Operations (Unchanged)
