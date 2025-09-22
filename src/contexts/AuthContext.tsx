@@ -1,157 +1,88 @@
-import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
-import { sessionManager } from '../lib/sessionManager';
-import type { AppUser } from '../types/database';
-import { firebaseAuthService } from '../lib/firebaseAuth';
-import { getUserProfile, syncUserProfile } from '../lib/firebaseAuthHelpers';
-import { getAuth } from 'firebase/auth';
+// src/contexts/AuthContext.tsx
 
+import React, { createContext, useContext, useEffect, useState } from 'react';
+import { onAuthStateChanged, User, GoogleAuthProvider, signInWithPopup } from 'firebase/auth';
+import { auth, signInWithEmailAndPassword, createUserWithEmailAndPassword, sendPasswordResetEmail, signOut } from '../lib/firebaseAuth';
+
+// Define the shape of the context value
 interface AuthContextType {
-  user: AppUser | null;
-  isAuthenticated: boolean;
-  isLoading: boolean;
-  login: (email: string, password: string, role: 'attendee' | 'organizer' | 'sponsor') => Promise<void>;
-  register: (email: string, password: string, name: string, role: 'attendee' | 'organizer' | 'sponsor', company?: string) => Promise<void>;
-  logout: () => void;
-  updateUser: (userData: Partial<AppUser>) => void;
+  currentUser: User | null;
+  loading: boolean;
+  signIn: (email: string, password: string) => Promise<any>;
+  signUp: (email: string, password: string) => Promise<any>;
+  logout: () => Promise<void>;
+  resetPassword: (email: string) => Promise<void>;
+  signInWithGoogle: () => Promise<any>;
 }
 
+// Create the context with a default undefined value
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
+// Custom hook to use the AuthContext
 export const useAuth = () => {
   const context = useContext(AuthContext);
-  if (!context) throw new Error('useAuth must be used within an AuthProvider');
+  if (context === undefined) {
+    throw new Error('useAuth must be used within an AuthProvider');
+  }
   return context;
 };
 
-interface AuthProviderProps {
-  children: ReactNode;
-}
+// Provider component
+export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  const [currentUser, setCurrentUser] = useState<User | null>(null);
+  const [loading, setLoading] = useState(true);
 
-export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
-  const [user, setUser] = useState<AppUser | null>(null);
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
-  const [isLoading, setIsLoading] = useState(true);
+  // Function to sign in with email and password
+  const signIn = (email: string, password: string) => {
+    return signInWithEmailAndPassword(auth, email, password);
+  };
 
-  const auth = getAuth();
+  // Function to sign up with email and password
+  const signUp = (email: string, password: string) => {
+    return createUserWithEmailAndPassword(auth, email, password);
+  };
+
+  // Function to log out
+  const logout = () => {
+    return signOut(auth);
+  };
+
+  // Function to reset password
+  const resetPassword = (email: string) => {
+    return sendPasswordResetEmail(auth, email);
+  };
+
+  // Function to sign in with Google
+  const signInWithGoogle = () => {
+    const provider = new GoogleAuthProvider();
+    return signInWithPopup(auth, provider);
+  };
 
   useEffect(() => {
-    const checkSession = () => {
-      if (sessionManager.isValidSession()) {
-        const storedUser = sessionManager.getUser();
-        if (storedUser) {
-          setUser(storedUser);
-          setIsAuthenticated(true);
-        }
-      } else {
-        sessionManager.clearSession();
-      }
-      setIsLoading(false);
-    };
-    checkSession();
+    // Subscribe to user state changes
+    const unsubscribe = onAuthStateChanged(auth, (user) => {
+      setCurrentUser(user);
+      setLoading(false);
+    });
+
+    // Unsubscribe on cleanup
+    return unsubscribe;
   }, []);
 
-  const login = async (email: string, password: string, role: 'attendee' | 'organizer' | 'sponsor') => {
-    setIsLoading(true);
-    try {
-      const result = await firebaseAuthService.signIn(email, password);
-      if (!result.success || !result.user) throw new Error(result.error || 'Login failed');
-
-      const firebaseUser = auth.currentUser;
-      if (!firebaseUser) throw new Error('Firebase user not found');
-
-      // Use Firebase UID directly for Supabase operations
-      const firebaseUid = firebaseUser.uid;
-      
-      // Sync Firebase profile to Supabase using Firebase UID
-      await syncUserProfile({ ...result.user, uid: firebaseUid }, role);
-      const profile = await getUserProfile(firebaseUid);
-
-      const appUser: AppUser = {
-        id: firebaseUid,
-        email: result.user.email || '',
-        full_name: profile?.full_name || result.user.displayName || '',
-        role: profile?.role as 'attendee' | 'organizer' | 'sponsor' || role,
-        company: profile?.company,
-        avatar_url: profile?.avatar_url,
-        plan: profile?.plan || 'free',
-      };
-
-      setUser(appUser);
-      sessionManager.setUser(appUser);
-      setIsAuthenticated(true);
-
-      setTimeout(() => {
-        const eventDetail = role === 'attendee' ? 'attendee-dashboard' : role === 'organizer' ? 'organizer-dashboard' : 'sponsor-dashboard';
-        window.dispatchEvent(new CustomEvent('navigate-to-dashboard', { detail: eventDetail }));
-      }, 100);
-
-    } catch (error) {
-      throw error;
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  const register = async (email: string, password: string, name: string, role: 'attendee' | 'organizer' | 'sponsor', company?: string) => {
-    setIsLoading(true);
-    try {
-      const result = await firebaseAuthService.register({ email, password, name, role });
-      if (!result.success || !result.user) throw new Error(result.error || 'Registration failed');
-
-      const firebaseUser = auth.currentUser;
-      if (!firebaseUser) throw new Error('Firebase user not found');
-
-      // Use Firebase UID directly for Supabase operations
-      const firebaseUid = firebaseUser.uid;
-      
-      // Sync Firebase profile to Supabase using Firebase UID
-      await syncUserProfile({ ...result.user, uid: firebaseUid }, role, company);
-      const profile = await getUserProfile(firebaseUid);
-
-      const appUser: AppUser = {
-        id: firebaseUid,
-        email: result.user.email || '',
-        full_name: profile?.full_name || name,
-        role: profile?.role as 'attendee' | 'organizer' | 'sponsor' || role,
-        company: profile?.company || company,
-        avatar_url: profile?.avatar_url,
-        plan: profile?.plan || 'free',
-      };
-
-      setUser(appUser);
-      sessionManager.setUser(appUser);
-      setIsAuthenticated(true);
-
-      setTimeout(() => {
-        const eventDetail = role === 'attendee' ? 'attendee-dashboard' : role === 'organizer' ? 'organizer-dashboard' : 'sponsor-dashboard';
-        window.dispatchEvent(new CustomEvent('navigate-to-dashboard', { detail: eventDetail }));
-      }, 100);
-
-    } catch (error) {
-      throw error;
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  const logout = async () => {
-    await firebaseAuthService.signOut();
-    setUser(null);
-    setIsAuthenticated(false);
-    sessionManager.clearSession();
-  };
-
-  const updateUser = (userData: Partial<AppUser>) => {
-    if (user) {
-      const updatedUser = { ...user, ...userData };
-      setUser(updatedUser);
-      sessionManager.setUser(updatedUser);
-    }
+  // The value that will be supplied to any descendants of this provider
+  const value = {
+    currentUser,
+    loading,
+    signIn,
+    signUp,
+    logout,
+    resetPassword,
+    signInWithGoogle,
   };
 
   return (
-    <AuthContext.Provider value={{ user, isAuthenticated, isLoading, login, register, logout, updateUser }}>
-      {children}
+    <AuthContext.Provider value={value}>
+      {!loading && children}
     </AuthContext.Provider>
   );
 };
