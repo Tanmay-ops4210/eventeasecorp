@@ -14,7 +14,8 @@ import {
   MoreVertical,
   ChevronDown
 } from 'lucide-react';
-import { AppUser, Event, db } from '../../lib/supabaseClient';
+import { dbService } from '../../lib/supabase';
+import type { AppUser, Event } from '../../types/database';
 import '../../styles/admin-panel.css';
 
 interface MemberManagementProps {
@@ -62,7 +63,7 @@ const MemberManagement: React.FC<MemberManagementProps> = ({ users, events, onRe
   const confirmDelete = async () => {
     if (!selectedUser) return;
     setIsLoading(true);
-    await db.deleteUser(selectedUser.id);
+    await dbService.deleteUser(selectedUser.id);
     await onRefresh();
     setIsLoading(false);
     setShowDeleteModal(false);

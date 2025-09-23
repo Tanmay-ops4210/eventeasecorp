@@ -181,8 +181,8 @@ const AdminNavigation: React.FC = () => {
               <User className="w-5 h-5" />
             </div>
             <div className="admin-user-details">
-              <h4>{user?.name}</h4>
-              <p>{user?.role}</p>
+              <h4>{profile?.full_name || user?.email}</h4>
+              <p>{profile?.role || 'admin'}</p>
             </div>
           </div>
           <button

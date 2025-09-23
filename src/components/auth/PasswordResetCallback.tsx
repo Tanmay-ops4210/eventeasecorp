@@ -1,11 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import { useApp } from '../../contexts/AppContext';
-import { auth } from '../../lib/firebaseConfig';
-import { confirmPasswordReset, verifyPasswordResetCode } from 'firebase/auth';
+import { useAuth } from '../../contexts/AuthContext';
+import { supabase } from '../../lib/supabase';
 import { Lock, Eye, EyeOff, CheckCircle, AlertCircle } from 'lucide-react';
 
 const PasswordResetCallback: React.FC = () => {
   const { setCurrentView } = useApp();
+  const { updatePassword } = useAuth();
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
@@ -15,27 +16,18 @@ const PasswordResetCallback: React.FC = () => {
   const [resetCode, setResetCode] = useState<string | null>(null);
 
   useEffect(() => {
-    // Check if we have a valid reset code from Firebase
+    // Check if we have a valid reset code from Supabase
     const urlParams = new URLSearchParams(window.location.search);
-    const mode = urlParams.get('mode');
-    const oobCode = urlParams.get('oobCode');
+    const type = urlParams.get('type');
+    const token = urlParams.get('token');
 
-    if (mode === 'resetPassword' && oobCode) {
-      setResetCode(oobCode);
-      verifyResetCode(oobCode);
+    if (type === 'recovery' && token) {
+      setResetCode(token);
+      setIsValidToken(true);
     } else {
       setIsValidToken(false);
     }
   }, []);
-
-  const verifyResetCode = async (code: string) => {
-    try {
-      await verifyPasswordResetCode(auth, code);
-      setIsValidToken(true);
-    } catch (error) {
-      setIsValidToken(false);
-    }
-  };
   const handlePasswordReset = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
@@ -65,7 +57,7 @@ const PasswordResetCallback: React.FC = () => {
       return;
     }
     try {
-      await confirmPasswordReset(auth, resetCode, newPassword);
+      await updatePassword(newPassword);
 
       // Success - redirect to login
       alert('Password updated successfully! You can now sign in with your new password.');

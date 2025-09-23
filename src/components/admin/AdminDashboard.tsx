@@ -6,13 +6,14 @@ import {
   Activity, AlertTriangle, CheckCircle, Clock, Eye,
   UserPlus, Plus, Settings, Shield, Bell, Lock
 } from 'lucide-react';
-import { db, AppUser, Event } from '../../lib/supabaseClient';
+import { dbService } from '../../lib/supabase';
+import type { AppUser, Event } from '../../types/database';
 import UserManagementPage from './UserManagementPage';
 import AdminSecurityDashboard from './AdminSecurityDashboard';
 
 const AdminDashboard: React.FC = () => {
   const { setBreadcrumbs } = useApp();
-  const { user } = useAuth();
+  const { user, profile } = useAuth();
   const [stats, setStats] = useState({
     totalUsers: 0,
     totalEvents: 0,
@@ -36,18 +37,26 @@ const AdminDashboard: React.FC = () => {
       setIsLoading(true);
       
       const [usersResponse, eventsResponse] = await Promise.all([
-        db.getAllUsers(),
-        db.getAllEvents()
+        dbService.getAllUsers(),
+        dbService.getEvents()
       ]);
 
-      if (usersResponse.data) {
-        setUsers(usersResponse.data);
+      if (usersResponse.success && usersResponse.users) {
+        setUsers(usersResponse.users.map(user => ({
+          id: user.id,
+          username: user.username,
+          email: user.email || '',
+          created_at: user.created_at,
+          updated_at: user.updated_at,
+          role: user.role,
+          status: 'active'
+        })));
         
         // Calculate user stats
-        const totalUsers = usersResponse.data.length;
+        const totalUsers = usersResponse.users.length;
         const weekAgo = new Date();
         weekAgo.setDate(weekAgo.getDate() - 7);
-        const newUsersThisWeek = usersResponse.data.filter(
+        const newUsersThisWeek = usersResponse.users.filter(
           user => new Date(user.created_at) > weekAgo
         ).length;
 
@@ -58,18 +67,26 @@ const AdminDashboard: React.FC = () => {
         }));
       }
 
-      if (eventsResponse.data) {
-        setEvents(eventsResponse.data);
+      if (eventsResponse.success && eventsResponse.events) {
+        setEvents(eventsResponse.events.map(event => ({
+          id: event.id,
+          event_name: event.title,
+          event_type: event.category,
+          event_date: event.event_date,
+          user_id: event.organizer_id,
+          expected_attendees: event.max_attendees,
+          current_attendees: 0
+        })));
         
         // Calculate event stats
-        const totalEvents = eventsResponse.data.length;
-        const activeEvents = eventsResponse.data.filter(
+        const totalEvents = eventsResponse.events.length;
+        const activeEvents = eventsResponse.events.filter(
           event => event.status === 'published' || event.status === 'ongoing'
         ).length;
         
         const monthAgo = new Date();
         monthAgo.setMonth(monthAgo.getMonth() - 1);
-        const eventsThisMonth = eventsResponse.data.filter(
+        const eventsThisMonth = eventsResponse.events.filter(
           event => new Date(event.created_at) > monthAgo
         ).length;
 
@@ -124,7 +141,7 @@ const AdminDashboard: React.FC = () => {
             Admin Dashboard
           </h1>
           <p className="text-xl text-gray-600">
-            Welcome, {user?.full_name}! Here's an overview of your platform.
+            Welcome, {profile?.full_name || user?.email}! Here's an overview of your platform.
           </p>
         </div>
 

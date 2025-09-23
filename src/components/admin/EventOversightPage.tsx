@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useApp } from '../../contexts/AppContext';
-import { db, Event } from '../../lib/supabaseClient';
+import { dbService } from '../../lib/supabase';
+import type { Event } from '../../types/database';
 import { Search, Filter, CheckCircle, XCircle, AlertTriangle, Eye } from 'lucide-react';
 
 const EventOversightPage: React.FC = () => {
@@ -15,11 +16,17 @@ const EventOversightPage: React.FC = () => {
 
   const fetchData = async () => {
     setIsLoading(true);
-    const eventsResponse = await db.getAllEvents();
-    if (eventsResponse.data) {
+    const eventsResponse = await dbService.getEvents();
+    if (eventsResponse.success && eventsResponse.events) {
       // Add a status to each event for moderation purposes
-      const eventsWithStatus = eventsResponse.data.map(event => ({
+      const eventsWithStatus = eventsResponse.events.map(event => ({
         ...event,
+        event_name: event.title,
+        event_type: event.category,
+        event_date: event.event_date,
+        user_id: event.organizer_id,
+        expected_attendees: event.max_attendees,
+        current_attendees: 0,
         status: ['pending', 'approved', 'rejected'][Math.floor(Math.random() * 3)]
       }));
       setEvents(eventsWithStatus as any);

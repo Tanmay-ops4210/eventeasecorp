@@ -2,9 +2,6 @@ import React, { useState } from 'react';
 import { X, User, Mail, Lock, Eye, EyeOff, Building, Calendar } from 'lucide-react';
 import { useApp } from '../../contexts/AppContext';
 import { useAuth } from '../../contexts/AuthContext';
-import { attendeeService } from '../../services/attendeeService';
-import { organizerService } from '../../services/organizerService';
-import { sponsorService } from '../../services/sponsorService';
 
 interface AuthModalProps {
   isOpen: boolean;
@@ -79,14 +76,12 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, onLoginSuccess }
     
     try {
       if (isLoginMode) {
-        // Use AuthContext login method
         await login(formData.email, formData.password, selectedRole);
-        onLoginSuccess({} as any); // The actual user is set in AuthContext
+        onLoginSuccess({} as any);
         onClose();
       } else {
-        // Use AuthContext register method
         await register(formData.email, formData.password, formData.name, selectedRole, formData.company);
-        onLoginSuccess({} as any); // The actual user is set in AuthContext
+        onLoginSuccess({} as any);
         onClose();
       }
     } catch (error) {

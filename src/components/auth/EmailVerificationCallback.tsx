@@ -1,7 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useApp } from '../../contexts/AppContext';
-import { auth } from '../../lib/firebaseConfig';
-import { applyActionCode } from 'firebase/auth';
+import { supabase } from '../../lib/supabase';
 import { CheckCircle, AlertCircle, Loader2 } from 'lucide-react';
 
 const EmailVerificationCallback: React.FC = () => {
@@ -16,11 +15,16 @@ const EmailVerificationCallback: React.FC = () => {
   const handleEmailVerification = async () => {
     try {
       const urlParams = new URLSearchParams(window.location.search);
-      const mode = urlParams.get('mode');
-      const oobCode = urlParams.get('oobCode');
+      const type = urlParams.get('type');
+      const token = urlParams.get('token');
 
-      if (mode === 'verifyEmail' && oobCode) {
-        await applyActionCode(auth, oobCode);
+      if (type === 'email' && token) {
+        const { error } = await supabase.auth.verifyOtp({
+          token_hash: token,
+          type: 'email'
+        });
+
+        if (error) throw error;
 
         setStatus('success');
         setMessage('Your email has been verified successfully! You can now sign in.');

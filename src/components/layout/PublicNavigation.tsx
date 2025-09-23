@@ -63,7 +63,8 @@ const PublicNavigation: React.FC = () => {
 
   const handleAuthAction = () => {
     if (isAuthenticated && user) {
-      switch (user.role) {
+      const userRole = profile?.role || 'attendee';
+      switch (userRole) {
         case 'attendee':
           setCurrentView('attendee-dashboard');
           break;
@@ -84,8 +85,7 @@ const PublicNavigation: React.FC = () => {
     }
   };
 
-  const handleLoginSuccess = (user: AppUser) => {
-    // User is already set in AuthContext via the auth services, just close modal
+  const handleLoginSuccess = () => {
     setIsAuthModalOpen(false);
   };
   const handleLogout = () => {
@@ -226,7 +226,7 @@ const PublicNavigation: React.FC = () => {
                   <>
                     <div className="mobile-nav-item flex items-center space-x-2 text-white px-4 py-3">
                       <User className="w-4 h-4" />
-                      <span className="text-base font-medium">{user.name}</span>
+                      <span className="text-base font-medium">{profile?.full_name || user?.email}</span>
                     </div>
                     <button
                       onClick={handleAuthAction}

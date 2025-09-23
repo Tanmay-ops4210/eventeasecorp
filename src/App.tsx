@@ -83,15 +83,16 @@ const LoadingFallback: React.FC = () => (
 );
 
 const AppContent: React.FC = () => {
-    const { user, isAuthenticated } = useAuth();
+    const { user, profile, isAuthenticated } = useAuth();
     const { currentView, selectedEventId } = useApp();
 
     const renderNavigation = () => {
-        if (isAuthenticated && user) {
-            switch (user.role) {
+        if (isAuthenticated && user && profile) {
+            switch (profile.role) {
                 case 'attendee': return <AttendeeNavigation />;
                 case 'organizer': return <OrganizerNavigation />;
                 case 'sponsor': return <SponsorNavigation />;
+                case 'admin': return <AdminNavigation />;
                 default: return <PublicNavigation />;
             }
         }
@@ -99,7 +100,7 @@ const AppContent: React.FC = () => {
     };
 
     const renderPage = () => {
-        const hasRole = (roles: string[]) => isAuthenticated && user && roles.includes(user.role);
+        const hasRole = (roles: string[]) => isAuthenticated && user && profile && roles.includes(profile.role);
 
         switch (currentView) {
             // --- Public Views ---

@@ -12,7 +12,7 @@ import { sponsorExhibitorService } from '../../services/sponsorExhibitorService'
 
 const SponsorDashboard: React.FC = () => {
   const { setBreadcrumbs } = useApp();
-  const { user } = useAuth();
+  const { user, profile } = useAuth();
   const [stats, setStats] = useState<SponsorDashboardStats | null>(null);
   const [recentActivity, setRecentActivity] = useState<SponsorActivity[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -69,7 +69,7 @@ const SponsorDashboard: React.FC = () => {
         {/* Header */}
         <div className="mb-8">
           <h1 className="text-4xl font-bold text-gray-900 mb-4">
-            Welcome, {user?.name}!
+            Welcome, {profile?.full_name || user?.email}!
           </h1>
           <p className="text-xl text-gray-600">Manage your sponsorship and track your event performance</p>
         </div>

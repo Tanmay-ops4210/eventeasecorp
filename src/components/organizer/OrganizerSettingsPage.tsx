@@ -5,7 +5,7 @@ import { User, Mail, LogOut, Shield } from 'lucide-react';
 
 const OrganizerSettingsPage: React.FC = () => {
   const { setBreadcrumbs, setCurrentView } = useApp();
-  const { user, logout } = useAuth();
+  const { user, profile, logout } = useAuth();
 
   React.useEffect(() => {
     setBreadcrumbs(['Account Settings']);
@@ -24,8 +24,8 @@ const OrganizerSettingsPage: React.FC = () => {
             <div className="w-24 h-24 bg-indigo-100 rounded-full flex items-center justify-center mx-auto mb-4">
               <User className="w-12 h-12 text-indigo-600" />
             </div>
-            <h1 className="text-3xl font-bold text-gray-900">{user?.name}</h1>
-            <p className="text-gray-600 capitalize">{user?.role}</p>
+            <h1 className="text-3xl font-bold text-gray-900">{profile?.full_name || user?.email}</h1>
+            <p className="text-gray-600 capitalize">{profile?.role || 'organizer'}</p>
           </div>
 
           <div className="space-y-6">

@@ -10,7 +10,7 @@ const SponsorNavigation: React.FC = () => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [showProfileMenu, setShowProfileMenu] = useState(false);
   const { setCurrentView } = useApp();
-  const { user, logout } = useAuth();
+  const { user, profile, logout } = useAuth();
 
   const navigationItems = [
     { label: 'Dashboard', view: 'sponsor-dashboard' as const, icon: Home },
@@ -95,8 +95,8 @@ const SponsorNavigation: React.FC = () => {
                   <User className="w-5 h-5 text-purple-600" />
                 </div>
                 <div className="text-sm">
-                  <p className="font-medium text-gray-900">{user?.name}</p>
-                  <p className="text-gray-500 capitalize">{user?.role}</p>
+                  <p className="font-medium text-gray-900">{profile?.full_name || user?.email}</p>
+                  <p className="text-gray-500 capitalize">{profile?.role || 'sponsor'}</p>
                 </div>
                 <ChevronDown className="w-4 h-4 text-gray-400" />
               </button>
@@ -159,7 +159,7 @@ const SponsorNavigation: React.FC = () => {
             <div className="border-t border-gray-200 pt-3 mt-3">
               <div className="mobile-nav-item flex items-center space-x-2 text-gray-700 px-4 py-3">
                 <User className="w-4 h-4" />
-                <span className="text-base font-medium">{user?.name}</span>
+               <span className="text-base font-medium">{profile?.full_name || user?.email}</span>
               </div>
               <button
                 onClick={() => handleNavigation('notifications')}

@@ -4,12 +4,12 @@ A modern, fully-featured event management website with interactive data visualiz
 
 ## 🔐 Authentication System
 
-### Firebase Authentication Integration
-- **Secure Authentication**: Email/password authentication with Firebase Auth
+### Supabase Authentication Integration
+- **Secure Authentication**: Email/password authentication with Supabase Auth
 - **Role-Based Access Control**: Three distinct user roles (Attendee, Organizer, Sponsor)
 - **Email Verification**: Required email verification for all new accounts
 - **Password Reset**: Secure password reset flow with email links
-- **Session Management**: Persistent sessions with Firebase Auth
+- **Session Management**: Persistent sessions with Supabase Auth
 
 ### User Roles & Permissions
 - **Attendee**: Can view and register for events, manage registrations, network with others
@@ -18,12 +18,12 @@ A modern, fully-featured event management website with interactive data visualiz
 - **Admin**: Full system access for user and content management
 
 ### Security Features
-- Firebase Auth security features
+- Supabase Auth security features
 - Supabase Row Level Security (RLS) policies for data protection
 - Email verification required before login
 - Secure password requirements (minimum 6 characters)
 - Role-based route protection
-- Firebase session management
+- Supabase session management
 
 ## Features
 
@@ -185,23 +185,20 @@ The system uses Firebase for authentication and Supabase for database operations
 
 ### Authentication Flow
 
-1. **Signup**: User registers with Firebase Auth (email, password, name, role)
+1. **Signup**: User registers with Supabase Auth (email, password, name, role)
 2. **Profile Creation**: User profile automatically created in Supabase database
-3. **Email Verification**: User receives Firebase verification email
+3. **Email Verification**: User receives Supabase verification email
 4. **Login**: User can only login after email verification is complete
 4. **Role-Based Routing**: Users are redirected to appropriate dashboard based on role
-5. **Session Management**: Firebase handles session persistence
+5. **Session Management**: Supabase handles session persistence
 
 ### Project Structure
 
 ```
 src/
 ├── lib/
-│   ├── firebaseConfig.ts         # Firebase configuration and initialization
-│   ├── firebaseAuth.ts           # Firebase authentication service
-│   ├── firebaseAuthHelpers.ts    # Helper functions for auth + database
-│   ├── supabaseClient.ts         # Supabase client for database operations
-│   └── supabase.ts               # Legacy mock data (for admin panel)
+│   ├── supabase.ts               # Supabase configuration and services
+│   └── supabaseClient.ts         # Legacy compatibility layer
 ├── contexts/
 │   ├── AuthContext.tsx           # Authentication state management
 │   └── AppContext.tsx            # Application state management
@@ -236,8 +233,7 @@ src/
 
 - **React 18**: Modern React with hooks and concurrent features
 - **TypeScript**: Type-safe development
-- **Firebase**: Authentication service
-- **Supabase**: Database operations and backend services
+- **Supabase**: Authentication and database services
 - **Tailwind CSS**: Utility-first CSS framework
 - **Lucide React**: Beautiful, customizable icons
 - **Vite**: Fast build tool and development server
@@ -248,26 +244,17 @@ src/
 Required environment variables:
 
 ```env
-# Firebase Configuration
-VITE_FIREBASE_API_KEY=your-firebase-api-key
-VITE_FIREBASE_AUTH_DOMAIN=your-firebase-auth-domain
-VITE_FIREBASE_PROJECT_ID=your-firebase-project-id
-VITE_FIREBASE_STORAGE_BUCKET=your-firebase-storage-bucket
-VITE_FIREBASE_MESSAGING_SENDER_ID=your-firebase-messaging-sender-id
-VITE_FIREBASE_APP_ID=your-firebase-app-id
-VITE_FIREBASE_MEASUREMENT_ID=your-firebase-measurement-id
-
-# Supabase Configuration (for database)
+# Supabase Configuration
 VITE_SUPABASE_URL=your-supabase-project-url
 VITE_SUPABASE_ANON_KEY=your-supabase-anon-key
 ```
 
 ## Security Considerations
 
-- **Firebase Email Verification**: All users must verify their email before accessing the platform
+- **Supabase Email Verification**: All users must verify their email before accessing the platform
 - **Role-Based Access**: Users can only access features appropriate to their role
-- **Firebase Password Reset**: Secure password reset flow with Firebase
-- **Session Security**: Firebase handles secure session management
+- **Supabase Password Reset**: Secure password reset flow with Supabase
+- **Session Security**: Supabase handles secure session management
 - **Data Protection**: Supabase Row Level Security policies protect user data
 
 ## License

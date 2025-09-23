@@ -1,5 +1,5 @@
 import { supabase } from '../lib/supabaseClient';
-import { auth } from '../lib/firebaseConfig';
+import { authService } from '../lib/supabase';
 
 export interface OrganizerEvent {
   id: string;
@@ -133,13 +133,11 @@ class OrganizerCrudService {
 
   private async ensureAuth(): Promise<boolean> {
     try {
-      if (!auth?.currentUser) {
-        console.error('No Firebase user found');
+      const { data: { user } } = await authService.getCurrentUser();
+      if (!user) {
+        console.error('No authenticated user found');
         return false;
       }
-      
-      // Use the centralized auth helper
-      await setSupabaseAuth(auth.currentUser);
       
       return true;
     } catch (error) {

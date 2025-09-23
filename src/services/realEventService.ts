@@ -1,4 +1,4 @@
-import { supabase } from '../lib/supabaseClient';
+import { supabase, dbService } from '../lib/supabase';
 
 export interface RealEvent {
   id: string;
@@ -210,18 +210,13 @@ class RealEventService {
   async createEvent(eventData: EventFormData, organizerId: string): Promise<{ success: boolean; event?: RealEvent; error?: string }> {
     try {
       const dbData = this.mapEventFormToDb(eventData, organizerId);
-
-      const { data, error } = await supabase
-        .from('events')
-        .insert([dbData])
-        .select('*')
-        .single();
-
-      if (error) {
-        return { success: false, error: error.message };
+      const result = await dbService.createEvent(dbData);
+      
+      if (!result.success) {
+        return { success: false, error: result.error };
       }
 
-      return { success: true, event: this.mapDbEventToRealEvent(data) };
+      return { success: true, event: this.mapDbEventToRealEvent(result.event) };
     } catch (error) {
       const message = error instanceof Error ? error.message : 'An unexpected error occurred';
       return { success: false, error: `Failed to create event: ${message}` };
@@ -230,17 +225,15 @@ class RealEventService {
 
   async getMyEvents(organizerId: string): Promise<{ success: boolean; events?: RealEvent[]; error?: string }> {
     try {
-      const { data, error } = await supabase
-        .from('events')
-        .select('*')
-        .eq('organizer_id', organizerId)
-        .order('created_at', { ascending: false });
-
-      if (error) {
-        return { success: false, error: error.message };
+      const result = await dbService.getEvents({
+        organizer_id: organizerId
+      });
+      
+      if (!result.success) {
+        return { success: false, error: result.error };
       }
 
-      const mappedEvents = (data || []).map(dbEvent => this.mapDbEventToRealEvent(dbEvent));
+      const mappedEvents = (result.events || []).map(dbEvent => this.mapDbEventToRealEvent(dbEvent));
       return { success: true, events: mappedEvents };
     } catch (error) {
       const message = error instanceof Error ? error.message : 'An unexpected error occurred';
@@ -250,17 +243,13 @@ class RealEventService {
   
   async getEventById(eventId: string): Promise<{ success: boolean; event?: RealEvent; error?: string }> {
     try {
-      const { data, error } = await supabase
-        .from('events')
-        .select('*')
-        .eq('id', eventId)
-        .single();
-
-      if (error) {
-        return { success: false, error: error.message };
+      const result = await dbService.getEventById(eventId);
+      
+      if (!result.success) {
+        return { success: false, error: result.error };
       }
 
-      return { success: true, event: this.mapDbEventToRealEvent(data) };
+      return { success: true, event: this.mapDbEventToRealEvent(result.event) };
     } catch (error) {
       const message = error instanceof Error ? error.message : 'An unexpected error occurred';
       return { success: false, error: `Failed to fetch event: ${message}` };
@@ -270,19 +259,13 @@ class RealEventService {
   async updateEvent(eventId: string, updates: Partial<EventFormData>): Promise<{ success: boolean; event?: RealEvent; error?: string }> {
     try {
       const dbUpdates = this.mapEventFormToDb(updates);
+      const result = await dbService.updateEvent(eventId, dbUpdates);
       
-      const { data, error } = await supabase
-        .from('events')
-        .update(dbUpdates)
-        .eq('id', eventId)
-        .select()
-        .single();
-
-      if (error) {
-        return { success: false, error: error.message };
+      if (!result.success) {
+        return { success: false, error: result.error };
       }
 
-      return { success: true, event: this.mapDbEventToRealEvent(data) };
+      return { success: true, event: this.mapDbEventToRealEvent(result.event) };
     } catch (error) {
         const message = error instanceof Error ? error.message : 'An unexpected error occurred';
         return { success: false, error: `Failed to update event: ${message}` };
@@ -346,16 +329,7 @@ class RealEventService {
 
   async deleteEvent(eventId: string): Promise<{ success: boolean; error?: string }> {
     try {
-      const { error } = await supabase
-        .from('events')
-        .delete()
-        .eq('id', eventId);
-
-      if (error) {
-        return { success: false, error: error.message };
-      }
-
-      return { success: true };
+      return await dbService.deleteEvent(eventId);
     } catch (error) {
       return { success: false, error: 'Failed to delete event' };
     }

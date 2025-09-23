@@ -6,31 +6,22 @@ import React, {
   useMemo,
   useCallback,
 } from 'react';
-import {
-  User,
-  onAuthStateChanged,
-  signOut as firebaseSignOut,
-  createUserWithEmailAndPassword,
-  signInWithEmailAndPassword,
-  sendPasswordResetEmail,
-  sendEmailVerification,
-} from 'firebase/auth';
-import { auth } from '../lib/firebaseConfig';
-import { setSupabaseAuth } from '../lib/supabaseClient';
-import { AppUser } from '../types/database';
+import { User, Session } from '@supabase/supabase-js';
+import { authService } from '../lib/supabase';
+import { UserRole } from '../types/user';
 
 // Define the shape of the context value
 interface AuthContextType {
   user: User | null;
-  appUser: AppUser | null;
+  profile: any | null;
+  session: Session | null;
   loading: boolean;
-  isAdmin: boolean;
   isAuthenticated: boolean;
-  signIn: (email: string, password: string) => Promise<User | null>;
-  signUp: (email: string, password: string, username: string) => Promise<User | null>;
-  signOut: () => Promise<void>;
+  login: (email: string, password: string, role?: UserRole) => Promise<void>;
+  register: (email: string, password: string, name: string, role: UserRole, company?: string) => Promise<void>;
+  logout: () => Promise<void>;
   resetPassword: (email: string) => Promise<void>;
-  resendVerificationEmail: () => Promise<void>;
+  updateProfile: (updates: any) => Promise<void>;
 }
 
 // Create the context with a default undefined value
@@ -48,110 +39,133 @@ export const useAuth = () => {
 // AuthProvider component
 export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const [user, setUser] = useState<User | null>(null);
-  const [appUser, setAppUser] = useState<AppUser | null>(null);
+  const [profile, setProfile] = useState<any | null>(null);
+  const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(true);
-  const [isAdmin, setIsAdmin] = useState(false);
 
   // Effect to handle authentication state changes
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
-      if (firebaseUser) {
-        setUser(firebaseUser);
-        await setSupabaseAuth(firebaseUser);
-        // Here you might fetch the corresponding appUser profile from your DB
-        // For now, we'll just set a placeholder or leave it to be fetched elsewhere
-        setAppUser({
-          id: firebaseUser.uid,
-          email: firebaseUser.email || '',
-          username: firebaseUser.displayName || 'User',
-          role: 'attendee', // Default role
-          status: 'active',
-          created_at: new Date().toISOString(),
-        });
-        // Replace with your actual admin check logic
-        setIsAdmin(firebaseUser.email === import.meta.env.VITE_ADMIN_BYPASS_EMAIL);
-      } else {
-        setUser(null);
-        setAppUser(null);
-        setIsAdmin(false);
-        await setSupabaseAuth(null);
+    // Get initial session
+    authService.getCurrentSession().then(({ data: { session } }) => {
+      setSession(session);
+      setUser(session?.user ?? null);
+      if (session?.user) {
+        loadUserProfile(session.user.id);
       }
       setLoading(false);
     });
 
-    return () => unsubscribe();
+    // Listen for auth changes
+    const { data: { subscription } } = authService.onAuthStateChange(
+      async (event, session) => {
+        setSession(session);
+        setUser(session?.user ?? null);
+        
+        if (session?.user) {
+          await loadUserProfile(session.user.id);
+        } else {
+          setProfile(null);
+        }
+        
+        setLoading(false);
+      }
+    );
+
+    return () => subscription.unsubscribe();
   }, []);
+
+  const loadUserProfile = async (userId: string) => {
+    try {
+      const result = await authService.getUserProfile(userId);
+      if (result.success && result.profile) {
+        setProfile(result.profile);
+      }
+    } catch (error) {
+      console.error('Failed to load user profile:', error);
+    }
+  };
 
   // Function to sign in a user
-  const signIn = useCallback(async (email, password) => {
-    if (!auth) return null;
-    const userCredential = await signInWithEmailAndPassword(auth, email, password);
-    return userCredential.user;
-  }, []);
-
-  // Function to sign up a user
-  const signUp = useCallback(async (email, password, username) => {
-    if (!auth) return null;
-    const userCredential = await createUserWithEmailAndPassword(auth, email, password);
-    const firebaseUser = userCredential.user;
-
-    // **THIS IS THE FIX:**
-    // The `db.createUser` call has been removed.
-    // The database trigger you created will now handle creating the
-    // user profile automatically and reliably on the backend.
-
-    if (firebaseUser) {
-      // Optional: You can send a verification email upon registration
-      await sendEmailVerification(firebaseUser);
+  const login = useCallback(async (email: string, password: string, role?: UserRole) => {
+    const result = await authService.signIn(email, password);
+    if (!result.success) {
+      throw new Error(result.error || 'Login failed');
     }
-
-    return firebaseUser;
   }, []);
 
+  // Function to register a user
+  const register = useCallback(async (
+    email: string, 
+    password: string, 
+    name: string, 
+    role: UserRole, 
+    company?: string
+  ) => {
+    const result = await authService.signUp(email, password, {
+      username: name.toLowerCase().replace(/\s+/g, '_'),
+      full_name: name,
+      role,
+      company
+    });
+    
+    if (!result.success) {
+      throw new Error(result.error || 'Registration failed');
+    }
+  }, []);
 
   // Function to sign out a user
-  const signOut = useCallback(async () => {
-    if (!auth) return;
-    await firebaseSignOut(auth);
+  const logout = useCallback(async () => {
+    const result = await authService.signOut();
+    if (!result.success) {
+      throw new Error(result.error || 'Logout failed');
+    }
   }, []);
 
   // Function to send a password reset email
   const resetPassword = useCallback(async (email: string) => {
-    if (!auth) return;
-    await sendPasswordResetEmail(auth, email);
-  }, []);
-
-  // Function to resend the verification email
-  const resendVerificationEmail = useCallback(async () => {
-    if (auth?.currentUser) {
-      await sendEmailVerification(auth.currentUser);
+    const result = await authService.resetPassword(email);
+    if (!result.success) {
+      throw new Error(result.error || 'Password reset failed');
     }
   }, []);
+
+  // Function to update user profile
+  const updateProfile = useCallback(async (updates: any) => {
+    const result = await authService.updateUserProfile(updates);
+    if (!result.success) {
+      throw new Error(result.error || 'Profile update failed');
+    }
+    
+    // Reload profile after update
+    if (user) {
+      await loadUserProfile(user.id);
+    }
+  }, [user]);
 
   // Memoize the context value to prevent unnecessary re-renders
   const value = useMemo(
     () => ({
       user,
-      appUser,
+      profile,
+      session,
       loading,
-      isAdmin,
       isAuthenticated: !!user,
-      signIn,
-      signUp,
-      signOut,
+      login,
+      register,
+      logout,
       resetPassword,
-      resendVerificationEmail,
+      updateProfile,
     }),
     [
       user,
-      appUser,
+      profile,
+      session,
       loading,
-      isAdmin,
-      signIn,
-      signUp,
-      signOut,
+      login,
+      register,
+      logout,
       resetPassword,
-      resendVerificationEmail,
+      updateProfile,
     ]
   );
 

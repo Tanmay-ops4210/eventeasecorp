@@ -187,7 +187,7 @@ const ActivityContent: React.FC = () => (
 
 const AttendeeDashboard: React.FC = () => {
   const { setBreadcrumbs } = useApp();
-  const { user } = useAuth();
+  const { user, profile } = useAuth();
   const [currentPage, setCurrentPage] = React.useState('overview');
 
   React.useEffect(() => {
@@ -216,7 +216,7 @@ const AttendeeDashboard: React.FC = () => {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="mb-8">
           <h1 className="text-4xl font-bold text-gray-900 mb-4">
-            Welcome, {user?.name}!
+            Welcome, {profile?.full_name || user?.email}!
           </h1>
           <p className="text-xl text-gray-600">Manage your events, network, and resources</p>
         </div>

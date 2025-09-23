@@ -14,7 +14,7 @@ import { Edit } from 'lucide-react';
 
 const RealOrganizerDashboard: React.FC = () => {
   const { setBreadcrumbs, setCurrentView } = useApp();
-  const { user } = useAuth();
+  const { user, profile } = useAuth();
   const [stats, setStats] = useState<DashboardStats | null>(null);
   const [recentEvents, setRecentEvents] = useState<OrganizerEvent[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -89,7 +89,7 @@ const RealOrganizerDashboard: React.FC = () => {
         {/* Header */}
         <div className="mb-8">
           <h1 className="text-4xl font-bold text-gray-900 mb-4">
-            Welcome back, {user?.full_name}!
+            Welcome back, {profile?.full_name || user?.email}!
           </h1>
           <p className="text-xl text-gray-600">Here's an overview of your events and performance</p>
         </div>
