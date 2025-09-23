@@ -12,6 +12,9 @@ import {
 } from "firebase/auth";
 import { auth } from "./firebaseConfig";
 
+// Import UserRole type
+import { UserRole } from '../types/user';
+
 // Check if Firebase is available
 const isFirebaseAvailable = auth !== null;
 
@@ -258,7 +261,7 @@ export class FirebaseAuthService {
 
     try {
       const firebaseUser = this.getCurrentUser();
-  register: async ({ email, password, name, role }: RegisterData & { role?: string }): Promise<AuthResult> => {
+      if (!firebaseUser) {
         return { success: false, error: 'No user is currently signed in' };
       }
 
