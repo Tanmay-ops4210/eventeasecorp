@@ -1,6 +1,6 @@
 import React from 'react';
 import ReactDOM from 'react-dom/client';
-import { AppRouter } from './components/router/AppRouter';
+import AppRouter from './components/router/AppRouter';
 import { AuthProvider } from './contexts/AuthContext';
 import './index.css';
 
