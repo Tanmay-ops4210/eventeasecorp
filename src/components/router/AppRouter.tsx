@@ -43,7 +43,7 @@ const ResourceLibraryPage = lazy(() => import('../attendee/ResourceLibraryPage')
 
 // Organizer Module
 const OrganizerDashboard = lazy(() => import('../organizer/RealOrganizerDashboard'));
-const EventBuilderPage = lazy(() => import('../organizer/EventBuilderPage'));
+const EventBuilderPage = lazy(() => import('../organizer/RealEventBuilderPage'));
 const EventSettingsPage = lazy(() => import('../organizer/EventSettingsPage'));
 const LandingCustomizerPage = lazy(() => import('../organizer/LandingCustomizerPage'));
 const AgendaManagerPage = lazy(() => import('../organizer/AgendaManagerPage'));
