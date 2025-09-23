@@ -39,30 +39,46 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     const unsubscribe = firebaseAuthService.onAuthStateChanged(async (firebaseUser: FirebaseUser | null) => {
       try {
         if (firebaseUser) {
-          // Set Supabase auth context immediately when Firebase user changes
-          await setSupabaseAuth(firebaseUser);
+          console.log('🔥 Firebase user authenticated:', firebaseUser.email);
           
-          // Get user profile from Supabase
-          const profile = await getUserProfile(firebaseUser.uid);
-          
-          if (profile) {
-            setUser({
-              id: firebaseUser.uid,
-              email: firebaseUser.email || '',
-              full_name: profile.full_name || firebaseUser.displayName || '',
-              role: profile.role,
-              company: profile.company,
-              avatar_url: profile.avatar_url,
-              is_active: true,
-              plan: profile.plan,
-              createdAt: profile.created_at,
-              updatedAt: profile.updated_at
-            });
-          } else {
-            // Profile doesn't exist, user might need to complete registration
+          try {
+            // Set Supabase auth context with Firebase user
+            await setSupabaseAuth(firebaseUser);
+            console.log('✅ Supabase auth context set');
+            
+            // Wait a moment for the session to be established
+            await new Promise(resolve => setTimeout(resolve, 200));
+            
+            // Get user profile from Supabase
+            const profile = await getUserProfile(firebaseUser.uid);
+            console.log('📋 User profile loaded:', profile ? 'Found' : 'Not found');
+            
+            if (profile) {
+              const userData = {
+                id: firebaseUser.uid,
+                email: firebaseUser.email || '',
+                full_name: profile.full_name || firebaseUser.displayName || '',
+                role: profile.role,
+                company: profile.company,
+                avatar_url: profile.avatar_url,
+                is_active: true,
+                plan: profile.plan,
+                createdAt: profile.created_at,
+                updatedAt: profile.updated_at
+              };
+              
+              setUser(userData);
+              console.log('👤 User state set:', userData.email, userData.role);
+            } else {
+              console.warn('⚠️ No profile found for user, clearing user state');
+              setUser(null);
+            }
+          } catch (profileError) {
+            console.error('❌ Error loading user profile:', profileError);
             setUser(null);
           }
         } else {
+          console.log('🚪 Firebase user signed out');
           // Clear Supabase auth when Firebase user is null
           await setSupabaseAuth(null);
           setUser(null);
@@ -81,13 +97,17 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   }, []);
 
   const login = async (email: string, password: string, role?: UserRole) => {
+    console.log('🔐 Attempting login for:', email);
     const result = await firebaseAuthService.signIn(email, password);
     if (!result.success) {
+      console.error('❌ Login failed:', result.error);
       throw new Error(result.error || 'Login failed');
     }
+    console.log('✅ Firebase login successful');
   };
 
   const register = async (email: string, password: string, name: string, role: UserRole, company?: string) => {
+    console.log('📝 Attempting registration for:', email, 'as', role);
     const result = await firebaseAuthService.register({
       email,
       password,
@@ -96,12 +116,21 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     });
 
     if (!result.success) {
+      console.error('❌ Registration failed:', result.error);
       throw new Error(result.error || 'Registration failed');
     }
 
+    console.log('✅ Firebase registration successful');
+    
     // Sync profile with Supabase
     if (result.user) {
-      await syncUserProfile(result.user, role, company);
+      try {
+        await syncUserProfile(result.user, role, company);
+        console.log('✅ Profile synced with Supabase');
+      } catch (syncError) {
+        console.error('❌ Failed to sync profile:', syncError);
+        throw new Error('Registration completed but profile sync failed');
+      }
     }
   };
 

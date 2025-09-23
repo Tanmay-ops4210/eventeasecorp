@@ -71,6 +71,8 @@ export class FirebaseAuthService {
     }
 
     try {
+      console.log('🔥 Starting Firebase registration for:', data.email);
+      
       // Create user in Firebase
       const userCredential: UserCredential = await createUserWithEmailAndPassword(
         auth,
@@ -79,19 +81,24 @@ export class FirebaseAuthService {
       );
 
       const firebaseUser = userCredential.user;
+      console.log('✅ Firebase user created:', firebaseUser.uid);
 
       // Update Firebase user profile
       await updateProfile(firebaseUser, {
         displayName: data.name
       });
+      console.log('✅ Firebase profile updated');
 
       // Set Supabase auth context
       await setSupabaseAuth(firebaseUser);
+      console.log('✅ Supabase auth context set');
+      
       return {
         success: true,
         user: this.mapFirebaseUser(firebaseUser)
       };
     } catch (error) {
+      console.error('❌ Firebase registration error:', error);
       return {
         success: false,
         error: this.getErrorMessage(error as AuthError)
@@ -111,6 +118,8 @@ export class FirebaseAuthService {
     }
 
     try {
+      console.log('🔥 Starting Firebase sign in for:', email);
+      
       const userCredential: UserCredential = await signInWithEmailAndPassword(
         auth,
         email,
@@ -118,14 +127,18 @@ export class FirebaseAuthService {
       );
 
       const firebaseUser = userCredential.user;
+      console.log('✅ Firebase sign in successful:', firebaseUser.uid);
 
       // Set Supabase auth context
       await setSupabaseAuth(firebaseUser);
+      console.log('✅ Supabase auth context set');
+      
       return {
         success: true,
         user: this.mapFirebaseUser(firebaseUser)
       };
     } catch (error) {
+      console.error('❌ Firebase sign in error:', error);
       return {
         success: false,
         error: this.getErrorMessage(error as AuthError)
@@ -142,12 +155,18 @@ export class FirebaseAuthService {
     }
 
     try {
+      console.log('🚪 Starting Firebase sign out');
+      
       // Clear Supabase auth context
       await setSupabaseAuth(null);
+      console.log('✅ Supabase auth context cleared');
       
       await signOut(auth);
+      console.log('✅ Firebase sign out successful');
+      
       return { success: true };
     } catch (error) {
+      console.error('❌ Firebase sign out error:', error);
       return {
         success: false,
         error: this.getErrorMessage(error as AuthError)

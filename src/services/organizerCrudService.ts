@@ -138,23 +138,8 @@ class OrganizerCrudService {
         return false;
       }
       
-      // Get fresh ID token
-      const idToken = await auth.currentUser.getIdToken(true);
-      
-      // Set authorization header for this request
-      supabase.auth.setSession({
-        access_token: idToken,
-        refresh_token: '',
-        expires_in: 3600,
-        token_type: 'bearer',
-        user: {
-          id: auth.currentUser.uid,
-          email: auth.currentUser.email || '',
-          user_metadata: {
-            full_name: auth.currentUser.displayName
-          }
-        }
-      });
+      // Use the centralized auth helper
+      await setSupabaseAuth(auth.currentUser);
       
       return true;
     } catch (error) {

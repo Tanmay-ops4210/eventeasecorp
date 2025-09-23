@@ -1,5 +1,5 @@
 import { firebaseAuthService } from './firebaseAuth';
-import { supabase, setSupabaseAuth } from './supabaseClient';
+import { supabase, setSupabaseAuth, ensureSupabaseAuth } from './supabaseClient';
 import { UserRole, UserProfile } from '../types/user';
 
 /**
@@ -12,6 +12,7 @@ import { UserRole, UserProfile } from '../types/user';
  */
 export const isAdmin = async (): Promise<boolean> => {
   try {
+    await ensureSupabaseAuth();
     const { firebaseUser, profile } = await firebaseAuthService.getCurrentUserWithProfile();
     
     if (!firebaseUser || !profile) return false;
@@ -29,6 +30,7 @@ export const isAdmin = async (): Promise<boolean> => {
  */
 export const getUserPermissions = async (userId?: string): Promise<string[]> => {
   try {
+    await ensureSupabaseAuth();
     const targetUserId = userId || firebaseAuthService.getCurrentUser()?.uid;
     if (!targetUserId) return [];
 
@@ -96,6 +98,9 @@ export const syncUserProfile = async (
   try {
     // Set Supabase auth context with Firebase user
     await setSupabaseAuth(firebaseUser);
+    
+    // Wait a moment for the session to be established
+    await new Promise(resolve => setTimeout(resolve, 100));
 
     const { data: existingProfile } = await supabase
       .from('profiles')
@@ -105,7 +110,7 @@ export const syncUserProfile = async (
 
     if (!existingProfile) {
       // Create new profile if it doesn't exist
-      await supabase
+      const { error } = await supabase
         .from('profiles')
         .insert([
           {
@@ -117,6 +122,11 @@ export const syncUserProfile = async (
             company: company || null
           }
         ]);
+      
+      if (error) {
+        console.error('Error creating profile:', error);
+        throw error;
+      }
     } else {
       // Update existing profile with Firebase data if needed
       const updates: any = {};
@@ -134,14 +144,20 @@ export const syncUserProfile = async (
       }
       
       if (Object.keys(updates).length > 0) {
-        await supabase
+        const { error } = await supabase
           .from('profiles')
           .update(updates)
           .eq('id', firebaseUser.uid);
+        
+        if (error) {
+          console.error('Error updating profile:', error);
+          throw error;
+        }
       }
     }
   } catch (error) {
     console.error('Error syncing user profile:', error);
+    throw error;
   }
 };
 
@@ -150,14 +166,10 @@ export const syncUserProfile = async (
  */
 export const getUserProfile = async (userId?: string): Promise<UserProfile | null> => {
   try {
+    await ensureSupabaseAuth();
     const targetUserId = userId || firebaseAuthService.getCurrentUser()?.uid;
     if (!targetUserId) return null;
 
-    // Ensure Supabase has the current Firebase user context
-    const currentUser = firebaseAuthService.getCurrentUser();
-    if (currentUser) {
-      await setSupabaseAuth(currentUser);
-    }
     const { data: profile, error } = await supabase
       .from('profiles')
       .select('*')
@@ -184,16 +196,12 @@ export const updateUserProfile = async (
   userId?: string
 ): Promise<{ success: boolean; error?: string }> => {
   try {
+    await ensureSupabaseAuth();
     const targetUserId = userId || firebaseAuthService.getCurrentUser()?.uid;
     if (!targetUserId) {
       return { success: false, error: 'No user ID provided' };
     }
 
-    // Ensure Supabase has the current Firebase user context
-    const currentUser = firebaseAuthService.getCurrentUser();
-    if (currentUser) {
-      await setSupabaseAuth(currentUser);
-    }
     const { error } = await supabase
       .from('profiles')
       .update(updates)
