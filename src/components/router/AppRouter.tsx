@@ -54,7 +54,7 @@ const EmailCampaignsPage = lazy(() => import('../organizer/RealEmailCampaignsPag
 const AttendeeManagementPage = lazy(() => import('../organizer/RealAttendeeManagementPage'));
 const SpeakerPortalPage = lazy(() => import('../organizer/SpeakerPortalPage'));
 const StaffRolesPage = lazy(() => import('../organizer/StaffRolesPage'));
-const AnalyticsPage = lazy(() => import('../organizer/AnalyticsPage'));
+const AnalyticsPage = lazy(() => import('../organizer/RealAnalyticsPage'));
 const OrganizerSettingsPage = lazy(() => import('../organizer/OrganizerSettingsPage'));
 
 // Sponsor Module
