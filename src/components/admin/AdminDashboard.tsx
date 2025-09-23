@@ -4,10 +4,11 @@ import { useAuth } from '../../contexts/AuthContext';
 import { 
   Users, Calendar, FileText, BarChart3, TrendingUp, 
   Activity, AlertTriangle, CheckCircle, Clock, Eye,
-  UserPlus, Plus, Settings, Shield, Bell
+  UserPlus, Plus, Settings, Shield, Bell, Lock
 } from 'lucide-react';
 import { db, AppUser, Event } from '../../lib/supabaseClient';
 import UserManagementPage from './UserManagementPage';
+import AdminSecurityDashboard from './AdminSecurityDashboard';
 
 const AdminDashboard: React.FC = () => {
   const { setBreadcrumbs } = useApp();
@@ -23,7 +24,7 @@ const AdminDashboard: React.FC = () => {
   const [users, setUsers] = useState<AppUser[]>([]);
   const [events, setEvents] = useState<Event[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [currentPage, setCurrentPage] = useState<'overview' | 'users' | 'events' | 'content'>('overview');
+  const [currentPage, setCurrentPage] = useState<'overview' | 'users' | 'events' | 'content' | 'security'>('overview');
 
   React.useEffect(() => {
     setBreadcrumbs(['Admin Dashboard']);
@@ -95,6 +96,10 @@ const AdminDashboard: React.FC = () => {
     return <UserManagementPage users={users} events={events} onRefresh={refreshData} />;
   }
 
+  if (currentPage === 'security') {
+    return <AdminSecurityDashboard />;
+  }
+
   if (isLoading) {
     return (
       <div className="min-h-screen bg-gray-50 pt-20">
@@ -131,7 +136,8 @@ const AdminDashboard: React.FC = () => {
               { id: 'overview', label: 'Overview', icon: BarChart3 },
               { id: 'users', label: 'User Management', icon: Users },
               { id: 'events', label: 'Event Oversight', icon: Calendar },
-              { id: 'content', label: 'Content Management', icon: FileText }
+              { id: 'content', label: 'Content Management', icon: FileText },
+              { id: 'security', label: 'Security Logs', icon: Lock }
             ].map((page) => {
               const IconComponent = page.icon;
               return (

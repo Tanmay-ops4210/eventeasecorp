@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { isAdmin } from '../lib/firebaseAuthHelpers';
-import { firebaseAuthService } from '../lib/firebaseAuth';
+import { adminAuthService } from '../lib/adminAuthService';
 import AdminLogin from './admin/AdminLogin';
 import AdminDashboard from './admin/AdminDashboard';
 
@@ -14,9 +13,8 @@ const AdminPanel: React.FC = () => {
 
   const checkAuthStatus = async () => {
     try {
-      const user = firebaseAuthService.getCurrentUser();
-      
-      if (user && await isAdmin()) {
+      const result = await adminAuthService.validateSession();
+      if (result.valid && result.user) {
         setIsAuthenticated(true);
       } else {
         setIsAuthenticated(false);
