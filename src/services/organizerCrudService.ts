@@ -1,4 +1,5 @@
 import { supabase } from '../lib/supabaseClient';
+import { auth } from '../lib/firebaseConfig';
 
 export interface OrganizerEvent {
   id: string;
@@ -130,8 +131,43 @@ class OrganizerCrudService {
 
   // ==================== EVENT CRUD ====================
 
+  private async ensureAuth(): Promise<boolean> {
+    try {
+      if (!auth?.currentUser) {
+        console.error('No Firebase user found');
+        return false;
+      }
+      
+      // Get fresh ID token
+      const idToken = await auth.currentUser.getIdToken(true);
+      
+      // Set authorization header for this request
+      supabase.auth.setSession({
+        access_token: idToken,
+        refresh_token: '',
+        expires_in: 3600,
+        token_type: 'bearer',
+        user: {
+          id: auth.currentUser.uid,
+          email: auth.currentUser.email || '',
+          user_metadata: {
+            full_name: auth.currentUser.displayName
+          }
+        }
+      });
+      
+      return true;
+    } catch (error) {
+      console.error('Failed to ensure auth:', error);
+      return false;
+    }
+  }
   async createEvent(eventData: EventFormData, organizerId: string): Promise<{ success: boolean; event?: OrganizerEvent; error?: string }> {
     try {
+      if (!(await this.ensureAuth())) {
+        return { success: false, error: 'Authentication required' };
+      }
+
       const { data, error } = await supabase
         .from('organizer_events')
         .insert([{
@@ -154,6 +190,10 @@ class OrganizerCrudService {
 
   async getMyEvents(organizerId: string): Promise<{ success: boolean; events?: OrganizerEvent[]; error?: string }> {
     try {
+      if (!(await this.ensureAuth())) {
+        return { success: false, error: 'Authentication required' };
+      }
+
       const { data, error } = await supabase
         .from('organizer_events')
         .select('*')
@@ -248,6 +288,10 @@ class OrganizerCrudService {
 
   async getDashboardStats(organizerId: string): Promise<{ success: boolean; stats?: DashboardStats; error?: string }> {
     try {
+      if (!(await this.ensureAuth())) {
+        return { success: false, error: 'Authentication required' };
+      }
+
       const { data: events, error: eventsError } = await supabase
         .from('organizer_events')
         .select('id, status, event_date, capacity')

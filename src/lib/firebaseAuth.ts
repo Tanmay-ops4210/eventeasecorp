@@ -11,6 +11,7 @@ import {
   AuthError
 } from "firebase/auth";
 import { auth } from "./firebaseConfig";
+import { setSupabaseAuth } from './supabaseClient';
 
 // Import UserRole type
 import { UserRole } from '../types/user';
@@ -84,6 +85,8 @@ export class FirebaseAuthService {
         displayName: data.name
       });
 
+      // Set Supabase auth context
+      await setSupabaseAuth(firebaseUser);
       return {
         success: true,
         user: this.mapFirebaseUser(firebaseUser)
@@ -116,6 +119,8 @@ export class FirebaseAuthService {
 
       const firebaseUser = userCredential.user;
 
+      // Set Supabase auth context
+      await setSupabaseAuth(firebaseUser);
       return {
         success: true,
         user: this.mapFirebaseUser(firebaseUser)
@@ -137,6 +142,9 @@ export class FirebaseAuthService {
     }
 
     try {
+      // Clear Supabase auth context
+      await setSupabaseAuth(null);
+      
       await signOut(auth);
       return { success: true };
     } catch (error) {

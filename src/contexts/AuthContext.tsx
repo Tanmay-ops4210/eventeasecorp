@@ -3,6 +3,7 @@ import { User as FirebaseUser } from 'firebase/auth';
 import { auth } from '../lib/firebaseConfig';
 import { firebaseAuthService } from '../lib/firebaseAuth';
 import { syncUserProfile, getUserProfile } from '../lib/firebaseAuthHelpers';
+import { setSupabaseAuth } from '../lib/supabaseClient';
 import { UserRole, User } from '../types/user';
 
 interface AuthContextType {
@@ -38,6 +39,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     const unsubscribe = firebaseAuthService.onAuthStateChanged(async (firebaseUser: FirebaseUser | null) => {
       try {
         if (firebaseUser) {
+          // Set Supabase auth context immediately when Firebase user changes
+          await setSupabaseAuth(firebaseUser);
+          
           // Get user profile from Supabase
           const profile = await getUserProfile(firebaseUser.uid);
           
@@ -59,10 +63,14 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             setUser(null);
           }
         } else {
+          // Clear Supabase auth when Firebase user is null
+          await setSupabaseAuth(null);
           setUser(null);
         }
       } catch (error) {
         console.error('Error loading user profile:', error);
+        // Clear Supabase auth on error
+        await setSupabaseAuth(null);
         setUser(null);
       } finally {
         setIsLoading(false);

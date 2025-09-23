@@ -1,5 +1,5 @@
 import { firebaseAuthService } from './firebaseAuth';
-import { supabase } from './supabaseClient';
+import { supabase, setSupabaseAuth } from './supabaseClient';
 import { UserRole, UserProfile } from '../types/user';
 
 /**
@@ -94,6 +94,9 @@ export const syncUserProfile = async (
   company?: string
 ): Promise<void> => {
   try {
+    // Set Supabase auth context with Firebase user
+    await setSupabaseAuth(firebaseUser);
+
     const { data: existingProfile } = await supabase
       .from('profiles')
       .select('*')
@@ -150,6 +153,11 @@ export const getUserProfile = async (userId?: string): Promise<UserProfile | nul
     const targetUserId = userId || firebaseAuthService.getCurrentUser()?.uid;
     if (!targetUserId) return null;
 
+    // Ensure Supabase has the current Firebase user context
+    const currentUser = firebaseAuthService.getCurrentUser();
+    if (currentUser) {
+      await setSupabaseAuth(currentUser);
+    }
     const { data: profile, error } = await supabase
       .from('profiles')
       .select('*')
@@ -181,6 +189,11 @@ export const updateUserProfile = async (
       return { success: false, error: 'No user ID provided' };
     }
 
+    // Ensure Supabase has the current Firebase user context
+    const currentUser = firebaseAuthService.getCurrentUser();
+    if (currentUser) {
+      await setSupabaseAuth(currentUser);
+    }
     const { error } = await supabase
       .from('profiles')
       .update(updates)

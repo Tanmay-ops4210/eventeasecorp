@@ -1,6 +1,7 @@
 // src/lib/supabaseClient.ts
 
 import { createClient } from '@supabase/supabase-js';
+import { auth } from './firebaseConfig';
 // NEW: Import types from their dedicated file to break the circular dependency.
 import type { AppUser, Event } from '../types/database';
 
@@ -25,11 +26,60 @@ if (!supabaseUrl || !supabaseKey) {
 // ✅ Export client with fallback values to prevent initialization errors
 export const supabase = createClient(
   supabaseUrl || 'https://placeholder.supabase.co', 
-  supabaseKey || 'placeholder-key'
+  supabaseKey || 'placeholder-key',
+  {
+    auth: {
+      // Configure Supabase to work with Firebase Auth
+      persistSession: false, // Don't persist Supabase sessions since we use Firebase
+      autoRefreshToken: false, // Don't auto-refresh Supabase tokens
+    },
+    global: {
+      headers: {
+        // Add Firebase ID token to requests when available
+        get Authorization() {
+          if (auth?.currentUser) {
+            return `Bearer ${auth.currentUser.accessToken || ''}`;
+          }
+          return '';
+        }
+      }
+    }
+  }
 );
 
 // ✅ Add a flag to check if Supabase is properly configured
 export const isSupabaseConfigured = !!(supabaseUrl && supabaseKey);
+
+// Helper function to set Firebase token for Supabase requests
+export const setSupabaseAuth = async (firebaseUser: any) => {
+  if (!firebaseUser) {
+    // Clear any existing auth
+    await supabase.auth.signOut();
+    return;
+  }
+
+  try {
+    // Get Firebase ID token
+    const idToken = await firebaseUser.getIdToken();
+    
+    // Set the token for Supabase requests
+    supabase.auth.setSession({
+      access_token: idToken,
+      refresh_token: '',
+      expires_in: 3600,
+      token_type: 'bearer',
+      user: {
+        id: firebaseUser.uid,
+        email: firebaseUser.email,
+        user_metadata: {
+          full_name: firebaseUser.displayName
+        }
+      }
+    });
+  } catch (error) {
+    console.error('Failed to set Supabase auth:', error);
+  }
+};
 
 // ----------------------
 // Database Operations (Unchanged)
