@@ -23,14 +23,22 @@ if (!supabaseUrl || !supabaseKey) {
   );
 }
 
-// Create Supabase client with proper Firebase integration
+// ✅ Export client with fallback values to prevent initialization errors
 export const supabase = createClient(
-  supabaseUrl || 'https://placeholder.supabase.co', 
+  supabaseUrl || 'https://placeholder.supabase.co',
   supabaseKey || 'placeholder-key',
   {
     auth: {
-      persistSession: false,
-      autoRefreshToken: false,
+      // Configure Supabase to work with Firebase Auth
+      persistSession: false, // Don't persist Supabase sessions since we use Firebase
+      autoRefreshToken: false, // Don't auto-refresh Supabase tokens
+    },
+    global: {
+      headers: {
+        // Initialize with an empty Authorization header.
+        // This will be updated dynamically by setSupabaseAuth.
+        'Authorization': `Bearer ${''}`
+      }
     }
   }
 );
@@ -38,73 +46,44 @@ export const supabase = createClient(
 // ✅ Add a flag to check if Supabase is properly configured
 export const isSupabaseConfigured = !!(supabaseUrl && supabaseKey);
 
-// Enhanced helper function to set Firebase token for Supabase requests
+// Helper function to set Firebase token for Supabase requests
 export const setSupabaseAuth = async (firebaseUser: any) => {
   if (!firebaseUser) {
-    // Clear Supabase session when Firebase user is null
-    try {
-      await supabase.auth.signOut();
-    } catch (error) {
-      console.warn('Error clearing Supabase session:', error);
-    }
+    // Clear any existing auth
+    await supabase.auth.signOut();
+    // Clear the Authorization header on logout
+    supabase.global.headers['Authorization'] = `Bearer ${''}`;
     return;
   }
 
   try {
-    // Get fresh Firebase ID token
+    // Get Firebase ID token
     const idToken = await firebaseUser.getIdToken();
-    
-    // Create a proper Supabase session with Firebase token
-    const { error } = await supabase.auth.setSession({
+
+    // Set the token for Supabase session
+    supabase.auth.setSession({
       access_token: idToken,
-      refresh_token: idToken, // Use the same token for refresh
+      refresh_token: '',
       expires_in: 3600,
       token_type: 'bearer',
       user: {
         id: firebaseUser.uid,
         email: firebaseUser.email,
-        aud: 'authenticated',
-        role: 'authenticated',
         user_metadata: {
-          full_name: firebaseUser.displayName,
-          email: firebaseUser.email,
-          provider: 'firebase'
+          full_name: firebaseUser.displayName
         }
       }
     });
-    
-    if (error) {
-      console.error('Failed to set Supabase session:', error);
-    } else {
-      console.log('✅ Supabase session set successfully with Firebase token');
-    }
+
+    // **THE FIX:** Manually and explicitly update the global Authorization header
+    // for all subsequent Supabase requests.
+    supabase.global.headers['Authorization'] = `Bearer ${idToken}`;
+
   } catch (error) {
     console.error('Failed to set Supabase auth:', error);
   }
 };
 
-// Helper function to ensure Supabase has current Firebase auth
-export const ensureSupabaseAuth = async () => {
-  if (!auth?.currentUser) {
-    console.warn('No Firebase user found');
-    return false;
-  }
-  
-  try {
-    // Check if we have a valid Supabase session
-    const { data: { session } } = await supabase.auth.getSession();
-    
-    if (!session || !session.access_token) {
-      console.log('No Supabase session found, setting Firebase auth...');
-      await setSupabaseAuth(auth.currentUser);
-    }
-    
-    return true;
-  } catch (error) {
-    console.error('Error ensuring Supabase auth:', error);
-    return false;
-  }
-};
 // ----------------------
 // Database Operations (Unchanged)
 // ----------------------
