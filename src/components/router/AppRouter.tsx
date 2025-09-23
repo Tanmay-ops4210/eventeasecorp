@@ -42,7 +42,7 @@ const ExpoHallPage = lazy(() => import('../attendee/ExpoHallPage'));
 const ResourceLibraryPage = lazy(() => import('../attendee/ResourceLibraryPage'));
 
 // Organizer Module
-const OrganizerDashboard = lazy(() => import('../organizer/OrganizerDashboard'));
+const OrganizerDashboard = lazy(() => import('../organizer/RealOrganizerDashboard'));
 const EventBuilderPage = lazy(() => import('../organizer/EventBuilderPage'));
 const EventSettingsPage = lazy(() => import('../organizer/EventSettingsPage'));
 const LandingCustomizerPage = lazy(() => import('../organizer/LandingCustomizerPage'));
