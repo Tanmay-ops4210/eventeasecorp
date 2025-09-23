@@ -48,7 +48,7 @@ const EventSettingsPage = lazy(() => import('../organizer/EventSettingsPage'));
 const LandingCustomizerPage = lazy(() => import('../organizer/LandingCustomizerPage'));
 const AgendaManagerPage = lazy(() => import('../organizer/AgendaManagerPage'));
 const VenueManagerPage = lazy(() => import('../organizer/VenueManagerPage'));
-const TicketingPage = lazy(() => import('../organizer/TicketingPage'));
+const RealTicketingPage = lazy(() => import('../organizer/RealTicketingPage'));
 const DiscountCodesPage = lazy(() => import('../organizer/DiscountCodesPage'));
 const EmailCampaignsPage = lazy(() => import('../organizer/EmailCampaignsPage'));
 const AttendeeManagementPage = lazy(() => import('../organizer/AttendeeManagementPage'));
@@ -112,7 +112,7 @@ const routes = [
   { path: 'landing-customizer', component: LandingCustomizerPage, requiredRoles: ['organizer'] },
   { path: 'agenda-manager', component: AgendaManagerPage, requiredRoles: ['organizer'] },
   { path: 'venue-manager', component: VenueManagerPage, requiredRoles: ['organizer'] },
-  { path: 'ticketing', component: TicketingPage, requiredRoles: ['organizer'] },
+  { path: 'ticketing', component: RealTicketingPage, requiredRoles: ['organizer'] },
   { path: 'discount-codes', component: DiscountCodesPage, requiredRoles: ['organizer'] },
   { path: 'email-campaigns', component: EmailCampaignsPage, requiredRoles: ['organizer'] },
   { path: 'attendee-management', component: AttendeeManagementPage, requiredRoles: ['organizer'] },
