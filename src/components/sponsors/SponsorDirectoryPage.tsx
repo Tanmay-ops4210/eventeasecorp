@@ -6,14 +6,14 @@ import { sponsorService } from '../../services/sponsorService';
 
 const tiers = ['All', 'Platinum', 'Gold', 'Silver', 'Bronze'];
 
-const tierColors = {
+const tierColors: { [key: string]: string } = {
   platinum: 'from-gray-300 to-gray-500',
   gold: 'from-yellow-300 to-yellow-500',
   silver: 'from-gray-200 to-gray-400',
   bronze: 'from-orange-300 to-orange-500'
 };
 
-const tierIcons = {
+const tierIcons: { [key: string]: string } = {
   platinum: '💎',
   gold: '🥇',
   silver: '🥈',
@@ -137,7 +137,6 @@ const SponsorDirectoryPage: React.FC = () => {
     );
   }
 
-  // Group sponsors by tier for display
   const platinumSponsors = sponsorData?.sponsors.filter(s => s.tier === 'platinum') || [];
   const goldSponsors = sponsorData?.sponsors.filter(s => s.tier === 'gold') || [];
   const silverSponsors = sponsorData?.sponsors.filter(s => s.tier === 'silver') || [];
@@ -319,7 +318,7 @@ const SponsorDirectoryPage: React.FC = () => {
 
             {/* Gold Sponsors */}
             {goldSponsors.length > 0 && (selectedTier === 'All' || selectedTier === 'Gold') && (
-              <div className="mb-16">
+               <div className="mb-16">
                 <div className="text-center mb-8">
                   <h2 className="text-2xl font-bold text-gray-900 mb-2 flex items-center justify-center space-x-2">
                     <span>{tierIcons.gold}</span>
