@@ -7,6 +7,7 @@ import {
   Loader2, ArrowUp, ArrowDown, Ticket, Mail, Settings
 } from 'lucide-react';
 import { realEventService, DashboardStats, RealEvent } from '../../services/realEventService';
+import { organizerCrudService, OrganizerEvent } from '../../services/organizerCrudService';
 
 // Import the Edit icon that was missing
 import { Edit } from 'lucide-react';
@@ -15,7 +16,7 @@ const RealOrganizerDashboard: React.FC = () => {
   const { setBreadcrumbs, setCurrentView } = useApp();
   const { user } = useAuth();
   const [stats, setStats] = useState<DashboardStats | null>(null);
-  const [recentEvents, setRecentEvents] = useState<RealEvent[]>([]);
+  const [recentEvents, setRecentEvents] = useState<OrganizerEvent[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
   React.useEffect(() => {
@@ -29,8 +30,8 @@ const RealOrganizerDashboard: React.FC = () => {
     try {
       setIsLoading(true);
       const [statsResult, eventsResult] = await Promise.all([
-        realEventService.getDashboardStats(user.id),
-        realEventService.getMyEvents(user.id)
+        organizerCrudService.getDashboardStats(user.id),
+        organizerCrudService.getMyEvents(user.id)
       ]);
 
       if (statsResult.success && statsResult.stats) {

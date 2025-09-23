@@ -7,13 +7,14 @@ import {
   Loader2, Calendar, MapPin, DollarSign, Ticket
 } from 'lucide-react';
 import { realEventService, RealEvent, RealAttendee } from '../../services/realEventService';
+import { organizerCrudService, OrganizerEvent, OrganizerAttendee } from '../../services/organizerCrudService';
 
 const RealAttendeeManagementPage: React.FC = () => {
   const { setBreadcrumbs } = useApp();
   const { user } = useAuth();
-  const [events, setEvents] = useState<RealEvent[]>([]);
+  const [events, setEvents] = useState<OrganizerEvent[]>([]);
   const [selectedEvent, setSelectedEvent] = useState<string>('');
-  const [attendees, setAttendees] = useState<RealAttendee[]>([]);
+  const [attendees, setAttendees] = useState<OrganizerAttendee[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState<'all' | 'pending' | 'checked-in' | 'no-show'>('all');
@@ -30,7 +31,7 @@ const RealAttendeeManagementPage: React.FC = () => {
 
     try {
       setIsLoading(true);
-      const result = await realEventService.getMyEvents(user.id);
+      const result = await organizerCrudService.getMyEvents(user.id);
       if (result.success && result.events) {
         const publishedEvents = result.events.filter(e => e.status !== 'draft');
         setEvents(publishedEvents);
@@ -49,7 +50,7 @@ const RealAttendeeManagementPage: React.FC = () => {
 
   const loadAttendees = async (eventId: string) => {
     try {
-      const result = await realEventService.getEventAttendees(eventId);
+      const result = await organizerCrudService.getEventAttendees(eventId);
       if (result.success && result.attendees) {
         setAttendees(result.attendees);
       }
@@ -66,7 +67,7 @@ const RealAttendeeManagementPage: React.FC = () => {
 
   const handleStatusUpdate = async (attendeeId: string, status: 'pending' | 'checked-in' | 'no-show') => {
     try {
-      const result = await realEventService.updateAttendeeStatus(attendeeId, status);
+      const result = await organizerCrudService.updateAttendeeStatus(attendeeId, status);
       if (result.success) {
         await loadAttendees(selectedEvent);
         // Show success feedback

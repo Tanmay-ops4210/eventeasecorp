@@ -7,6 +7,7 @@ import {
   Eye, Globe, Lock, Settings
 } from 'lucide-react';
 import { realEventService, EventFormData } from '../../services/realEventService';
+import { organizerCrudService } from '../../services/organizerCrudService';
 
 const RealEventBuilderPage: React.FC = () => {
   const { setBreadcrumbs, setCurrentView } = useApp();
@@ -81,11 +82,11 @@ const RealEventBuilderPage: React.FC = () => {
 
     setIsLoading(true);
     try {
-      const result = await realEventService.createEvent(eventData, user.id);
+      const result = await organizerCrudService.createEvent(eventData, user.id);
 
       if (result.success) {
         if (status === 'published' && result.event) {
-          await realEventService.publishEvent(result.event.id);
+          await organizerCrudService.publishEvent(result.event.id);
         }
         
         alert(`Event ${status === 'draft' ? 'saved as draft' : 'created and published'} successfully!`);

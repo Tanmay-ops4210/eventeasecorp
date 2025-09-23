@@ -8,11 +8,12 @@ import {
   EyeOff, Share2
 } from 'lucide-react';
 import { realEventService, RealEvent } from '../../services/realEventService';
+import { organizerCrudService, OrganizerEvent } from '../../services/organizerCrudService';
 
 const RealMyEventsPage: React.FC = () => {
   const { setBreadcrumbs, setCurrentView } = useApp();
   const { user } = useAuth();
-  const [events, setEvents] = useState<RealEvent[]>([]);
+  const [events, setEvents] = useState<OrganizerEvent[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState<'all' | 'draft' | 'published' | 'completed'>('all');
@@ -27,7 +28,7 @@ const RealMyEventsPage: React.FC = () => {
     
     setIsLoading(true);
     try {
-      const result = await realEventService.getMyEvents(user.id);
+      const result = await organizerCrudService.getMyEvents(user.id);
       if (result.success && result.events) {
         setEvents(result.events);
       } else {
@@ -85,7 +86,7 @@ const RealMyEventsPage: React.FC = () => {
 
   const handleDeleteEvent = async (eventId: string) => {
     try {
-      const result = await realEventService.deleteEvent(eventId);
+      const result = await organizerCrudService.deleteEvent(eventId);
       if (result.success) {
         await fetchEvents();
         setShowDeleteModal(false);
@@ -101,7 +102,7 @@ const RealMyEventsPage: React.FC = () => {
 
   const handlePublishEvent = async (eventId: string) => {
     try {
-      const result = await realEventService.publishEvent(eventId);
+      const result = await organizerCrudService.publishEvent(eventId);
       if (result.success) {
         await fetchEvents();
         alert('Event published successfully!');
@@ -115,7 +116,7 @@ const RealMyEventsPage: React.FC = () => {
 
   const handleHideEvent = async (eventId: string) => {
     try {
-      const result = await realEventService.hideEvent(eventId);
+      const result = await organizerCrudService.updateEvent(eventId, { visibility: 'private' });
       if (result.success) {
         await fetchEvents();
         alert('Event hidden successfully!');
@@ -129,7 +130,7 @@ const RealMyEventsPage: React.FC = () => {
 
   const handleShowEvent = async (eventId: string) => {
     try {
-      const result = await realEventService.showEvent(eventId);
+      const result = await organizerCrudService.updateEvent(eventId, { visibility: 'public' });
       if (result.success) {
         await fetchEvents();
         alert('Event is now visible!');

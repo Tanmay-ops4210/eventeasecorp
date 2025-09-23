@@ -6,13 +6,14 @@ import {
   Download, Filter, RefreshCw, Loader2, ArrowUp, ArrowDown
 } from 'lucide-react';
 import { realEventService, RealEvent, RealEventAnalytics } from '../../services/realEventService';
+import { organizerCrudService, OrganizerEvent, OrganizerEventAnalytics } from '../../services/organizerCrudService';
 
 const RealAnalyticsPage: React.FC = () => {
   const { setBreadcrumbs } = useApp();
   const { user } = useAuth();
-  const [events, setEvents] = useState<RealEvent[]>([]);
+  const [events, setEvents] = useState<OrganizerEvent[]>([]);
   const [selectedEvent, setSelectedEvent] = useState<string>('');
-  const [analytics, setAnalytics] = useState<RealEventAnalytics | null>(null);
+  const [analytics, setAnalytics] = useState<OrganizerEventAnalytics | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [timeRange, setTimeRange] = useState<'7d' | '30d' | '90d' | '1y'>('30d');
 
@@ -26,7 +27,7 @@ const RealAnalyticsPage: React.FC = () => {
 
     try {
       setIsLoading(true);
-      const result = await realEventService.getMyEvents(user.id);
+      const result = await organizerCrudService.getMyEvents(user.id);
       if (result.success && result.events) {
         const publishedEvents = result.events.filter(e => e.status !== 'draft');
         setEvents(publishedEvents);
@@ -45,7 +46,7 @@ const RealAnalyticsPage: React.FC = () => {
 
   const loadAnalytics = async (eventId: string) => {
     try {
-      const result = await realEventService.getEventAnalytics(eventId);
+      const result = await organizerCrudService.getEventAnalytics(eventId);
       if (result.success && result.analytics) {
         setAnalytics(result.analytics);
       }

@@ -8,19 +8,20 @@ import {
   ArrowRight, ToggleLeft, ToggleRight, Eye, EyeOff
 } from 'lucide-react';
 import { realEventService, RealEvent, RealTicketType, TicketFormData } from '../../services/realEventService';
+import { organizerCrudService, OrganizerEvent, OrganizerTicketType, TicketFormData as CrudTicketFormData } from '../../services/organizerCrudService';
 
 const RealTicketingPage: React.FC = () => {
   const { setBreadcrumbs } = useApp();
   const { user } = useAuth();
 
-  const [events, setEvents] = useState<RealEvent[]>([]);
-  const [selectedEvent, setSelectedEvent] = useState<RealEvent | null>(null);
-  const [ticketTypes, setTicketTypes] = useState<RealTicketType[]>([]);
+  const [events, setEvents] = useState<OrganizerEvent[]>([]);
+  const [selectedEvent, setSelectedEvent] = useState<OrganizerEvent | null>(null);
+  const [ticketTypes, setTicketTypes] = useState<OrganizerTicketType[]>([]);
   const [isLoading, setIsLoading] = useState({ events: true, tickets: false, form: false });
   
   const [showForm, setShowForm] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
-  const [currentTicket, setCurrentTicket] = useState<TicketFormData | null>(null);
+  const [currentTicket, setCurrentTicket] = useState<CrudTicketFormData | null>(null);
   const [editingTicketId, setEditingTicketId] = useState<string | null>(null);
   const [errors, setErrors] = useState<Record<string, string>>({});
 
@@ -28,7 +29,7 @@ const RealTicketingPage: React.FC = () => {
     if (!user) return;
     setIsLoading(prev => ({ ...prev, events: true }));
     try {
-      const result = await realEventService.getMyEvents(user.id);
+      const result = await organizerCrudService.getMyEvents(user.id);
       if (result.success && result.events) {
         setEvents(result.events);
         if (result.events.length > 0) {
@@ -43,7 +44,7 @@ const RealTicketingPage: React.FC = () => {
   const fetchTicketTypes = async (eventId: string) => {
     setIsLoading(prev => ({ ...prev, tickets: true }));
     try {
-      const result = await realEventService.getTicketTypes(eventId);
+      const result = await organizerCrudService.getTicketTypes(eventId);
       if (result.success && result.tickets) {
         setTicketTypes(result.tickets);
       }
@@ -57,7 +58,7 @@ const RealTicketingPage: React.FC = () => {
     fetchEvents();
   }, [setBreadcrumbs, user]);
 
-  const handleEventSelect = (event: RealEvent) => {
+  const handleEventSelect = (event: OrganizerEvent) => {
     setSelectedEvent(event);
     setShowForm(false);
     setIsEditing(false);
@@ -86,23 +87,23 @@ const RealTicketingPage: React.FC = () => {
     setShowForm(true);
   };
   
-  const handleEdit = (ticket: RealTicketType) => {
+  const handleEdit = (ticket: OrganizerTicketType) => {
     setCurrentTicket({
       ...ticket,
       sale_start: new Date(ticket.sale_start).toISOString().slice(0, 16),
-      sale_end: new Date(ticket.sale_end).toISOString().slice(0, 16),
+      sale_end: ticket.sale_end ? new Date(ticket.sale_end).toISOString().slice(0, 16) : '',
     });
     setEditingTicketId(ticket.id);
     setIsEditing(true);
     setShowForm(true);
   };
 
-  const validateForm = (ticket: TicketFormData): boolean => {
+  const validateForm = (ticket: CrudTicketFormData): boolean => {
     const newErrors: Record<string, string> = {};
     if (!ticket.name.trim()) newErrors.name = 'Ticket name is required';
     if (ticket.price < 0) newErrors.price = 'Price cannot be negative';
     if (ticket.quantity < 1) newErrors.quantity = 'Quantity must be at least 1';
-    if (new Date(ticket.sale_end) <= new Date(ticket.sale_start)) {
+    if (ticket.sale_end && new Date(ticket.sale_end) <= new Date(ticket.sale_start)) {
       newErrors.sale_end = 'Sale end date must be after start date';
     }
     setErrors(newErrors);
@@ -118,9 +119,9 @@ const RealTicketingPage: React.FC = () => {
     try {
       let result;
       if (isEditing && editingTicketId) {
-        result = await realEventService.updateTicketType(editingTicketId, currentTicket);
+        result = await organizerCrudService.updateTicketType(editingTicketId, currentTicket);
       } else {
-        result = await realEventService.createTicketType(selectedEvent.id, currentTicket);
+        result = await organizerCrudService.createTicketType(selectedEvent.id, currentTicket);
       }
       
       if (result.success) {
@@ -141,7 +142,7 @@ const RealTicketingPage: React.FC = () => {
     if (window.confirm('Are you sure you want to delete this ticket type? This cannot be undone.')) {
         setIsLoading(prev => ({ ...prev, tickets: true }));
         try {
-            const result = await realEventService.deleteTicketType(ticketId);
+            const result = await organizerCrudService.deleteTicketType(ticketId);
             if (result.success) {
                 alert('Ticket type deleted successfully!');
                 if(selectedEvent) fetchTicketTypes(selectedEvent.id);
@@ -154,10 +155,10 @@ const RealTicketingPage: React.FC = () => {
     }
   };
   
-  const toggleTicketStatus = async (ticket: RealTicketType) => {
+  const toggleTicketStatus = async (ticket: OrganizerTicketType) => {
     setIsLoading(prev => ({ ...prev, tickets: true }));
     try {
-        const result = await realEventService.updateTicketType(ticket.id, { is_active: !ticket.is_active });
+        const result = await organizerCrudService.updateTicketType(ticket.id, { is_active: !ticket.is_active });
         if (result.success) {
             if(selectedEvent) fetchTicketTypes(selectedEvent.id);
         } else {

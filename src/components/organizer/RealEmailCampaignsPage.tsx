@@ -7,16 +7,17 @@ import {
   ChevronRight, Loader2, Mail, Users, Calendar, X, Save
 } from 'lucide-react';
 import { realEventService, RealEvent, RealMarketingCampaign } from '../../services/realEventService';
+import { organizerCrudService, OrganizerEvent, MarketingCampaign } from '../../services/organizerCrudService';
 
 const RealEmailCampaignsPage: React.FC = () => {
   const { setBreadcrumbs } = useApp();
   const { user } = useAuth();
-  const [events, setEvents] = useState<RealEvent[]>([]);
+  const [events, setEvents] = useState<OrganizerEvent[]>([]);
   const [selectedEvent, setSelectedEvent] = useState<string>('');
-  const [campaigns, setCampaigns] = useState<RealMarketingCampaign[]>([]);
+  const [campaigns, setCampaigns] = useState<MarketingCampaign[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [showModal, setShowModal] = useState(false);
-  const [editingCampaign, setEditingCampaign] = useState<RealMarketingCampaign | null>(null);
+  const [editingCampaign, setEditingCampaign] = useState<MarketingCampaign | null>(null);
   const [currentPage, setCurrentPage] = useState(1);
   const campaignsPerPage = 5;
   const [campaignFormData, setCampaignFormData] = useState({
@@ -38,7 +39,7 @@ const RealEmailCampaignsPage: React.FC = () => {
 
     try {
       setIsLoading(true);
-      const result = await realEventService.getMyEvents(user.id);
+      const result = await organizerCrudService.getMyEvents(user.id);
       if (result.success && result.events) {
         const publishedEvents = result.events.filter(e => e.status !== 'draft');
         setEvents(publishedEvents);
@@ -57,7 +58,7 @@ const RealEmailCampaignsPage: React.FC = () => {
 
   const loadCampaigns = async (eventId: string) => {
     try {
-      const result = await realEventService.getMarketingCampaigns(eventId);
+      const result = await organizerCrudService.getMarketingCampaigns(eventId);
       if (result.success && result.campaigns) {
         setCampaigns(result.campaigns);
       }
@@ -94,7 +95,7 @@ const RealEmailCampaignsPage: React.FC = () => {
     setShowModal(true);
   };
 
-  const handleEditCampaign = (campaign: RealMarketingCampaign) => {
+  const handleEditCampaign = (campaign: MarketingCampaign) => {
     setCampaignFormData({
       name: campaign.name,
       type: campaign.type,
@@ -116,9 +117,9 @@ const RealEmailCampaignsPage: React.FC = () => {
     try {
       let result;
       if (editingCampaign) {
-        result = await realEventService.updateMarketingCampaign(editingCampaign.id, campaignFormData);
+        result = await organizerCrudService.updateMarketingCampaign(editingCampaign.id, campaignFormData);
       } else {
-        result = await realEventService.createMarketingCampaign(selectedEvent, campaignFormData);
+        result = await organizerCrudService.createMarketingCampaign(selectedEvent, campaignFormData);
       }
 
       if (result.success) {
@@ -136,7 +137,7 @@ const RealEmailCampaignsPage: React.FC = () => {
   const handleDeleteCampaign = async (campaignId: string) => {
     if (confirm('Are you sure you want to delete this campaign?')) {
       try {
-        const result = await realEventService.deleteMarketingCampaign(campaignId);
+        const result = await organizerCrudService.deleteMarketingCampaign(campaignId);
         if (result.success) {
           await loadCampaigns(selectedEvent);
           alert('Campaign deleted successfully!');
