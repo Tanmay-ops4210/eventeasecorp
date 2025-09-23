@@ -1,166 +1,163 @@
-import React, { createContext, useContext, useEffect, useState } from 'react';
-import { User as FirebaseUser } from 'firebase/auth';
+import React, {
+  createContext,
+  useContext,
+  useEffect,
+  useState,
+  useMemo,
+  useCallback,
+} from 'react';
+import {
+  User,
+  onAuthStateChanged,
+  signOut as firebaseSignOut,
+  createUserWithEmailAndPassword,
+  signInWithEmailAndPassword,
+  sendPasswordResetEmail,
+  sendEmailVerification,
+} from 'firebase/auth';
 import { auth } from '../lib/firebaseConfig';
-import { firebaseAuthService } from '../lib/firebaseAuth';
-import { syncUserProfile, getUserProfile } from '../lib/firebaseAuthHelpers';
 import { setSupabaseAuth } from '../lib/supabaseClient';
-import { UserRole, User } from '../types/user';
+import { AppUser } from '../types/database';
 
+// Define the shape of the context value
 interface AuthContextType {
   user: User | null;
+  appUser: AppUser | null;
+  loading: boolean;
+  isAdmin: boolean;
   isAuthenticated: boolean;
-  isLoading: boolean;
-  login: (email: string, password: string, role?: UserRole) => Promise<void>;
-  register: (email: string, password: string, name: string, role: UserRole, company?: string) => Promise<void>;
-  logout: () => Promise<void>;
+  signIn: (email: string, password: string) => Promise<User | null>;
+  signUp: (email: string, password: string, username: string) => Promise<User | null>;
+  signOut: () => Promise<void>;
   resetPassword: (email: string) => Promise<void>;
+  resendVerificationEmail: () => Promise<void>;
 }
 
+// Create the context with a default undefined value
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
+// Custom hook to use the AuthContext
 export const useAuth = () => {
   const context = useContext(AuthContext);
-  if (context === undefined) {
+  if (!context) {
     throw new Error('useAuth must be used within an AuthProvider');
   }
   return context;
 };
 
-export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+// AuthProvider component
+export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const [user, setUser] = useState<User | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
+  const [appUser, setAppUser] = useState<AppUser | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [isAdmin, setIsAdmin] = useState(false);
 
+  // Effect to handle authentication state changes
   useEffect(() => {
-    if (!auth) {
-      setIsLoading(false);
-      return;
-    }
-
-    const unsubscribe = firebaseAuthService.onAuthStateChanged(async (firebaseUser: FirebaseUser | null) => {
-      try {
-        if (firebaseUser) {
-          console.log('🔥 Firebase user authenticated:', firebaseUser.email);
-          
-          try {
-            // Set Supabase auth context with Firebase user
-            await setSupabaseAuth(firebaseUser);
-            console.log('✅ Supabase auth context set');
-            
-            // Wait a moment for the session to be established
-            await new Promise(resolve => setTimeout(resolve, 200));
-            
-            // Get user profile from Supabase
-            const profile = await getUserProfile(firebaseUser.uid);
-            console.log('📋 User profile loaded:', profile ? 'Found' : 'Not found');
-            
-            if (profile) {
-              const userData = {
-                id: firebaseUser.uid,
-                email: firebaseUser.email || '',
-                full_name: profile.full_name || firebaseUser.displayName || '',
-                role: profile.role,
-                company: profile.company,
-                avatar_url: profile.avatar_url,
-                is_active: true,
-                plan: profile.plan,
-                createdAt: profile.created_at,
-                updatedAt: profile.updated_at
-              };
-              
-              setUser(userData);
-              console.log('👤 User state set:', userData.email, userData.role);
-            } else {
-              console.warn('⚠️ No profile found for user, clearing user state');
-              setUser(null);
-            }
-          } catch (profileError) {
-            console.error('❌ Error loading user profile:', profileError);
-            setUser(null);
-          }
-        } else {
-          console.log('🚪 Firebase user signed out');
-          // Clear Supabase auth when Firebase user is null
-          await setSupabaseAuth(null);
-          setUser(null);
-        }
-      } catch (error) {
-        console.error('Error loading user profile:', error);
-        // Clear Supabase auth on error
-        await setSupabaseAuth(null);
+    const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
+      if (firebaseUser) {
+        setUser(firebaseUser);
+        await setSupabaseAuth(firebaseUser);
+        // Here you might fetch the corresponding appUser profile from your DB
+        // For now, we'll just set a placeholder or leave it to be fetched elsewhere
+        setAppUser({
+          id: firebaseUser.uid,
+          email: firebaseUser.email || '',
+          username: firebaseUser.displayName || 'User',
+          role: 'attendee', // Default role
+          status: 'active',
+          created_at: new Date().toISOString(),
+        });
+        // Replace with your actual admin check logic
+        setIsAdmin(firebaseUser.email === import.meta.env.VITE_ADMIN_BYPASS_EMAIL);
+      } else {
         setUser(null);
-      } finally {
-        setIsLoading(false);
+        setAppUser(null);
+        setIsAdmin(false);
+        await setSupabaseAuth(null);
       }
+      setLoading(false);
     });
 
-    return unsubscribe;
+    return () => unsubscribe();
   }, []);
 
-  const login = async (email: string, password: string, role?: UserRole) => {
-    console.log('🔐 Attempting login for:', email);
-    const result = await firebaseAuthService.signIn(email, password);
-    if (!result.success) {
-      console.error('❌ Login failed:', result.error);
-      throw new Error(result.error || 'Login failed');
+  // Function to sign in a user
+  const signIn = useCallback(async (email, password) => {
+    if (!auth) return null;
+    const userCredential = await signInWithEmailAndPassword(auth, email, password);
+    return userCredential.user;
+  }, []);
+
+  // Function to sign up a user
+  const signUp = useCallback(async (email, password, username) => {
+    if (!auth) return null;
+    const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+    const firebaseUser = userCredential.user;
+
+    // **THIS IS THE FIX:**
+    // The `db.createUser` call has been removed.
+    // The database trigger you created will now handle creating the
+    // user profile automatically and reliably on the backend.
+
+    if (firebaseUser) {
+      // Optional: You can send a verification email upon registration
+      await sendEmailVerification(firebaseUser);
     }
-    console.log('✅ Firebase login successful');
-  };
 
-  const register = async (email: string, password: string, name: string, role: UserRole, company?: string) => {
-    console.log('📝 Attempting registration for:', email, 'as', role);
-    const result = await firebaseAuthService.register({
-      email,
-      password,
-      name,
-      role
-    });
+    return firebaseUser;
+  }, []);
 
-    if (!result.success) {
-      console.error('❌ Registration failed:', result.error);
-      throw new Error(result.error || 'Registration failed');
+
+  // Function to sign out a user
+  const signOut = useCallback(async () => {
+    if (!auth) return;
+    await firebaseSignOut(auth);
+  }, []);
+
+  // Function to send a password reset email
+  const resetPassword = useCallback(async (email: string) => {
+    if (!auth) return;
+    await sendPasswordResetEmail(auth, email);
+  }, []);
+
+  // Function to resend the verification email
+  const resendVerificationEmail = useCallback(async () => {
+    if (auth?.currentUser) {
+      await sendEmailVerification(auth.currentUser);
     }
+  }, []);
 
-    console.log('✅ Firebase registration successful');
-    
-    // Sync profile with Supabase
-    if (result.user) {
-      try {
-        await syncUserProfile(result.user, role, company);
-        console.log('✅ Profile synced with Supabase');
-      } catch (syncError) {
-        console.error('❌ Failed to sync profile:', syncError);
-        throw new Error('Registration completed but profile sync failed');
-      }
-    }
-  };
-
-  const logout = async () => {
-    const result = await firebaseAuthService.signOut();
-    if (!result.success) {
-      throw new Error(result.error || 'Logout failed');
-    }
-  };
-
-  const resetPassword = async (email: string) => {
-    const result = await firebaseAuthService.resetPassword(email);
-    if (!result.success) {
-      throw new Error(result.error || 'Password reset failed');
-    }
-  };
-
-  const value = {
-    user,
-    isAuthenticated: !!user,
-    isLoading,
-    login,
-    register,
-    logout,
-    resetPassword,
-  };
+  // Memoize the context value to prevent unnecessary re-renders
+  const value = useMemo(
+    () => ({
+      user,
+      appUser,
+      loading,
+      isAdmin,
+      isAuthenticated: !!user,
+      signIn,
+      signUp,
+      signOut,
+      resetPassword,
+      resendVerificationEmail,
+    }),
+    [
+      user,
+      appUser,
+      loading,
+      isAdmin,
+      signIn,
+      signUp,
+      signOut,
+      resetPassword,
+      resendVerificationEmail,
+    ]
+  );
 
   return (
     <AuthContext.Provider value={value}>
-      {children}
+      {!loading && children}
     </AuthContext.Provider>
   );
 };
