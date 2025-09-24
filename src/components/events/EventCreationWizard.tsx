@@ -7,7 +7,7 @@ import Step4Verification from './wizard-steps/Step4_Verification';
 import Step5Maintenance from './wizard-steps/Step5_Maintenance';
 import { eventService } from '../../services/eventService';
 import UpgradeModal from '../common/UpgradeModal';
-import { useAuth } from '../../contexts/AuthContext';
+import { useAuth } from '../../contexts/NewAuthContext';
 
 interface Props {
   onClose: () => void;
