@@ -45,7 +45,7 @@ const ExpoHallPage = lazy(() => import('./components/attendee/ExpoHallPage'));
 const ResourceLibraryPage = lazy(() => import('./components/attendee/ResourceLibraryPage'));
 
 // Organizer Components
-const OrganizerDashboard = lazy(() => import('./components/organizer/RealOrganizerDashboard'));
+const OrganizerDashboard = lazy(() => import('./components/organizer/OrganizerDashboard'));
 const EventBuilderPage = lazy(() => import('./components/organizer/RealEventBuilderPage'));
 const EventSettingsPage = lazy(() => import('./components/organizer/EventSettingsPage'));
 const LandingCustomizerPage = lazy(() => import('./components/organizer/LandingCustomizerPage'));
