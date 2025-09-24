@@ -111,8 +111,8 @@ const SimplePricingPage: React.FC = () => {
             const IconComponent = plan.icon;
             
             return (
-                onClick={() => handlePlanSelect(plan.id)}
               <div
+                onClick={() => handlePlanSelect(plan.id)}
                 key={plan.id}
                 className={`relative bg-white rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-300 transform hover:scale-105 overflow-hidden ${
                   plan.popular ? 'ring-2 ring-indigo-600' : ''
