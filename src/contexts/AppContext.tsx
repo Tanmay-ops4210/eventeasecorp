@@ -5,7 +5,6 @@ type AppView =
   | 'home' 
   | 'event-discovery' 
   | 'speaker-directory' 
-  | 'sponsor-directory' 
   | 'organizer-directory'
   | 'blog' 
   | 'resources' 

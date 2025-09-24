@@ -73,7 +73,6 @@ const routes = [
   { path: 'home', component: HomePage, isPublic: true },
   { path: 'event-discovery', component: EventDiscoveryPage, isPublic: true },
   { path: 'speaker-directory', component: SpeakerDirectoryPage, isPublic: true },
-  { path: 'sponsor-directory', component: SponsorDirectoryPage, isPublic: true },
   { path: 'organizer-directory', component: OrganizerDirectoryPage, isPublic: true },
   { path: 'blog', component: BlogPage, isPublic: true },
   { path: 'resources', component: ResourcesPage, isPublic: true },
