@@ -5,6 +5,9 @@ import './index.css';
 import './components/chart-styles.css';
 import { Loader2 } from 'lucide-react';
 
+// Add console logging for debugging
+console.log('NewApp.tsx loaded');
+
 // --- Layout Components ---
 import NewPublicNavigation from './components/layout/NewPublicNavigation';
 import AttendeeNavigation from './components/layout/AttendeeNavigation';
@@ -82,6 +85,8 @@ const AppContent: React.FC = () => {
   const { user, profile, isAuthenticated } = useAuth();
   const { currentView, selectedEventId } = useApp();
 
+  console.log('AppContent render:', { user, profile, isAuthenticated, currentView });
+
   const renderNavigation = () => {
     if (isAuthenticated && user && profile) {
       switch (profile.role) {
@@ -96,6 +101,8 @@ const AppContent: React.FC = () => {
 
   const renderPage = () => {
     const hasRole = (roles: string[]) => isAuthenticated && user && profile && roles.includes(profile.role || 'attendee');
+
+    console.log('Rendering page for view:', currentView);
 
     switch (currentView) {
       // --- Public Views ---
@@ -221,6 +228,8 @@ const AppContent: React.FC = () => {
 };
 
 function NewApp() {
+  console.log('NewApp component rendering');
+
   return (
     <AppProvider>
       <AuthProvider>

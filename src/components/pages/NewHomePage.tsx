@@ -20,6 +20,8 @@ const NewHomePage: React.FC = () => {
     defaultRole: 'attendee'
   });
 
+  console.log('NewHomePage rendering');
+
   const featuredEvents = [
     {
       id: '1',

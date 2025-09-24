@@ -36,9 +36,13 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(true);
 
+  console.log('AuthProvider state:', { user, profile, session, loading });
+
   useEffect(() => {
+    console.log('AuthProvider useEffect - getting initial session');
     // Get initial session
     supabaseAuth.getCurrentSession().then(({ data: { session } }) => {
+      console.log('Initial session:', session);
       setSession(session);
       setUser(session?.user ?? null);
       if (session?.user) {
@@ -50,6 +54,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     // Listen for auth changes
     const { data: { subscription } } = supabaseAuth.onAuthStateChange(
       async (event, session) => {
+        console.log('Auth state change:', event, session);
         setSession(session);
         setUser(session?.user ?? null);
         
@@ -68,7 +73,9 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
   const loadUserProfile = async (userId: string) => {
     try {
+      console.log('Loading user profile for:', userId);
       const userProfile = await supabaseAuth.getUserProfile(userId);
+      console.log('User profile loaded:', userProfile);
       setProfile(userProfile);
     } catch (error) {
       console.error('Failed to load user profile:', error);
@@ -155,6 +162,8 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     updatePassword,
     updateProfile,
   };
+
+  console.log('AuthProvider rendering children, loading:', loading);
 
   return (
     <AuthContext.Provider value={value}>

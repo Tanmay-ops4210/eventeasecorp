@@ -80,6 +80,8 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
   const [breadcrumbs, setBreadcrumbs] = useState<string[]>([]);
   const [registrationData, setRegistrationData] = useState<any>(null);
 
+  console.log('AppProvider state:', { currentView, selectedEventId });
+
   return (
     <AppContext.Provider
       value={{
