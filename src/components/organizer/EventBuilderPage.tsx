@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useApp } from '../../contexts/AppContext';
-import { useAuth } from '../../contexts/AuthContext';
+import { useAuth } from '../../contexts/NewAuthContext';
 import {
   Save, Calendar, MapPin, Users, DollarSign, Image as ImageIcon, Type,
   ArrowLeft, Check, AlertTriangle, Loader2, Upload, IndianRupee
