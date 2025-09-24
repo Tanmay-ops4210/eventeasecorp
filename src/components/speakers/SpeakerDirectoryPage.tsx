@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Search, Filter, MapPin, Calendar, ArrowRight, User, Star, Award, Loader2, Plus } from 'lucide-react';
 import { useApp } from '../../contexts/AppContext';
-import { useAuth } from '../../contexts/AuthContext';
+import { useAuth } from '../../contexts/NewAuthContext';
 import { Speaker, SpeakerListResponse } from '../../types/speaker';
 import { speakerService } from '../../services/speakerService';
 
