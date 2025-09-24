@@ -1,6 +1,8 @@
 import React from 'react';
 import { useApp } from '../../contexts/AppContext';
+import { useAuth } from '../../contexts/NewAuthContext';
 import { Check, Star, Users, Calendar } from 'lucide-react';
+import NewAuthModal from '../auth/NewAuthModal';
 
 const pricingPlans = [
   {
@@ -67,11 +69,29 @@ const pricingPlans = [
 
 const SimplePricingPage: React.FC = () => {
   const { setBreadcrumbs, setCurrentView } = useApp();
+  const { isAuthenticated } = useAuth();
+  const [showAuthModal, setShowAuthModal] = React.useState(false);
+  const [selectedPlan, setSelectedPlan] = React.useState<string>('');
 
   React.useEffect(() => {
     setBreadcrumbs(['Pricing']);
   }, [setBreadcrumbs]);
 
+  const handlePlanSelect = (planId: string) => {
+    if (!isAuthenticated) {
+      setSelectedPlan(planId);
+      setShowAuthModal(true);
+    } else {
+      // User is already authenticated, handle plan upgrade
+      alert(`Plan upgrade to ${planId} would be handled here`);
+    }
+  };
+
+  const handleAuthSuccess = () => {
+    setShowAuthModal(false);
+    // After successful auth, redirect to organizer dashboard
+    setCurrentView('organizer-dashboard');
+  };
   return (
     <div className="min-h-screen bg-gray-50 pt-20">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
@@ -91,6 +111,7 @@ const SimplePricingPage: React.FC = () => {
             const IconComponent = plan.icon;
             
             return (
+                onClick={() => handlePlanSelect(plan.id)}
               <div
                 key={plan.id}
                 className={`relative bg-white rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-300 transform hover:scale-105 overflow-hidden ${
@@ -171,6 +192,15 @@ const SimplePricingPage: React.FC = () => {
           </button>
         </div>
       </div>
+
+      {/* Auth Modal for Plan Selection */}
+      <NewAuthModal
+        isOpen={showAuthModal}
+        onClose={() => setShowAuthModal(false)}
+        onLoginSuccess={handleAuthSuccess}
+        defaultRole="organizer"
+        redirectTo="organizer-dashboard"
+      />
     </div>
   );
 };

@@ -1,6 +1,8 @@
 import React, { useState } from 'react';
 import { useApp } from '../../contexts/AppContext';
+import { useAuth } from '../../contexts/NewAuthContext';
 import { Check, Star, Zap, Crown, Users, Calendar, BarChart3, Headphones } from 'lucide-react';
+import NewAuthModal from '../auth/NewAuthModal';
 
 interface PricingPlan {
   id: string;
@@ -128,7 +130,10 @@ const features = [
 
 const PricingPage: React.FC = () => {
   const { setBreadcrumbs, setCurrentView } = useApp();
+  const { isAuthenticated } = useAuth();
   const [billingPeriod, setBillingPeriod] = useState<'monthly' | 'yearly'>('monthly');
+  const [showAuthModal, setShowAuthModal] = useState(false);
+  const [selectedPlan, setSelectedPlan] = useState<string>('');
 
   React.useEffect(() => {
     setBreadcrumbs(['Pricing']);
@@ -138,6 +143,21 @@ const PricingPage: React.FC = () => {
     return billingPeriod === 'yearly' ? Math.round(price * 0.8) : price;
   };
 
+  const handlePlanSelect = (planId: string) => {
+    if (!isAuthenticated) {
+      setSelectedPlan(planId);
+      setShowAuthModal(true);
+    } else {
+      // User is already authenticated, handle plan upgrade
+      alert(`Plan upgrade to ${planId} would be handled here`);
+    }
+  };
+
+  const handleAuthSuccess = () => {
+    setShowAuthModal(false);
+    // After successful auth, redirect to organizer dashboard
+    setCurrentView('organizer-dashboard');
+  };
   return (
     <div className="min-h-screen bg-gray-50 pt-20">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
@@ -242,6 +262,7 @@ const PricingPage: React.FC = () => {
                   </ul>
 
                   <button
+                    onClick={() => handlePlanSelect(plan.id)}
                     className={`w-full py-3 rounded-lg font-medium transition-all duration-200 transform hover:scale-105 ${
                       plan.popular
                         ? 'bg-gradient-to-r from-indigo-600 to-purple-600 text-white hover:from-indigo-700 hover:to-purple-700 shadow-lg hover:shadow-xl'
@@ -329,6 +350,15 @@ const PricingPage: React.FC = () => {
           </button>
         </div>
       </div>
+
+      {/* Auth Modal for Plan Selection */}
+      <NewAuthModal
+        isOpen={showAuthModal}
+        onClose={() => setShowAuthModal(false)}
+        onLoginSuccess={handleAuthSuccess}
+        defaultRole="organizer"
+        redirectTo="organizer-dashboard"
+      />
     </div>
   );
 };

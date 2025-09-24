@@ -7,16 +7,24 @@ interface AuthModalProps {
   isOpen: boolean;
   onClose: () => void;
   onLoginSuccess: (user: any) => void;
+  defaultRole?: 'attendee' | 'organizer' | 'sponsor';
+  redirectTo?: string;
 }
 
 type UserRole = 'attendee' | 'organizer' | 'sponsor';
 
-const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, onLoginSuccess }) => {
+const AuthModal: React.FC<AuthModalProps> = ({ 
+  isOpen, 
+  onClose, 
+  onLoginSuccess, 
+  defaultRole = 'attendee',
+  redirectTo 
+}) => {
   const { setCurrentView } = useApp();
   const { login, register } = useAuth();
   const [isLoginMode, setIsLoginMode] = useState(true);
   const [showPassword, setShowPassword] = useState(false);
-  const [selectedRole, setSelectedRole] = useState<UserRole>('attendee');
+  const [selectedRole, setSelectedRole] = useState<UserRole>(defaultRole);
   const [formData, setFormData] = useState({
     name: '',
     email: '',
@@ -77,13 +85,45 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, onLoginSuccess }
     try {
       if (isLoginMode) {
         await login(formData.email, formData.password, selectedRole);
-        onLoginSuccess({} as any);
-        onClose();
+        
+        // Handle redirection after successful login
+        if (redirectTo) {
+          setCurrentView(redirectTo as any);
+        } else {
+          // Default redirection based on role
+          switch (selectedRole) {
+            case 'organizer':
+              setCurrentView('organizer-dashboard');
+              break;
+            case 'admin':
+              setCurrentView('admin-dashboard');
+              break;
+            default:
+              setCurrentView('attendee-dashboard');
+          }
+        }
       } else {
         await register(formData.email, formData.password, formData.name, selectedRole, formData.company);
-        onLoginSuccess({} as any);
-        onClose();
+        
+        // After registration, redirect to appropriate dashboard
+        if (redirectTo) {
+          setCurrentView(redirectTo as any);
+        } else {
+          switch (selectedRole) {
+            case 'organizer':
+              setCurrentView('organizer-dashboard');
+              break;
+            case 'admin':
+              setCurrentView('admin-dashboard');
+              break;
+            default:
+              setCurrentView('attendee-dashboard');
+          }
+        }
       }
+      
+      onLoginSuccess({} as any);
+      onClose();
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Authentication failed. Please try again.';
       setErrors({ general: errorMessage });

@@ -81,20 +81,8 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       throw new Error(result.error || 'Login failed');
     }
     
-    // Trigger navigation based on user role after successful login
-    if (result.profile?.role === 'organizer') {
-      window.dispatchEvent(new CustomEvent('navigate-to-dashboard', { 
-        detail: 'organizer-dashboard' 
-      }));
-    } else if (result.profile?.role === 'attendee') {
-      window.dispatchEvent(new CustomEvent('navigate-to-dashboard', { 
-        detail: 'attendee-dashboard' 
-      }));
-    } else if (result.profile?.role === 'admin') {
-      window.dispatchEvent(new CustomEvent('navigate-to-dashboard', { 
-        detail: 'admin-dashboard' 
-      }));
-    }
+    // Navigation will be handled by the component that initiated the login
+    // This allows for context-aware redirection
   };
 
   const register = async (
@@ -113,6 +101,11 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     
     if (!result.success) {
       throw new Error(result.error || 'Registration failed');
+    }
+    
+    // After successful registration, automatically sign in
+    if (result.user) {
+      await login(email, password, role);
     }
   };
 

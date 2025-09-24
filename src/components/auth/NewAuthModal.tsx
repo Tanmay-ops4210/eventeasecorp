@@ -1,20 +1,30 @@
 import React, { useState } from 'react';
 import { X, User, Mail, Lock, Eye, EyeOff, Building, Calendar } from 'lucide-react';
 import { useAuth } from '../../contexts/NewAuthContext';
+import { useApp } from '../../contexts/AppContext';
 
 interface NewAuthModalProps {
   isOpen: boolean;
   onClose: () => void;
   onLoginSuccess: () => void;
+  defaultRole?: 'attendee' | 'organizer' | 'admin';
+  redirectTo?: string;
 }
 
 type UserRole = 'attendee' | 'organizer' | 'admin';
 
-const NewAuthModal: React.FC<NewAuthModalProps> = ({ isOpen, onClose, onLoginSuccess }) => {
+const NewAuthModal: React.FC<NewAuthModalProps> = ({ 
+  isOpen, 
+  onClose, 
+  onLoginSuccess, 
+  defaultRole = 'attendee',
+  redirectTo 
+}) => {
   const { login, register } = useAuth();
+  const { setCurrentView } = useApp();
   const [isLoginMode, setIsLoginMode] = useState(true);
   const [showPassword, setShowPassword] = useState(false);
-  const [selectedRole, setSelectedRole] = useState<UserRole>('attendee');
+  const [selectedRole, setSelectedRole] = useState<UserRole>(defaultRole);
   const [formData, setFormData] = useState({
     name: '',
     email: '',
@@ -75,8 +85,41 @@ const NewAuthModal: React.FC<NewAuthModalProps> = ({ isOpen, onClose, onLoginSuc
     try {
       if (isLoginMode) {
         await login(formData.email, formData.password, selectedRole);
+        
+        // Handle role-based redirection
+        if (redirectTo) {
+          setCurrentView(redirectTo as any);
+        } else {
+          // Default redirection based on role
+          switch (selectedRole) {
+            case 'organizer':
+              setCurrentView('organizer-dashboard');
+              break;
+            case 'admin':
+              setCurrentView('admin-dashboard');
+              break;
+            default:
+              setCurrentView('attendee-dashboard');
+          }
+        }
       } else {
         await register(formData.email, formData.password, formData.name, selectedRole, formData.company);
+        
+        // After registration, redirect to appropriate dashboard
+        if (redirectTo) {
+          setCurrentView(redirectTo as any);
+        } else {
+          switch (selectedRole) {
+            case 'organizer':
+              setCurrentView('organizer-dashboard');
+              break;
+            case 'admin':
+              setCurrentView('admin-dashboard');
+              break;
+            default:
+              setCurrentView('attendee-dashboard');
+          }
+        }
       }
       onLoginSuccess();
       onClose();

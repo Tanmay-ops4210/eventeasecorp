@@ -1,5 +1,8 @@
 import React, { useState } from 'react';
 import { Calendar, Users, MapPin, Clock, Star, CheckCircle } from 'lucide-react';
+import { useAuth } from '../contexts/NewAuthContext';
+import { useApp } from '../contexts/AppContext';
+import NewAuthModal from './auth/NewAuthModal';
 
 interface PlanEventSectionProps {
   onEventSubmitted?: (eventData: any) => void;
@@ -24,7 +27,10 @@ const features = [
 ];
 
 const PlanEventSection: React.FC<PlanEventSectionProps> = ({ onEventSubmitted }) => {
+  const { isAuthenticated } = useAuth();
+  const { setCurrentView } = useApp();
   const [selectedType, setSelectedType] = useState('conference');
+  const [showAuthModal, setShowAuthModal] = useState(false);
   const [formData, setFormData] = useState({
     eventName: '',
     eventType: 'conference',
@@ -44,21 +50,28 @@ const PlanEventSection: React.FC<PlanEventSectionProps> = ({ onEventSubmitted })
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
+    // Check if user is authenticated
+    if (!isAuthenticated) {
+      setShowAuthModal(true);
+      return;
+    }
+    
     setIsSubmitting(true);
     
     // Simulate API call
     await new Promise(resolve => setTimeout(resolve, 1000));
     
-    // Call the callback to trigger the multi-step flow
-    if (onEventSubmitted) {
-      onEventSubmitted(formData);
-    } else {
-      alert('Thank you! We\'ll contact you within 24 hours to discuss your event planning needs.');
-    }
+    // Redirect to organizer dashboard to start creating the event
+    setCurrentView('organizer-dashboard');
     
     setIsSubmitting(false);
   };
 
+  const handleAuthSuccess = () => {
+    setShowAuthModal(false);
+    // After successful auth, redirect to organizer dashboard
+    setCurrentView('organizer-dashboard');
+  };
   return (
     <section id="plan-event" className="py-12 sm:py-16 lg:py-20 bg-gradient-to-br from-slate-50 to-indigo-50">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -229,7 +242,7 @@ const PlanEventSection: React.FC<PlanEventSectionProps> = ({ onEventSubmitted })
                         <span>Processing...</span>
                       </>
                     ) : (
-                      <span className="text-center">Request Planning Consultation</span>
+                      <span className="text-center">{isAuthenticated ? 'Start Creating Event' : 'Sign Up to Start Organizing'}</span>
                     )}
                   </button>
                 </form>
@@ -238,6 +251,15 @@ const PlanEventSection: React.FC<PlanEventSectionProps> = ({ onEventSubmitted })
           </div>
         </div>
       </div>
+
+      {/* Auth Modal for Organizer Signup */}
+      <NewAuthModal
+        isOpen={showAuthModal}
+        onClose={() => setShowAuthModal(false)}
+        onLoginSuccess={handleAuthSuccess}
+        defaultRole="organizer"
+        redirectTo="organizer-dashboard"
+      />
     </section>
   );
 };

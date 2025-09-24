@@ -48,7 +48,7 @@ const NewPublicNavigation: React.FC = () => {
 
   const handleLoginSuccess = () => {
     setIsAuthModalOpen(false);
-    // Navigation will be handled by the auth context event
+    // Navigation is handled by the auth modal itself
   };
 
   const handleLogout = () => {

@@ -531,6 +531,7 @@ const EventsSection: React.FC<EventsSectionProps> = ({
       <AuthModal
         isOpen={showAuthModal}
         onClose={() => setShowAuthModal(false)}
+        onLoginSuccess={() => setShowAuthModal(false)}
       />
     </>
   );

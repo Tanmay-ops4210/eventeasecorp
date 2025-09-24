@@ -5,6 +5,7 @@ import { useAuth } from '../../contexts/NewAuthContext';
 import ParallaxSection from '../ParallaxSection';
 import LoginPromptOverlay from '../common/LoginPromptOverlay';
 import NewAuthModal from '../auth/NewAuthModal';
+import { useState } from 'react';
 import '../../styles/wave-animation.css';
 
 const NewHomePage: React.FC = () => {
@@ -12,6 +13,12 @@ const NewHomePage: React.FC = () => {
   const { isAuthenticated } = useAuth();
   const [showLoginPrompt, setShowLoginPrompt] = React.useState(false);
   const [showAuthModal, setShowAuthModal] = React.useState(false);
+  const [authModalConfig, setAuthModalConfig] = React.useState<{
+    defaultRole: 'attendee' | 'organizer' | 'admin';
+    redirectTo?: string;
+  }>({
+    defaultRole: 'attendee'
+  });
 
   const featuredEvents = [
     {
@@ -93,6 +100,15 @@ const NewHomePage: React.FC = () => {
 
   const handleLoginPromptLogin = () => {
     setShowLoginPrompt(false);
+    setAuthModalConfig({ defaultRole: 'attendee' });
+    setShowAuthModal(true);
+  };
+
+  const handleOrganizerSignUp = () => {
+    setAuthModalConfig({ 
+      defaultRole: 'organizer',
+      redirectTo: 'organizer-dashboard'
+    });
     setShowAuthModal(true);
   };
 
@@ -336,7 +352,7 @@ const NewHomePage: React.FC = () => {
               Find Events
             </button>
             <button
-              onClick={() => setCurrentView('pricing')}
+              onClick={handleOrganizerSignUp}
               className="border-2 border-white text-white px-8 py-4 rounded-full font-medium hover:bg-white hover:text-gray-900 transition-all duration-300 transform hover:scale-105"
             >
               Start Organizing
@@ -357,6 +373,8 @@ const NewHomePage: React.FC = () => {
         isOpen={showAuthModal}
         onClose={() => setShowAuthModal(false)}
         onLoginSuccess={() => setShowAuthModal(false)}
+        defaultRole={authModalConfig.defaultRole}
+        redirectTo={authModalConfig.redirectTo}
       />
     </div>
   );

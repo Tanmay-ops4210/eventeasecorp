@@ -7,6 +7,8 @@ interface AuthDropdownProps {
   onClose: () => void;
   onSuccess: () => void;
   isMobile?: boolean;
+  defaultRole?: UserRole;
+  redirectTo?: string;
 }
 
 type AuthMode = 'signin' | 'signup';
@@ -29,7 +31,13 @@ interface FormErrors {
   general?: string;
 }
 
-const AuthDropdown: React.FC<AuthDropdownProps> = ({ onClose, onSuccess, isMobile = false }) => {
+const AuthDropdown: React.FC<AuthDropdownProps> = ({ 
+  onClose, 
+  onSuccess, 
+  isMobile = false, 
+  defaultRole = 'attendee',
+  redirectTo 
+}) => {
   const [authMode, setAuthMode] = useState<AuthMode>('signin');
   const [isLoading, setIsLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
@@ -39,7 +47,7 @@ const AuthDropdown: React.FC<AuthDropdownProps> = ({ onClose, onSuccess, isMobil
     confirmPassword: '',
     fullName: '',
     company: '',
-    role: 'attendee'
+    role: defaultRole
   });
   const [errors, setErrors] = useState<FormErrors>({});
   const [successMessage, setSuccessMessage] = useState('');
@@ -103,6 +111,24 @@ const AuthDropdown: React.FC<AuthDropdownProps> = ({ onClose, onSuccess, isMobil
     try {
       if (authMode === 'signin') {
         await login(formData.email, formData.password, formData.role);
+        
+        // Handle redirection after successful login
+        if (redirectTo) {
+          setCurrentView(redirectTo as any);
+        } else {
+          // Default redirection based on role
+          switch (formData.role) {
+            case 'organizer':
+              setCurrentView('organizer-dashboard');
+              break;
+            case 'admin':
+              setCurrentView('admin-dashboard');
+              break;
+            default:
+              setCurrentView('attendee-dashboard');
+          }
+        }
+        
         setSuccessMessage('Successfully signed in!');
         setTimeout(() => {
           onSuccess();
@@ -115,6 +141,23 @@ const AuthDropdown: React.FC<AuthDropdownProps> = ({ onClose, onSuccess, isMobil
           formData.role,
           formData.company || undefined
         );
+        
+        // After registration, redirect to appropriate dashboard
+        if (redirectTo) {
+          setCurrentView(redirectTo as any);
+        } else {
+          switch (formData.role) {
+            case 'organizer':
+              setCurrentView('organizer-dashboard');
+              break;
+            case 'admin':
+              setCurrentView('admin-dashboard');
+              break;
+            default:
+              setCurrentView('attendee-dashboard');
+          }
+        }
+        
         setSuccessMessage('Account created successfully! Please check your email to verify your account.');
         setTimeout(() => {
           onSuccess();

@@ -5,9 +5,15 @@ interface LoginPromptOverlayProps {
   isOpen: boolean;
   onClose: () => void;
   onLogin: () => void;
+  message?: string;
 }
 
-const LoginPromptOverlay: React.FC<LoginPromptOverlayProps> = ({ isOpen, onClose, onLogin }) => {
+const LoginPromptOverlay: React.FC<LoginPromptOverlayProps> = ({ 
+  isOpen, 
+  onClose, 
+  onLogin, 
+  message = "Login or sign up first" 
+}) => {
   if (!isOpen) return null;
 
   const handleBackgroundClick = (e: React.MouseEvent) => {
@@ -40,7 +46,7 @@ const LoginPromptOverlay: React.FC<LoginPromptOverlayProps> = ({ isOpen, onClose
         <div className="bg-gradient-to-r from-purple-600 to-indigo-600 rounded-full px-12 py-8 shadow-2xl hover:shadow-3xl transition-all duration-300">
           <div className="text-center">
             <p className="text-white text-xl md:text-2xl font-semibold">
-              Login or sign up first
+              {message}
             </p>
           </div>
         </div>
