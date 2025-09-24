@@ -1,6 +1,6 @@
 import React from 'react';
 import ReactDOM from 'react-dom/client';
-import App from './App';
+import NewApp from './NewApp';
 import './index.css';
 
 const rootElement = document.getElementById('root');
@@ -16,6 +16,6 @@ const root = ReactDOM.createRoot(rootElement);
 // (like the current user and loading status) available to all routes and components.
 root.render(
   <React.StrictMode>
-    <App />
+    <NewApp />
   </React.StrictMode>
 );
