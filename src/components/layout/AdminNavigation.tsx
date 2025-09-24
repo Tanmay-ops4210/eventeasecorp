@@ -10,7 +10,7 @@ import '../../styles/admin-panel.css';
 
 const AdminNavigation: React.FC = () => {
   const { setCurrentView } = useApp();
-  const { user, logout } = useAuth();
+  const { user, profile, logout } = useAuth();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isSidebarExpanded, setIsSidebarExpanded] = useState(false);
   const [isMobile, setIsMobile] = useState(false);

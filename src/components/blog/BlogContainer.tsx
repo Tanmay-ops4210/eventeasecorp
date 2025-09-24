@@ -1,11 +1,11 @@
 import React, { useState } from 'react';
-import Navigation from '../Navigation';
 import BlogList from './BlogList';
 import BlogArticle from './BlogArticle';
 
 type BlogView = 'list' | 'article';
 
 interface BlogContainerProps {
+  isStandalone?: boolean;
   isAuthenticated?: boolean;
   user?: any;
   onLogin?: () => void;
@@ -17,6 +17,7 @@ interface BlogContainerProps {
 }
 
 const BlogContainer: React.FC<BlogContainerProps> = ({
+  isStandalone = false,
   isAuthenticated = false,
   user = null,
   onLogin = () => {},
@@ -45,17 +46,6 @@ const BlogContainer: React.FC<BlogContainerProps> = ({
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <Navigation 
-        isAuthenticated={isAuthenticated}
-        user={user}
-        onLogin={onLogin}
-        onLogout={onLogout}
-        onShowEvents={onShowEvents}
-        onShowSpeakers={onShowSpeakers}
-        onShowSponsors={onShowSponsors}
-        onShowDashboard={onShowDashboard}
-        currentPage="other"
-      />
       {currentView === 'list' ? (
         <div className="pt-20 pb-8">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">

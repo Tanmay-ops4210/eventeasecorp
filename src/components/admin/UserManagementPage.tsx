@@ -13,6 +13,7 @@ import {
   XCircle,
   MoreVertical,
   ChevronDown
+  User
 } from 'lucide-react';
 import { dbService } from '../../lib/supabase';
 import type { AppUser, Event } from '../../types/database';

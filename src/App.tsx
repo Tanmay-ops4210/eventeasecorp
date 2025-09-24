@@ -9,7 +9,6 @@ import { Loader2 } from 'lucide-react'; // Import a loading icon
 import PublicNavigation from './components/layout/PublicNavigation';
 import AttendeeNavigation from './components/layout/AttendeeNavigation';
 import OrganizerNavigation from './components/layout/OrganizerNavigation';
-import SponsorNavigation from './components/layout/SponsorNavigation';
 import AdminNavigation from './components/layout/AdminNavigation';
 import Breadcrumbs from './components/layout/Breadcrumbs';
 
@@ -18,7 +17,7 @@ const HomePage = lazy(() => import('./components/pages/HomePage'));
 const EventDiscoveryPage = lazy(() => import('./components/pages/EventDiscoveryPage'));
 const SpeakerDirectoryPage = lazy(() => import('./components/speakers/SpeakerDirectoryPage'));
 const OrganizerDirectoryPage = lazy(() => import('./components/pages/OrganizerDirectoryPage'));
-const BlogPage = lazy(() => import('./components/blog/BlogPage'));
+const BlogPage = lazy(() => import('./components/blog/BlogContainer'));
 const EventDetailPage = lazy(() => import('./components/events/EventDetailPage'));
 const EventPaymentPage = lazy(() => import('./components/events/EventPaymentPage'));
 const EventPaymentSuccess = lazy(() => import('./components/events/EventPaymentSuccess'));
@@ -61,8 +60,8 @@ const OrganizerSettingsPage = lazy(() => import('./components/organizer/Organize
 // Real Organizer Components
 const RealMyEventsPage = lazy(() => import('./components/organizer/RealMyEventsPage'));
 
-const AdminDashboard = lazy(() => import('./components/admin/AdminDashboard.tsx'));
-const EventOversightPage = lazy(() => import('./components/admin/EventOversightPage.tsx'));
+const AdminDashboard = lazy(() => import('./components/admin/AdminDashboard'));
+const EventOversightPage = lazy(() => import('./components/admin/EventOversightPage'));
 const ContentManagementPage = lazy(() => import('./components/admin/ContentManagementPage'));
 
 
@@ -93,7 +92,7 @@ const AppContent: React.FC = () => {
     };
 
     const renderPage = () => {
-        const hasRole = (roles: string[]) => isAuthenticated && user && profile && roles.includes(profile.role);
+        const hasRole = (roles: string[]) => isAuthenticated && user && profile && roles.includes(profile.role || 'attendee');
 
         switch (currentView) {
             // --- Public Views ---
@@ -101,7 +100,7 @@ const AppContent: React.FC = () => {
             case 'event-discovery': return <EventDiscoveryPage />;
             case 'speaker-directory': return <SpeakerDirectoryPage />;
             case 'organizer-directory': return <OrganizerDirectoryPage />;
-            case 'blog': return <BlogPage />;
+            case 'blog': return <BlogPage isStandalone={true} />;
             case 'resources': return <ResourcesPage />;
             case 'press': return <PressPage />;
             case 'about': return <AboutPage />;
@@ -144,6 +143,11 @@ const AppContent: React.FC = () => {
             case 'speaker-portal': return hasRole(['organizer']) ? <SpeakerPortalPage /> : <HomePage />;
             case 'staff-roles': return hasRole(['organizer']) ? <StaffRolesPage /> : <HomePage />;
 
+            // Admin
+            case 'admin-dashboard': return hasRole(['admin']) ? <AdminDashboard /> : <HomePage />;
+            case 'user-management': return hasRole(['admin']) ? <AdminDashboard /> : <HomePage />;
+            case 'event-oversight': return hasRole(['admin']) ? <EventOversightPage /> : <HomePage />;
+            case 'content-management': return hasRole(['admin']) ? <ContentManagementPage /> : <HomePage />;
 
             // Shared (Multi-Role)
             case 'my-events': return hasRole(['organizer']) ? <RealMyEventsPage /> : <HomePage />;
