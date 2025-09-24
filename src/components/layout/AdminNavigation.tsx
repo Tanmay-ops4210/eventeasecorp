@@ -5,7 +5,7 @@ import {
   ChevronLeft, ChevronRight
 } from 'lucide-react';
 import { useApp } from '../../contexts/AppContext';
-import { useAuth } from '../../contexts/AuthContext';
+import { useAuth } from '../../contexts/NewAuthContext';
 import '../../styles/admin-panel.css';
 
 const AdminNavigation: React.FC = () => {
