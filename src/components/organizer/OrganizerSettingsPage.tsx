@@ -1,6 +1,6 @@
 import React from 'react';
 import { useApp } from '../../contexts/AppContext';
-import { useAuth } from '../../contexts/AuthContext';
+import { useAuth } from '../../contexts/NewAuthContext';
 import { User, Mail, LogOut, Shield } from 'lucide-react';
 
 const OrganizerSettingsPage: React.FC = () => {
