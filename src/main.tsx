@@ -2,6 +2,7 @@ import React from 'react';
 import ReactDOM from 'react-dom/client';
 import AppRouter from './components/router/AppRouter';
 import { AuthProvider } from './contexts/AuthContext';
+import { AppProvider } from './contexts/AppContext';
 import './index.css';
 
 const rootElement = document.getElementById('root');
@@ -17,8 +18,10 @@ const root = ReactDOM.createRoot(rootElement);
 // (like the current user and loading status) available to all routes and components.
 root.render(
   <React.StrictMode>
-    <AuthProvider>
-      <AppRouter />
-    </AuthProvider>
+    <AppProvider>
+      <AuthProvider>
+        <AppRouter />
+      </AuthProvider>
+    </AppProvider>
   </React.StrictMode>
 );

@@ -12,7 +12,7 @@ import {
   CheckCircle,
   XCircle,
   MoreVertical,
-  ChevronDown
+  ChevronDown,
   User
 } from 'lucide-react';
 import { dbService } from '../../lib/supabase';
