@@ -71,6 +71,18 @@ const ResponsiveHeader: React.FC<ResponsiveHeaderProps> = ({ className = '' }) =
     }
   };
 
+  // Listen for navigation events from auth context
+  useEffect(() => {
+    const handleDashboardNavigation = (event: CustomEvent) => {
+      setCurrentView(event.detail);
+    };
+
+    window.addEventListener('navigate-to-dashboard', handleDashboardNavigation as EventListener);
+    
+    return () => {
+      window.removeEventListener('navigate-to-dashboard', handleDashboardNavigation as EventListener);
+    };
+  }, [setCurrentView]);
   return (
     <header className={`bg-white shadow-lg border-b border-gray-200 sticky top-0 z-50 ${className}`}>
       <nav className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">

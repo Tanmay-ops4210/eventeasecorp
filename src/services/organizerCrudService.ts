@@ -164,6 +164,17 @@ class OrganizerCrudService {
         return { success: false, error: error.message };
       }
 
+      // Create analytics record for the new event
+      await supabase
+        .from('organizer_event_analytics')
+        .insert([{
+          event_id: data.id,
+          views: 0,
+          registrations: 0,
+          conversion_rate: 0,
+          revenue: 0,
+          top_referrers: []
+        }]);
       return { success: true, event: data };
     } catch (error) {
       const message = error instanceof Error ? error.message : 'An unexpected error occurred';

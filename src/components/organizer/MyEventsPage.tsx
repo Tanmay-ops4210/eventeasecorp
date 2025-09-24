@@ -1,16 +1,15 @@
 import React, { useState, useEffect } from 'react';
 import { useApp } from '../../contexts/AppContext';
-import { useAuth } from '../../contexts/AuthContext';
+import { useAuth } from '../../contexts/NewAuthContext';
 import {
-  Plus, Edit, Trash2, Eye, Copy, Search, Calendar, Users, DollarSign,
-  MoreVertical, AlertTriangle, CheckCircle, Clock, Globe, Loader2,
+  Plus, Edit, Trash2, Eye, Search, Calendar, Users, DollarSign,
+  AlertTriangle, CheckCircle, Clock, Globe, Loader2,
   ArrowLeft, ArrowRight, Settings, BarChart3, Mail, Ticket,
-  EyeOff, Share2
+  EyeOff, Share2, MapPin
 } from 'lucide-react';
-import { realEventService, RealEvent } from '../../services/realEventService';
 import { organizerCrudService, OrganizerEvent } from '../../services/organizerCrudService';
 
-const RealMyEventsPage: React.FC = () => {
+const MyEventsPage: React.FC = () => {
   const { setBreadcrumbs, setCurrentView } = useApp();
   const { user } = useAuth();
   const [events, setEvents] = useState<OrganizerEvent[]>([]);
@@ -68,22 +67,6 @@ const RealMyEventsPage: React.FC = () => {
     setCurrentPage(1);
   }, [searchTerm, statusFilter]);
 
-  const handleSelectEvent = (eventId: string) => {
-    setSelectedEvents(prev => 
-      prev.includes(eventId) 
-        ? prev.filter(id => id !== eventId)
-        : [...prev, eventId]
-    );
-  };
-
-  const handleSelectAll = () => {
-    setSelectedEvents(
-      selectedEvents.length === currentEvents.length 
-        ? [] 
-        : currentEvents.map(event => event.id)
-    );
-  };
-
   const handleDeleteEvent = async (eventId: string) => {
     try {
       const result = await organizerCrudService.deleteEvent(eventId);
@@ -97,48 +80,6 @@ const RealMyEventsPage: React.FC = () => {
       }
     } catch (error) {
       alert('Failed to delete event');
-    }
-  };
-
-  const handlePublishEvent = async (eventId: string) => {
-    try {
-      const result = await organizerCrudService.publishEvent(eventId);
-      if (result.success) {
-        await fetchEvents();
-        alert('Event published successfully!');
-      } else {
-        alert(result.error || 'Failed to publish event');
-      }
-    } catch (error) {
-      alert('Failed to publish event');
-    }
-  };
-
-  const handleHideEvent = async (eventId: string) => {
-    try {
-      const result = await organizerCrudService.updateEvent(eventId, { visibility: 'private' });
-      if (result.success) {
-        await fetchEvents();
-        alert('Event hidden successfully!');
-      } else {
-        alert(result.error || 'Failed to hide event');
-      }
-    } catch (error) {
-      alert('Failed to hide event');
-    }
-  };
-
-  const handleShowEvent = async (eventId: string) => {
-    try {
-      const result = await organizerCrudService.updateEvent(eventId, { visibility: 'public' });
-      if (result.success) {
-        await fetchEvents();
-        alert('Event is now visible!');
-      } else {
-        alert(result.error || 'Failed to show event');
-      }
-    } catch (error) {
-      alert('Failed to show event');
     }
   };
 
@@ -165,8 +106,8 @@ const RealMyEventsPage: React.FC = () => {
   const getVisibilityIcon = (visibility: string) => {
     switch (visibility) {
       case 'public': return <Globe className="w-4 h-4 text-green-500" />;
-      case 'private': return <Lock className="w-4 h-4 text-red-500" />;
-      case 'unlisted': return <EyeOff className="w-4 h-4 text-orange-500" />;
+      case 'private': return <EyeOff className="w-4 h-4 text-red-500" />;
+      case 'unlisted': return <Eye className="w-4 h-4 text-orange-500" />;
       default: return <Globe className="w-4 h-4 text-gray-500" />;
     }
   };
@@ -185,6 +126,7 @@ const RealMyEventsPage: React.FC = () => {
           </button>
         </div>
 
+        {/* Search and Filters */}
         <div className="bg-white rounded-2xl shadow-lg p-6 mb-8">
           <div className="flex flex-col lg:flex-row gap-4 mb-4">
             <div className="flex-1 relative">
@@ -212,6 +154,7 @@ const RealMyEventsPage: React.FC = () => {
           </div>
         </div>
 
+        {/* Pagination */}
         {totalPages > 1 && (
           <div className="flex items-center justify-between bg-white rounded-lg shadow-sm p-4 mb-6">
             <button
@@ -250,6 +193,7 @@ const RealMyEventsPage: React.FC = () => {
           </div>
         )}
 
+        {/* Events Grid */}
         {isLoading ? (
           <div className="flex items-center justify-center py-20">
             <div className="text-center">
@@ -284,12 +228,6 @@ const RealMyEventsPage: React.FC = () => {
                   </div>
                   <div className="absolute top-4 right-4 flex space-x-2">
                     {getVisibilityIcon(event.visibility)}
-                    <input
-                      type="checkbox"
-                      checked={selectedEvents.includes(event.id)}
-                      onChange={() => handleSelectEvent(event.id)}
-                      className="w-4 h-4 text-indigo-600 focus:ring-indigo-500 rounded"
-                    />
                   </div>
                 </div>
 
@@ -314,69 +252,22 @@ const RealMyEventsPage: React.FC = () => {
                   </div>
 
                   <div className="flex items-center justify-between">
-                    <div className="flex space-x-2">
+                    <div className="flex items-center space-x-2">
+                      {getStatusIcon(event.status)}
+                      <span className="text-sm font-medium text-gray-700 capitalize">
+                        {event.status}
+                      </span>
+                    </div>
+
+                    <div className="flex space-x-1">
                       <button
+                        onClick={() => setCurrentView('event-builder')}
                         className="p-2 text-gray-600 hover:text-indigo-600 hover:bg-indigo-50 rounded-lg transition-colors duration-200"
                         title="Edit Event"
                       >
                         <Edit className="w-4 h-4" />
                       </button>
-                      <button
-                        onClick={() => setCurrentView('ticketing')}
-                        className="p-2 text-gray-600 hover:text-purple-600 hover:bg-purple-50 rounded-lg transition-colors duration-200"
-                        title="Manage Tickets"
-                      >
-                        <Ticket className="w-4 h-4" />
-                      </button>
-                      <button
-                        onClick={() => setCurrentView('attendee-management')}
-                        className="p-2 text-gray-600 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors duration-200"
-                        title="Manage Attendees"
-                      >
-                        <Users className="w-4 h-4" />
-                      </button>
-                      <button
-                        onClick={() => setCurrentView('analytics')}
-                        className="p-2 text-gray-600 hover:text-green-600 hover:bg-green-50 rounded-lg transition-colors duration-200"
-                        title="View Analytics"
-                      >
-                        <BarChart3 className="w-4 h-4" />
-                      </button>
-                    </div>
-
-                    <div className="flex space-x-1">
-                      {event.status === 'draft' && (
-                        <button
-                          onClick={() => handlePublishEvent(event.id)}
-                          className="p-2 text-gray-600 hover:text-green-600 hover:bg-green-50 rounded-lg transition-colors duration-200"
-                          title="Publish Event"
-                        >
-                          <CheckCircle className="w-4 h-4" />
-                        </button>
-                      )}
                       
-                      {event.status === 'published' && (
-                        <>
-                          {event.visibility === 'public' ? (
-                            <button
-                              onClick={() => handleHideEvent(event.id)}
-                              className="p-2 text-gray-600 hover:text-orange-600 hover:bg-orange-50 rounded-lg transition-colors duration-200"
-                              title="Hide Event"
-                            >
-                              <EyeOff className="w-4 h-4" />
-                            </button>
-                          ) : (
-                            <button
-                              onClick={() => handleShowEvent(event.id)}
-                              className="p-2 text-gray-600 hover:text-green-600 hover:bg-green-50 rounded-lg transition-colors duration-200"
-                              title="Show Event"
-                            >
-                              <Eye className="w-4 h-4" />
-                            </button>
-                          )}
-                        </>
-                      )}
-
                       <button
                         onClick={() => {
                           setEventToDelete(event.id);
@@ -416,6 +307,7 @@ const RealMyEventsPage: React.FC = () => {
           </div>
         )}
         
+        {/* Delete Confirmation Modal */}
         {showDeleteModal && eventToDelete && (
           <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black bg-opacity-50 backdrop-blur-sm">
             <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full p-6">
@@ -453,4 +345,4 @@ const RealMyEventsPage: React.FC = () => {
   );
 };
 
-export default RealMyEventsPage;
+export default MyEventsPage;
