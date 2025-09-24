@@ -33,7 +33,7 @@ const SimplePasswordReset = lazy(() => import('./components/auth/SimplePasswordR
 
 // Attendee Components
 const AttendeeDashboard = lazy(() => import('./components/attendee/AttendeeDashboard'));
-const MyEventsPage = lazy(() => import('./components/attendee/MyEventsPage'));
+const AttendeeMyEventsPage = lazy(() => import('./components/attendee/MyEventsPage'));
 const MyNetworkPage = lazy(() => import('./components/attendee/MyNetworkPage'));
 const NotificationsPage = lazy(() => import('./components/attendee/NotificationsPage'));
 const AttendeeProfilePage = lazy(() => import('./components/attendee/AttendeeProfilePage'));
@@ -59,7 +59,7 @@ const SpeakerPortalPage = lazy(() => import('./components/organizer/SpeakerPorta
 const StaffRolesPage = lazy(() => import('./components/organizer/StaffRolesPage'));
 const AnalyticsPage = lazy(() => import('./components/organizer/RealAnalyticsPage'));
 const OrganizerSettingsPage = lazy(() => import('./components/organizer/OrganizerSettingsPage'));
-const MyEventsPage = lazy(() => import('./components/organizer/MyEventsPage'));
+const OrganizerMyEventsPage = lazy(() => import('./components/organizer/MyEventsPage'));
 
 // Admin Components
 const AdminDashboard = lazy(() => import('./components/admin/AdminDashboard'));
@@ -151,7 +151,10 @@ const AppContent: React.FC = () => {
       case 'content-management': return hasRole(['admin']) ? <ContentManagementPage /> : <NewHomePage />;
 
       // Shared (Multi-Role)
-      case 'my-events': return hasRole(['organizer']) ? <MyEventsPage /> : <NewHomePage />;
+      case 'my-events': 
+        if (hasRole(['attendee'])) return <AttendeeMyEventsPage />;
+        if (hasRole(['organizer'])) return <OrganizerMyEventsPage />;
+        return <NewHomePage />;
       case 'notifications': return hasRole(['attendee', 'organizer']) ? <NotificationsPage /> : <NewHomePage />;
 
       // Default fallback
