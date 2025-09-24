@@ -4,7 +4,7 @@ import {
   LogOut, Menu, X, User, Bell, Plus, ChevronDown
 } from 'lucide-react';
 import { useApp } from '../../contexts/AppContext';
-import { useAuth } from '../../contexts/AuthContext';
+import { useAuth } from '../../contexts/NewAuthContext';
 
 const OrganizerNavigation: React.FC = () => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
