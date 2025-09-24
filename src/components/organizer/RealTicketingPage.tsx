@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useApp } from '../../contexts/AppContext';
-import { useAuth } from '../../contexts/AuthContext';
+import { useAuth } from '../../contexts/NewAuthContext';
 import {
   Ticket, Plus, Edit, Trash2, Save, X, MoreVertical, Search,
   DollarSign, Hash, Calendar, Clock, BarChart3, Users,
