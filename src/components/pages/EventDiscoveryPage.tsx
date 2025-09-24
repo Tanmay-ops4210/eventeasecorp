@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Search, Filter, Calendar, MapPin, Users, Star, ArrowRight } from 'lucide-react';
 import { useApp } from '../../contexts/AppContext';
-import { useAuth } from '../../contexts/AuthContext';
+import { useAuth } from '../../contexts/NewAuthContext';
 import LoginPromptOverlay from '../common/LoginPromptOverlay';
 import AuthModal from '../auth/AuthModal';
 
