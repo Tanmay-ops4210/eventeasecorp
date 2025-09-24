@@ -46,7 +46,7 @@ const ResourceLibraryPage = lazy(() => import('./components/attendee/ResourceLib
 
 // Organizer Components
 const OrganizerDashboard = lazy(() => import('./components/organizer/OrganizerDashboard'));
-const EventBuilderPage = lazy(() => import('./components/organizer/RealEventBuilderPage'));
+const EventBuilderPage = lazy(() => import('./components/organizer/EventBuilderPage'));
 const EventSettingsPage = lazy(() => import('./components/organizer/EventSettingsPage'));
 const LandingCustomizerPage = lazy(() => import('./components/organizer/LandingCustomizerPage'));
 const AgendaManagerPage = lazy(() => import('./components/organizer/AgendaManagerPage'));
@@ -59,7 +59,7 @@ const SpeakerPortalPage = lazy(() => import('./components/organizer/SpeakerPorta
 const StaffRolesPage = lazy(() => import('./components/organizer/StaffRolesPage'));
 const AnalyticsPage = lazy(() => import('./components/organizer/RealAnalyticsPage'));
 const OrganizerSettingsPage = lazy(() => import('./components/organizer/OrganizerSettingsPage'));
-const RealMyEventsPage = lazy(() => import('./components/organizer/RealMyEventsPage'));
+const RealMyEventsPage = lazy(() => import('./components/organizer/MyEventsPage'));
 
 // Admin Components
 const AdminDashboard = lazy(() => import('./components/admin/AdminDashboard'));
