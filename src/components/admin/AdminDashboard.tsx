@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useApp } from '../../contexts/AppContext';
-import { useAuth } from '../../contexts/AuthContext';
+import { useAuth } from '../../contexts/NewAuthContext';
 import { 
   Users, Calendar, FileText, BarChart3, TrendingUp, 
   Activity, AlertTriangle, CheckCircle, Clock, Eye,
