@@ -70,26 +70,6 @@ const HomePage: React.FC = () => {
     }
   ];
 
-  const upcomingSpeakers = [
-    {
-      name: 'Sarah Johnson',
-      title: 'CEO, TechCorp',
-      image: 'https://images.pexels.com/photos/3211476/pexels-photo-3211476.jpeg?auto=compress&cs=tinysrgb&w=400',
-      expertise: 'AI & Innovation'
-    },
-    {
-      name: 'Michael Chen',
-      title: 'Marketing Director',
-      image: 'https://images.pexels.com/photos/1040880/pexels-photo-1040880.jpeg?auto=compress&cs=tinysrgb&w=400',
-      expertise: 'Digital Strategy'
-    },
-    {
-      name: 'Emma Rodriguez',
-      title: 'Sustainability Expert',
-      image: 'https://images.pexels.com/photos/2379004/pexels-photo-2379004.jpeg?auto=compress&cs=tinysrgb&w=400',
-      expertise: 'Green Business'
-    }
-  ];
 
   const benefits = [
     {
@@ -370,52 +350,6 @@ const HomePage: React.FC = () => {
         </div>
       </section>
 
-      {/* Upcoming Speakers Preview */}
-      <section className="py-20 bg-gradient-to-br from-indigo-600 to-purple-600">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-16">
-            <h2 className="text-4xl md:text-5xl font-bold text-white mb-4">
-              Featured Speakers
-            </h2>
-            <p className="text-xl text-white/90">
-              Learn from industry leaders and experts
-            </p>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-            {upcomingSpeakers.map((speaker, index) => (
-              <div
-                key={index}
-                className="text-center group cursor-pointer"
-                onClick={() => setCurrentView('speaker-directory')}
-                style={{ animationDelay: `${index * 0.1}s` }}
-              >
-                <div className="relative mx-auto mb-6 w-32 h-32 rounded-full overflow-hidden transform group-hover:scale-110 transition-all duration-300 group-hover:shadow-2xl">
-                  <img
-                    src={speaker.image}
-                    alt={speaker.name}
-                    className="w-full h-full object-cover"
-                  />
-                </div>
-                <h3 className="text-xl font-bold text-white mb-2 group-hover:text-indigo-200 transition-colors duration-200">
-                  {speaker.name}
-                </h3>
-                <p className="text-white/80 mb-2">{speaker.title}</p>
-                <p className="text-white/60 text-sm">{speaker.expertise}</p>
-              </div>
-            ))}
-          </div>
-
-          <div className="text-center mt-12">
-            <button
-              onClick={() => setCurrentView('speaker-directory')}
-              className="bg-white text-indigo-600 px-8 py-4 rounded-full font-medium hover:bg-gray-100 transform hover:scale-105 transition-all duration-300 shadow-lg hover:shadow-xl"
-            >
-              View All Speakers
-            </button>
-          </div>
-        </div>
-      </section>
 
       {/* CTA Section */}
       <section className="py-20 bg-gray-900">
