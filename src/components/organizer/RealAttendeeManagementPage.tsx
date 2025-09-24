@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useApp } from '../../contexts/AppContext';
-import { useAuth } from '../../contexts/AuthContext';
+import { useAuth } from '../../contexts/NewAuthContext';
 import {
   Users, Search, Filter, Download, Mail, CheckCircle,
   XCircle, Clock, Eye, MoreVertical, UserCheck, AlertCircle,
