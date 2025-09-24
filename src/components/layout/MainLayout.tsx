@@ -4,7 +4,6 @@ import { useApp } from '../../contexts/AppContext';
 import PublicNavigation from './PublicNavigation';
 import AttendeeNavigation from './AttendeeNavigation';
 import OrganizerNavigation from './OrganizerNavigation';
-import SponsorNavigation from './SponsorNavigation';
 import AdminNavigation from './AdminNavigation';
 import Breadcrumbs from './Breadcrumbs';
 
@@ -23,8 +22,6 @@ const MainLayout: React.FC<MainLayoutProps> = ({ children }) => {
           return <AttendeeNavigation />;
         case 'organizer':
           return <OrganizerNavigation />;
-        case 'sponsor':
-          return <SponsorNavigation />;
         case 'admin':
           return <AdminNavigation />;
         default:

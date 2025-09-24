@@ -48,13 +48,6 @@ type AppView =
   | 'staff-roles'
   | 'analytics'
   | 'organizer-settings'
-  // Sponsor Module
-  | 'sponsor-dashboard'
-  | 'booth-customization'
-  | 'lead-capture'
-  | 'sponsor-analytics'
-  | 'sponsor-tools'
-  | 'sponsor-settings';
 
 interface AppContextType {
   currentView: AppView;

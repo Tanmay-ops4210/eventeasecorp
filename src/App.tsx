@@ -17,7 +17,6 @@ import Breadcrumbs from './components/layout/Breadcrumbs';
 const HomePage = lazy(() => import('./components/pages/HomePage'));
 const EventDiscoveryPage = lazy(() => import('./components/pages/EventDiscoveryPage'));
 const SpeakerDirectoryPage = lazy(() => import('./components/speakers/SpeakerDirectoryPage'));
-const SponsorDirectoryPage = lazy(() => import('./components/sponsors/SponsorDirectoryPage'));
 const OrganizerDirectoryPage = lazy(() => import('./components/pages/OrganizerDirectoryPage'));
 const BlogPage = lazy(() => import('./components/blog/BlogPage'));
 const EventDetailPage = lazy(() => import('./components/events/EventDetailPage'));
@@ -62,11 +61,6 @@ const OrganizerSettingsPage = lazy(() => import('./components/organizer/Organize
 // Real Organizer Components
 const RealMyEventsPage = lazy(() => import('./components/organizer/RealMyEventsPage'));
 
-const SponsorDashboard = lazy(() => import('./components/sponsor/SponsorDashboard'));
-const BoothCustomizationPage = lazy(() => import('./components/sponsor/BoothCustomizationPage'));
-const LeadCapturePage = lazy(() => import('./components/sponsor/LeadCapturePage'));
-const SponsorAnalyticsPage = lazy(() => import('./components/sponsor/SponsorAnalyticsPage'));
-const SponsorToolsPage = lazy(() => import('./components/sponsor/SponsorToolsPage'));
 const AdminDashboard = lazy(() => import('./components/admin/AdminDashboard.tsx'));
 const EventOversightPage = lazy(() => import('./components/admin/EventOversightPage.tsx'));
 const ContentManagementPage = lazy(() => import('./components/admin/ContentManagementPage'));
@@ -91,7 +85,6 @@ const AppContent: React.FC = () => {
             switch (profile.role) {
                 case 'attendee': return <AttendeeNavigation />;
                 case 'organizer': return <OrganizerNavigation />;
-                case 'sponsor': return <SponsorNavigation />;
                 case 'admin': return <AdminNavigation />;
                 default: return <PublicNavigation />;
             }
@@ -107,7 +100,6 @@ const AppContent: React.FC = () => {
             case 'home': return <HomePage />;
             case 'event-discovery': return <EventDiscoveryPage />;
             case 'speaker-directory': return <SpeakerDirectoryPage />;
-            case 'sponsor-directory': return <SponsorDirectoryPage />;
             case 'organizer-directory': return <OrganizerDirectoryPage />;
             case 'blog': return <BlogPage />;
             case 'resources': return <ResourcesPage />;
@@ -152,16 +144,10 @@ const AppContent: React.FC = () => {
             case 'speaker-portal': return hasRole(['organizer']) ? <SpeakerPortalPage /> : <HomePage />;
             case 'staff-roles': return hasRole(['organizer']) ? <StaffRolesPage /> : <HomePage />;
 
-            // Sponsor
-            case 'sponsor-dashboard': return hasRole(['sponsor']) ? <SponsorDashboard /> : <HomePage />;
-            case 'booth-customization': return hasRole(['sponsor']) ? <BoothCustomizationPage /> : <HomePage />;
-            case 'lead-capture': return hasRole(['sponsor']) ? <LeadCapturePage /> : <HomePage />;
-            case 'sponsor-analytics': return hasRole(['sponsor']) ? <SponsorAnalyticsPage /> : <HomePage />;
-            case 'sponsor-tools': return hasRole(['sponsor']) ? <SponsorToolsPage /> : <HomePage />;
 
             // Shared (Multi-Role)
             case 'my-events': return hasRole(['organizer']) ? <RealMyEventsPage /> : <HomePage />;
-            case 'notifications': return hasRole(['attendee', 'organizer', 'sponsor']) ? <NotificationsPage /> : <HomePage />;
+            case 'notifications': return hasRole(['attendee', 'organizer']) ? <NotificationsPage /> : <HomePage />;
 
             // Default fallback
             default:

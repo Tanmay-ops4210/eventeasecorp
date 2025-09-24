@@ -27,7 +27,7 @@ export interface Database {
           email: string;
           username: string;
           full_name: string | null;
-          role: 'attendee' | 'organizer' | 'sponsor' | 'admin';
+          role: 'attendee' | 'organizer' | 'admin';
           plan: string;
           company: string | null;
           title: string | null;
@@ -40,7 +40,7 @@ export interface Database {
           email: string;
           username: string;
           full_name?: string | null;
-          role?: 'attendee' | 'organizer' | 'sponsor' | 'admin';
+          role?: 'attendee' | 'organizer' | 'admin';
           plan?: string;
           company?: string | null;
           title?: string | null;
@@ -50,7 +50,7 @@ export interface Database {
           email?: string;
           username?: string;
           full_name?: string | null;
-          role?: 'attendee' | 'organizer' | 'sponsor' | 'admin';
+          role?: 'attendee' | 'organizer' | 'admin';
           plan?: string;
           company?: string | null;
           title?: string | null;
@@ -133,7 +133,7 @@ export class SupabaseAuthService {
   async signUp(email: string, password: string, userData: {
     username: string;
     full_name: string;
-    role: 'attendee' | 'organizer' | 'sponsor';
+    role: 'attendee' | 'organizer';
     company?: string;
   }) {
     try {

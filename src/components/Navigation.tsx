@@ -9,7 +9,6 @@ interface NavigationProps {
   onShowBlog?: () => void;
   onShowEvents?: () => void;
   onShowSpeakers?: () => void;
-  onShowSponsors?: () => void;
   onShowDashboard?: () => void;
   currentPage?: 'home' | 'other';
 }
@@ -22,7 +21,6 @@ const Navigation: React.FC<NavigationProps> = ({
   onShowBlog, 
   onShowEvents,
   onShowSpeakers,
-  onShowSponsors,
   onShowDashboard,
   currentPage = 'home'
 }) => {
@@ -70,7 +68,6 @@ const Navigation: React.FC<NavigationProps> = ({
     { label: 'ANALYTICS', action: () => scrollToSection('analytics'), icon: Calendar },
     { label: 'PLAN EVENT', action: () => scrollToSection('plan-event'), icon: Calendar },
     { label: 'BLOG', action: () => onShowBlog?.(), icon: Calendar },
-    { label: 'SPONSORS', action: () => onShowSponsors?.(), icon: Calendar },
   ];
 
   const isHomePage = currentPage === 'home';
@@ -148,12 +145,6 @@ const Navigation: React.FC<NavigationProps> = ({
                     className="nav-item text-white hover:text-indigo-200 px-3 py-2 text-sm font-medium transition-all duration-200 hover:bg-white/10 rounded-lg touch-manipulation"
                   >
                     BLOG
-                  </button>
-                  <button
-                    onClick={() => handleNavigation(() => onShowSponsors?.())}
-                    className="nav-item text-white hover:text-indigo-200 px-3 py-2 text-sm font-medium transition-all duration-200 hover:bg-white/10 rounded-lg touch-manipulation"
-                  >
-                    SPONSORS
                   </button>
                 </>
               ) : (
@@ -307,12 +298,6 @@ const Navigation: React.FC<NavigationProps> = ({
                   className="mobile-nav-item text-white hover:text-indigo-200 block px-4 py-3 text-base font-medium w-full text-left rounded-lg hover:bg-white/10 transition-colors duration-200 touch-manipulation"
                 >
                   BLOG
-                </button>
-                <button
-                  onClick={() => handleNavigation(() => onShowSponsors?.())}
-                  className="mobile-nav-item text-white hover:text-indigo-200 block px-4 py-3 text-base font-medium w-full text-left rounded-lg hover:bg-white/10 transition-colors duration-200 touch-manipulation"
-                >
-                  SPONSORS
                 </button>
               </>
             ) : (

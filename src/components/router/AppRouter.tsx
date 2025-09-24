@@ -57,12 +57,6 @@ const StaffRolesPage = lazy(() => import('../organizer/StaffRolesPage'));
 const AnalyticsPage = lazy(() => import('../organizer/RealAnalyticsPage'));
 const OrganizerSettingsPage = lazy(() => import('../organizer/OrganizerSettingsPage'));
 
-// Sponsor Module
-const SponsorDashboard = lazy(() => import('../sponsor/SponsorDashboard'));
-const BoothCustomizationPage = lazy(() => import('../sponsor/BoothCustomizationPage'));
-const LeadCapturePage = lazy(() => import('../sponsor/LeadCapturePage'));
-const SponsorAnalyticsPage = lazy(() => import('../sponsor/SponsorAnalyticsPage'));
-const SponsorToolsPage = lazy(() => import('../sponsor/SponsorToolsPage'));
 
 // Admin Module
 const AdminDashboard = lazy(() => import('../admin/AdminDashboard'));
@@ -119,12 +113,6 @@ const routes = [
   { path: 'speaker-portal', component: SpeakerPortalPage, requiredRoles: ['organizer'] },
   { path: 'staff-roles', component: StaffRolesPage, requiredRoles: ['organizer'] },
 
-  // Sponsor Routes
-  { path: 'sponsor-dashboard', component: SponsorDashboard, requiredRoles: ['sponsor'] },
-  { path: 'booth-customization', component: BoothCustomizationPage, requiredRoles: ['sponsor'] },
-  { path: 'lead-capture', component: LeadCapturePage, requiredRoles: ['sponsor'] },
-  { path: 'sponsor-analytics', component: SponsorAnalyticsPage, requiredRoles: ['sponsor'] },
-  { path: 'sponsor-tools', component: SponsorToolsPage, requiredRoles: ['sponsor'] },
 
   // Admin Routes
   { path: 'admin-dashboard', component: AdminDashboard, requiredRoles: ['admin'] },
@@ -134,7 +122,7 @@ const routes = [
 
   // Shared Routes (accessible by multiple roles)
   { path: 'my-events', component: MyEventsPage, requiredRoles: ['organizer', 'attendee'] },
-  { path: 'notifications', component: NotificationsPage, requiredRoles: ['attendee', 'organizer', 'sponsor', 'admin'] },
+  { path: 'notifications', component: NotificationsPage, requiredRoles: ['attendee', 'organizer', 'admin'] },
 ];
 
 // --- Helper Components ---
@@ -173,7 +161,6 @@ const AppRouter: React.FC = () => {
     switch (role) {
       case 'attendee': return <AttendeeDashboard />;
       case 'organizer': return <OrganizerDashboard />;
-      case 'sponsor': return <SponsorDashboard />;
       case 'admin': return <AdminDashboard />;
       default: return <HomePage />;
     }

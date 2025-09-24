@@ -30,7 +30,6 @@ interface SponsorsPartnersPageProps {
   onLogout?: () => void;
   onShowBlog?: () => void;
   onShowEvents?: () => void;
-  onShowSpeakers?: () => void;
   onShowDashboard?: () => void;
 }
 
@@ -164,7 +163,6 @@ const SponsorsPartnersPage: React.FC<SponsorsPartnersPageProps> = ({
   onLogout = () => {},
   onShowBlog = () => {},
   onShowEvents = () => {},
-  onShowSpeakers = () => {},
   onShowDashboard = () => {}
 }) => {
   const platinumSponsors = sponsors.filter(s => s.tier === 'platinum');
@@ -181,7 +179,6 @@ const SponsorsPartnersPage: React.FC<SponsorsPartnersPageProps> = ({
         onLogout={onLogout}
         onShowBlog={onShowBlog}
         onShowEvents={onShowEvents}
-        onShowSpeakers={onShowSpeakers}
         onShowDashboard={onShowDashboard}
         currentPage="other"
       />

@@ -111,12 +111,6 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, onLoginSuccess }
       description: 'Create and manage events',
       icon: Calendar
     },
-    { 
-      value: 'sponsor', 
-      label: 'Sponsor/Exhibitor', 
-      description: 'Sponsor events and showcase products',
-      icon: Building
-    },
   ];
   
   return (

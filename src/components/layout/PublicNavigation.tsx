@@ -49,7 +49,6 @@ const PublicNavigation: React.FC = () => {
   const navigationItems = [
     { label: 'Events', view: 'event-discovery' as const, icon: Calendar },
     { label: 'Speakers', view: 'speaker-directory' as const, icon: Users },
-    { label: 'Sponsors', view: 'sponsor-directory' as const, icon: Building },
     { label: 'Blog', view: 'blog' as const, icon: BookOpen },
     { label: 'About', view: 'about' as const, icon: Info },
     { label: 'Contact', view: 'contact' as const, icon: Phone },
@@ -70,9 +69,6 @@ const PublicNavigation: React.FC = () => {
           break;
         case 'organizer':
           setCurrentView('organizer-dashboard');
-          break;
-        case 'sponsor':
-          setCurrentView('sponsor-dashboard');
           break;
         case 'admin':
           setCurrentView('admin-dashboard');
