@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Search, Filter, Calendar, MapPin, Users, Star, ArrowRight, Loader2 } from 'lucide-react';
 import { useApp } from '../../contexts/AppContext';
-import { useAuth } from '../../contexts/AuthContext';
+import { useAuth } from '../../contexts/NewAuthContext';
 
 interface Event {
   id: string;
