@@ -13,7 +13,7 @@ import { ShieldX, Loader2 } from 'lucide-react';
 const HomePage = lazy(() => import('../pages/HomePage'));
 const EventDiscoveryPage = lazy(() => import('../pages/EventDiscoveryPage'));
 const SpeakerDirectoryPage = lazy(() => import('../speakers/SpeakerDirectoryPage'));
-const SponsorDirectoryPage = lazy(() => import('../sponsors/SponsorDirectoryPage'));
+const SponsorDirectoryPage = lazy(() => import('../pages/SponsorDirectoryPage'));
 const OrganizerDirectoryPage = lazy(() => import('../pages/OrganizerDirectoryPage'));
 const BlogPage = lazy(() => import('../blog/BlogPage'));
 const EventDetailPage = lazy(() => import('../events/EventDetailPage'));
