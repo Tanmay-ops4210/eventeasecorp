@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { X, User, Mail, Lock, Eye, EyeOff, Building, Calendar } from 'lucide-react';
 import { useApp } from '../../contexts/AppContext';
-import { useAuth } from '../../contexts/AuthContext';
+import { useAuth } from '../../contexts/NewAuthContext';
 
 interface AuthModalProps {
   isOpen: boolean;
