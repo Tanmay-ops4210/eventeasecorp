@@ -5,7 +5,7 @@ import {
   User, Award, Globe, Mail, Phone
 } from 'lucide-react';
 import { useApp } from '../../contexts/AppContext';
-import { useAuth } from '../../contexts/AuthContext';
+import { useAuth } from '../../contexts/NewAuthContext';
 import { EventDetail } from '../../types/eventDetail';
 import { eventDetailService } from '../../services/eventDetailService';
 import { attendeeEventService } from '../../services/attendeeEventService';
