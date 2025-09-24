@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useAuth } from '../../contexts/AuthContext';
+import { useAuth } from '../../contexts/NewAuthContext';
 import { useApp } from '../../contexts/AppContext';
 import { 
   Plus, Edit, Trash2, Eye, Copy, Filter, Search, Calendar,
