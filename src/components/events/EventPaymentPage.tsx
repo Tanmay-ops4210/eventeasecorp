@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { CreditCard, Lock, Check, ArrowLeft, MapPin, Calendar, Users, DollarSign } from 'lucide-react';
 import { useApp } from '../../contexts/AppContext';
-import { useAuth } from '../../contexts/AuthContext';
+import { useAuth } from '../../contexts/NewAuthContext';
 import { attendeeEventService } from '../../services/attendeeEventService';
 
 const EventPaymentPage: React.FC = () => {
