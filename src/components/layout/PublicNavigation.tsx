@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Menu, X, Calendar, Users, Building, BookOpen, Info, Phone, User, LogOut } from 'lucide-react';
+import { Menu, X, Calendar, Users, Building, BookOpen, Info, Phone, User, LogOut, Award } from 'lucide-react';
 import { useApp } from '../../contexts/AppContext';
 import { useAuth } from '../../contexts/AuthContext';
 import AuthModal from '../auth/AuthModal';
@@ -49,6 +49,7 @@ const PublicNavigation: React.FC = () => {
   const navigationItems = [
     { label: 'Events', view: 'event-discovery' as const, icon: Calendar },
     { label: 'Speakers', view: 'speaker-directory' as const, icon: Users },
+    { label: 'Sponsors', view: 'sponsor-directory' as const, icon: Award },
     { label: 'Blog', view: 'blog' as const, icon: BookOpen },
     { label: 'About', view: 'about' as const, icon: Info },
     { label: 'Contact', view: 'contact' as const, icon: Phone },
