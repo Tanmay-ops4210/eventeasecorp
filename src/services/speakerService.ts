@@ -225,6 +225,7 @@ class SpeakerService {
   static getInstance(): SpeakerService {
     if (!SpeakerService.instance) {
       SpeakerService.instance = new SpeakerService();
+    }
     return SpeakerService.instance;
   }
 
@@ -287,10 +288,6 @@ class SpeakerService {
   async getFeaturedSpeakers(): Promise<Speaker[]> {
     return this.speakers.filter(speaker => speaker.featured);
   }
-}
-
-export const speakerService = SpeakerService.getInstance();
-
 }
 
 export const speakerService = SpeakerService.getInstance();
