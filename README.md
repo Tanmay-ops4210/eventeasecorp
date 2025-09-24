@@ -27,6 +27,13 @@ A modern, fully-featured event management website with interactive data visualiz
 
 ## Features
 
+### 🧭 Responsive Header Navigation
+- **Modern Navigation**: Clean, responsive header with dropdown authentication
+- **Supabase Integration**: Seamless authentication with sign-in/sign-up functionality
+- **Role-Based Access**: Different navigation options based on user roles
+- **Mobile Optimized**: Collapsible mobile menu with touch-friendly interactions
+- **Accessibility**: ARIA labels, keyboard navigation, and screen reader support
+
 ### 🎯 Core Functionality
 - **Event Management**: Complete event planning and booking system
 - **User Authentication**: Secure Firebase-powered authentication with role-based access
@@ -138,10 +145,6 @@ npm install
 
 # Set up environment variables
 # Create a .env file with your Firebase and Supabase credentials:
-# VITE_FIREBASE_API_KEY=your-firebase-api-key
-# VITE_FIREBASE_AUTH_DOMAIN=your-firebase-auth-domain
-# VITE_FIREBASE_PROJECT_ID=your-firebase-project-id
-# (... other Firebase config)
 # VITE_SUPABASE_URL=your-supabase-url
 # VITE_SUPABASE_ANON_KEY=your-supabase-anon-key
 
@@ -150,75 +153,153 @@ npm run dev
 
 # Build for production
 npm run build
+
+# Demo the new header component
+# Navigate to /header-demo in your browser to see the responsive header in action
 ```
 
-### Firebase & Supabase Setup
+### Header Navigation Demo
 
-1. **Create a Firebase Project**: Visit [console.firebase.google.com](https://console.firebase.google.com) and create a new project
+To see the new responsive header navigation component in action:
 
-2. **Enable Firebase Authentication**: Enable Email/Password authentication in your Firebase console
+1. **Start the development server**: `npm run dev`
+2. **Navigate to the demo**: Add `?view=header-demo` to your URL or use the app navigation
+3. **Test authentication**: Try the sign-in/sign-up functionality
+4. **Test responsiveness**: Resize your browser to see mobile navigation
+5. **Test navigation**: Click through Events, Speaker, Blog, and Contact pages
 
-3. **Create a Supabase Project**: Visit [supabase.com](https://supabase.com) and create a new project for database operations
+### Supabase Setup
 
-4. **Run Database Migrations**: Run the migration file located at `supabase/migrations/20250829135458_floral_sky.sql`
+1. **Create a Supabase Project**: Visit [supabase.com](https://supabase.com) and create a new project
 
-5. **Configure Environment Variables**: Add your Firebase and Supabase credentials to your `.env` file
+2. **Run Database Migrations**: The project includes comprehensive database migrations that will set up all necessary tables and security policies
 
-6. **Email Templates**: Configure email templates in your Firebase console for:
+3. **Configure Environment Variables**: Add your Supabase credentials to your `.env` file:
+
+```env
+VITE_SUPABASE_URL=your-supabase-project-url
+VITE_SUPABASE_ANON_KEY=your-supabase-anon-key
+```
+
+4. **Authentication Setup**: The system uses Supabase Auth for user management with automatic profile creation
+
+5. **Email Templates**: Configure email templates in your Supabase dashboard for:
    - Email confirmation
    - Password reset
    - Email change confirmation
 
-7. **Auth Settings**: In your Firebase console, configure:
+6. **Auth Settings**: In your Supabase dashboard, configure:
    - Enable email confirmations
    - Set redirect URLs for your domain
    - Configure password requirements
 
 ### Database Schema
 
-The system uses Firebase for authentication and Supabase for database operations:
+The system uses Supabase for both authentication and database operations:
 
-- **Firebase Auth**: Handles user authentication, email verification, password reset
+- **Supabase Auth**: Handles user authentication, email verification, password reset
 - **Supabase Database**: Stores user profiles, events, and all application data
-- **profiles**: User information linked to Firebase UID
+- **profiles**: User information with role-based access control
 - **events**: Event data linked to user profiles
+- **organizer_events**: Simplified event management for organizers
+- **speakers**: Speaker directory with expertise areas
+- **sponsors**: Sponsor management with tier-based organization
 
 ### Authentication Flow
 
 1. **Signup**: User registers with Supabase Auth (email, password, name, role)
-2. **Profile Creation**: User profile automatically created in Supabase database
+2. **Profile Creation**: User profile automatically created via database trigger
 3. **Email Verification**: User receives Supabase verification email
-4. **Login**: User can only login after email verification is complete
-4. **Role-Based Routing**: Users are redirected to appropriate dashboard based on role
+4. **Login**: User can login after email verification
+5. **Role-Based Routing**: Users are redirected to appropriate dashboard based on role
 5. **Session Management**: Supabase handles session persistence
+
+### New Header Navigation Features
+
+#### Component Architecture
+- **ResponsiveHeader**: Main header component with navigation and authentication
+- **AuthDropdown**: Reusable authentication dropdown with sign-in/sign-up forms
+- **Page Components**: Dedicated pages for Events, Speaker, Blog, and Contact
+
+#### Authentication Features
+- **Dropdown Authentication**: Clean dropdown interface for sign-in/sign-up
+- **Role Selection**: Users can choose between Attendee and Organizer roles
+- **Form Validation**: Comprehensive client-side validation with error handling
+- **Loading States**: Visual feedback during authentication processes
+- **Success Messages**: Clear confirmation of successful actions
+
+#### Responsive Design
+- **Mobile-First**: Optimized for mobile devices with touch-friendly interactions
+- **Collapsible Menu**: Clean mobile navigation with smooth animations
+- **Adaptive Layout**: Navigation adapts to screen size and authentication state
+- **Accessibility**: Full keyboard navigation and screen reader support
 
 ### Project Structure
 
 ```
 src/
+├── components/
+│   ├── navigation/
+│   │   ├── ResponsiveHeader.tsx     # Main header component
+│   │   └── AuthDropdown.tsx         # Authentication dropdown
+│   ├── pages/
+│   │   ├── EventsPage.tsx           # Events listing page
+│   │   ├── SpeakerPage.tsx          # Speaker directory page
+│   │   ├── BlogPageNew.tsx          # Blog articles page
+│   │   └── ContactPageNew.tsx       # Contact form page
+│   └── demo/
+│       └── HeaderDemo.tsx           # Demo wrapper component
 ├── lib/
 │   ├── supabase.ts               # Supabase configuration and services
 │   └── supabaseClient.ts         # Legacy compatibility layer
 ├── contexts/
 │   ├── AuthContext.tsx           # Authentication state management
 │   └── AppContext.tsx            # Application state management
-├── components/
-│   ├── auth/
-│   │   ├── AuthModal.tsx         # Login/signup modal with role selection
-│   │   ├── PasswordResetPage.tsx # Password reset request page
-│   │   ├── EmailVerificationCallback.tsx # Email verification handler
-│   │   └── PasswordResetCallback.tsx     # Password reset handler
-│   ├── common/
-│   │   └── EmailVerificationBanner.tsx   # Verification reminder banner
-├── components/
-│   ├── EnhancedChart.tsx      # Main chart component
-│   ├── chart-styles.css       # Chart-specific styles
-│   ├── Navigation.tsx         # Updated navigation
-│   └── ...                    # Other components
 ├── types/
-│   └── user.ts                   # User and authentication types
+│   ├── user.ts                   # User and authentication types
+│   └── navigation.ts             # Navigation-specific types
 ├── App.tsx                    # Main application
 └── main.tsx                   # Entry point
+```
+
+### Usage Examples
+
+#### Basic Header Implementation
+```tsx
+import ResponsiveHeader from './components/navigation/ResponsiveHeader';
+
+function App() {
+  return (
+    <div>
+      <ResponsiveHeader />
+      {/* Your page content */}
+    </div>
+  );
+}
+```
+
+#### Custom Navigation Items
+```tsx
+const customNavItems = [
+  { label: 'Events', path: 'events', href: '/events' },
+  { label: 'Speakers', path: 'speakers', href: '/speakers' },
+  { label: 'Blog', path: 'blog', href: '/blog' },
+  { label: 'Contact', path: 'contact', href: '/contact' }
+];
+
+<ResponsiveHeader navigationItems={customNavItems} />
+```
+
+#### Authentication Integration
+```tsx
+import { useAuth } from './contexts/AuthContext';
+
+function MyComponent() {
+  const { isAuthenticated, user, login, logout } = useAuth();
+  
+  // Authentication state is automatically managed
+  // Header will show appropriate UI based on auth state
+}
 ```
 
 ### Performance Considerations
@@ -238,6 +319,7 @@ src/
 - **Lucide React**: Beautiful, customizable icons
 - **Vite**: Fast build tool and development server
 - **CSS3**: Modern CSS features for animations and layouts
+- **Responsive Design**: Mobile-first approach with modern CSS Grid and Flexbox
 
 ## Environment Variables
 
@@ -256,6 +338,8 @@ VITE_SUPABASE_ANON_KEY=your-supabase-anon-key
 - **Supabase Password Reset**: Secure password reset flow with Supabase
 - **Session Security**: Supabase handles secure session management
 - **Data Protection**: Supabase Row Level Security policies protect user data
+- **Form Validation**: Client-side validation with server-side security
+- **CSRF Protection**: Built-in protection through Supabase Auth
 
 ## License
 

@@ -4,6 +4,7 @@ import { AppProvider, useApp } from './contexts/AppContext';
 import './index.css';
 import './components/chart-styles.css';
 import { Loader2 } from 'lucide-react'; // Import a loading icon
+import HeaderDemo from './components/demo/HeaderDemo';
 
 // --- Layout Components ---
 import PublicNavigation from './components/layout/PublicNavigation';
@@ -63,6 +64,12 @@ const RealMyEventsPage = lazy(() => import('./components/organizer/RealMyEventsP
 const AdminDashboard = lazy(() => import('./components/admin/AdminDashboard'));
 const EventOversightPage = lazy(() => import('./components/admin/EventOversightPage'));
 const ContentManagementPage = lazy(() => import('./components/admin/ContentManagementPage'));
+
+// Demo Components
+const EventsPage = lazy(() => import('./components/pages/EventsPage'));
+const SpeakerPage = lazy(() => import('./components/pages/SpeakerPage'));
+const BlogPageNew = lazy(() => import('./components/pages/BlogPageNew'));
+const ContactPageNew = lazy(() => import('./components/pages/ContactPageNew'));
 
 
 // A loading spinner component to show while pages are being lazy-loaded.
@@ -148,6 +155,13 @@ const AppContent: React.FC = () => {
             case 'user-management': return hasRole(['admin']) ? <AdminDashboard /> : <HomePage />;
             case 'event-oversight': return hasRole(['admin']) ? <EventOversightPage /> : <HomePage />;
             case 'content-management': return hasRole(['admin']) ? <ContentManagementPage /> : <HomePage />;
+            
+            // Demo Header Navigation Routes
+            case 'events': return <EventsPage />;
+            case 'speaker': return <SpeakerPage />;
+            case 'blog-new': return <BlogPageNew />;
+            case 'contact-new': return <ContactPageNew />;
+            case 'header-demo': return <HeaderDemo />;
 
             // Shared (Multi-Role)
             case 'my-events': return hasRole(['organizer']) ? <RealMyEventsPage /> : <HomePage />;
