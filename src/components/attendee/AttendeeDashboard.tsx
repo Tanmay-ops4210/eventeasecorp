@@ -1,6 +1,6 @@
 import React from 'react';
 import { useApp } from '../../contexts/AppContext';
-import { useAuth } from '../../contexts/AuthContext';
+import { useAuth } from '../../contexts/NewAuthContext';
 import { Calendar, Users, BookOpen, Bell, ArrowRight, TrendingUp, Clock, Star } from 'lucide-react';
 
 interface AttendeePageProps {
