@@ -63,8 +63,7 @@ const PublicNavigation: React.FC = () => {
 
   const handleAuthAction = () => {
     if (isAuthenticated && user) {
-      const userRole = profile?.role || 'attendee';
-      switch (userRole) {
+      switch (profile?.role) {
         case 'attendee':
           setCurrentView('attendee-dashboard');
           break;

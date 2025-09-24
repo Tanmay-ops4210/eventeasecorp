@@ -91,6 +91,21 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     if (!result.success) {
       throw new Error(result.error || 'Login failed');
     }
+    
+    // Navigate to appropriate dashboard based on role
+    if (result.profile?.role === 'organizer') {
+      window.dispatchEvent(new CustomEvent('navigate-to-dashboard', { 
+        detail: 'organizer-dashboard' 
+      }));
+    } else if (result.profile?.role === 'attendee') {
+      window.dispatchEvent(new CustomEvent('navigate-to-dashboard', { 
+        detail: 'attendee-dashboard' 
+      }));
+    } else if (result.profile?.role === 'admin') {
+      window.dispatchEvent(new CustomEvent('navigate-to-dashboard', { 
+        detail: 'admin-dashboard' 
+      }));
+    }
   }, []);
 
   // Function to register a user

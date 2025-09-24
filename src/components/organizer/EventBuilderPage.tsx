@@ -1,11 +1,24 @@
 import React, { useState } from 'react';
 import { useApp } from '../../contexts/AppContext';
-import { useAuth } from '../../contexts/NewAuthContext';
+import { useAuth } from '../../contexts/AuthContext';
 import {
   Save, Calendar, MapPin, Users, DollarSign, Image as ImageIcon, Type,
   ArrowLeft, Check, AlertTriangle, Loader2, Upload, IndianRupee
 } from 'lucide-react';
-import { organizerCrudService, EventFormData } from '../../services/organizerCrudService';
+import { supabase } from '../../lib/supabase';
+
+interface EventFormData {
+  title: string;
+  description?: string;
+  category: string;
+  event_date: string;
+  time: string;
+  end_time?: string;
+  venue: string;
+  capacity: number;
+  image_url?: string;
+  visibility: 'public' | 'private' | 'unlisted';
+}
 
 const EventBuilderPage: React.FC = () => {
   const { setBreadcrumbs, setCurrentView } = useApp();
@@ -100,13 +113,22 @@ const EventBuilderPage: React.FC = () => {
 
     setIsLoading(true);
     try {
-      const result = await organizerCrudService.createEvent(eventData, user.id);
+      const { data, error } = await supabase
+        .from('organizer_events')
+        .insert([{
+          ...eventData,
+          organizer_id: user.id,
+          price: price,
+          status: markComplete ? 'published' : 'draft'
+        }])
+        .select()
+        .single();
 
-      if (result.success) {
+      if (!error) {
         alert(`Event ${markComplete ? 'created and marked complete' : 'saved as draft'} successfully!`);
         setCurrentView('organizer-dashboard');
       } else {
-        alert(result.error || 'Failed to create event');
+        alert('Failed to create event');
       }
     } catch (error) {
       alert('Failed to create event');
@@ -120,18 +142,22 @@ const EventBuilderPage: React.FC = () => {
 
     setIsLoading(true);
     try {
-      const result = await organizerCrudService.createEvent(eventData, user.id);
+      const { data, error } = await supabase
+        .from('organizer_events')
+        .insert([{
+          ...eventData,
+          organizer_id: user.id,
+          price: price,
+          status: 'published'
+        }])
+        .select()
+        .single();
 
-      if (result.success && result.event) {
-        const publishResult = await organizerCrudService.publishEvent(result.event.id);
-        if (publishResult.success) {
-          alert('Event created and published successfully!');
-          setCurrentView('my-events');
-        } else {
-          alert(publishResult.error || 'Failed to publish event');
-        }
+      if (!error) {
+        alert('Event created and published successfully!');
+        setCurrentView('my-events');
       } else {
-        alert(result.error || 'Failed to create event');
+        alert('Failed to create event');
       }
     } catch (error) {
       alert('Failed to create and publish event');

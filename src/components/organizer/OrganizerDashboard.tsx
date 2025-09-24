@@ -1,18 +1,18 @@
 import React, { useState, useEffect } from 'react';
 import { useApp } from '../../contexts/AppContext';
-import { useAuth } from '../../contexts/NewAuthContext';
+import { useAuth } from '../../contexts/AuthContext';
 import { 
   Calendar, Users, DollarSign, TrendingUp, Eye, Plus, 
   BarChart3, Clock, CheckCircle, AlertCircle, Activity,
   Loader2, ArrowUp, ArrowDown, Ticket, Mail, Settings,
   Edit, Check, ExternalLink
 } from 'lucide-react';
-import { organizerCrudService, OrganizerEvent } from '../../services/organizerCrudService';
+import { supabase } from '../../lib/supabase';
 
 const OrganizerDashboard: React.FC = () => {
   const { setBreadcrumbs, setCurrentView } = useApp();
   const { user, profile } = useAuth();
-  const [events, setEvents] = useState<OrganizerEvent[]>([]);
+  const [events, setEvents] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
   React.useEffect(() => {
@@ -25,11 +25,16 @@ const OrganizerDashboard: React.FC = () => {
 
     try {
       setIsLoading(true);
-      const result = await organizerCrudService.getMyEvents(user.id);
-      if (result.success && result.events) {
-        setEvents(result.events);
+      const { data, error } = await supabase
+        .from('organizer_events')
+        .select('*')
+        .eq('organizer_id', user.id)
+        .order('created_at', { ascending: false });
+
+      if (error) {
+        console.error('Failed to fetch events:', error);
       } else {
-        console.error('Failed to fetch events:', result.error);
+        setEvents(data || []);
       }
     } catch (error) {
       console.error('Failed to fetch events:', error);
@@ -40,19 +45,23 @@ const OrganizerDashboard: React.FC = () => {
 
   const handlePublishEvent = async (eventId: string) => {
     try {
-      const result = await organizerCrudService.publishEvent(eventId);
-      if (result.success) {
+      const { error } = await supabase
+        .from('organizer_events')
+        .update({ status: 'published' })
+        .eq('id', eventId);
+
+      if (!error) {
         await loadEvents();
         alert('Event published successfully!');
       } else {
-        alert(result.error || 'Failed to publish event');
+        alert('Failed to publish event');
       }
     } catch (error) {
       alert('Failed to publish event');
     }
   };
 
-  const getEventStatus = (event: OrganizerEvent) => {
+  const getEventStatus = (event: any) => {
     // Check if event has all required fields
     const hasTitle = event.title && event.title.trim().length > 0;
     const hasDescription = event.description && event.description.trim().length > 0;
@@ -67,7 +76,7 @@ const OrganizerDashboard: React.FC = () => {
     return 'incomplete';
   };
 
-  const getStatusIcon = (event: OrganizerEvent) => {
+  const getStatusIcon = (event: any) => {
     if (event.status === 'published') {
       return <CheckCircle className="w-5 h-5 text-green-500" />;
     }
@@ -79,7 +88,7 @@ const OrganizerDashboard: React.FC = () => {
     return <Edit className="w-5 h-5 text-orange-500" />;
   };
 
-  const getStatusText = (event: OrganizerEvent) => {
+  const getStatusText = (event: any) => {
     if (event.status === 'published') {
       return 'Published';
     }
@@ -88,7 +97,7 @@ const OrganizerDashboard: React.FC = () => {
     return status === 'complete' ? 'Complete' : 'Incomplete';
   };
 
-  const getStatusColor = (event: OrganizerEvent) => {
+  const getStatusColor = (event: any) => {
     if (event.status === 'published') {
       return 'bg-green-100 text-green-800';
     }
@@ -235,7 +244,7 @@ const OrganizerDashboard: React.FC = () => {
                           title="Edit Event"
                         >
                           <Edit className="w-4 h-4" />
-                          <span className="text-xs">Edit</span>
+                          <span className="text-xs">Incomplete</span>
                         </button>
                       )}
 

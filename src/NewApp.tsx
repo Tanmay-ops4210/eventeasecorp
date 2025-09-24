@@ -59,7 +59,7 @@ const SpeakerPortalPage = lazy(() => import('./components/organizer/SpeakerPorta
 const StaffRolesPage = lazy(() => import('./components/organizer/StaffRolesPage'));
 const AnalyticsPage = lazy(() => import('./components/organizer/RealAnalyticsPage'));
 const OrganizerSettingsPage = lazy(() => import('./components/organizer/OrganizerSettingsPage'));
-const RealMyEventsPage = lazy(() => import('./components/organizer/MyEventsPage'));
+const MyEventsPage = lazy(() => import('./components/organizer/MyEventsPage'));
 
 // Admin Components
 const AdminDashboard = lazy(() => import('./components/admin/AdminDashboard'));
@@ -151,7 +151,7 @@ const AppContent: React.FC = () => {
       case 'content-management': return hasRole(['admin']) ? <ContentManagementPage /> : <NewHomePage />;
 
       // Shared (Multi-Role)
-      case 'my-events': return hasRole(['organizer']) ? <RealMyEventsPage /> : <NewHomePage />;
+      case 'my-events': return hasRole(['organizer']) ? <MyEventsPage /> : <NewHomePage />;
       case 'notifications': return hasRole(['attendee', 'organizer']) ? <NotificationsPage /> : <NewHomePage />;
 
       // Default fallback

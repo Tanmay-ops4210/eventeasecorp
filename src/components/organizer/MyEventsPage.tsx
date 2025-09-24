@@ -6,13 +6,13 @@ import {
   AlertTriangle, CheckCircle, Clock, Globe, Loader2,
   ArrowLeft, ArrowRight, Settings, BarChart3, Mail, Ticket,
   EyeOff, Share2, MapPin
-} from 'lucide-react';
+import { supabase } from '../../lib/supabase';
 import { organizerCrudService, OrganizerEvent } from '../../services/organizerCrudService';
 
 const MyEventsPage: React.FC = () => {
   const { setBreadcrumbs, setCurrentView } = useApp();
   const { user } = useAuth();
-  const [events, setEvents] = useState<OrganizerEvent[]>([]);
+  const [events, setEvents] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState<'all' | 'draft' | 'published' | 'completed'>('all');
@@ -27,11 +27,17 @@ const MyEventsPage: React.FC = () => {
     
     setIsLoading(true);
     try {
-      const result = await organizerCrudService.getMyEvents(user.id);
-      if (result.success && result.events) {
-        setEvents(result.events);
+      const { data, error } = await supabase
+        .from('organizer_events')
+        .select('*')
+        .eq('organizer_id', user.id)
+        .eq('status', 'published')
+        .order('created_at', { ascending: false });
+
+      if (error) {
+        console.error('Failed to fetch events:', error);
       } else {
-        console.error('Failed to fetch events:', result.error);
+        setEvents(data || []);
       }
     } catch (error) {
       console.error('Failed to fetch events:', error);
@@ -69,14 +75,18 @@ const MyEventsPage: React.FC = () => {
 
   const handleDeleteEvent = async (eventId: string) => {
     try {
-      const result = await organizerCrudService.deleteEvent(eventId);
-      if (result.success) {
+      const { error } = await supabase
+        .from('organizer_events')
+        .delete()
+        .eq('id', eventId);
+
+      if (!error) {
         await fetchEvents();
         setShowDeleteModal(false);
         setEventToDelete(null);
-        alert('Event deleted successfully!');
+        alert('Failed to publish event');
       } else {
-        alert(result.error || 'Failed to delete event');
+        alert('Failed to delete event');
       }
     } catch (error) {
       alert('Failed to delete event');
@@ -85,8 +95,12 @@ const MyEventsPage: React.FC = () => {
 
   const getStatusIcon = (status: string) => {
     switch (status) {
-      case 'draft': return <Edit className="w-4 h-4 text-gray-500" />;
-      case 'published': return <CheckCircle className="w-4 h-4 text-green-500" />;
+      const { error } = await supabase
+        .from('organizer_events')
+        .update({ status: 'published' })
+        .eq('id', eventId);
+
+      if (!error) {
       case 'ongoing': return <Clock className="w-4 h-4 text-blue-500" />;
       case 'completed': return <CheckCircle className="w-4 h-4 text-indigo-500" />;
       default: return <AlertTriangle className="w-4 h-4 text-yellow-500" />;
