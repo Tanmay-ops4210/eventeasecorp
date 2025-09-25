@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useParams, useNavigate } from 'react-router-dom';
 import { 
   ArrowLeft, Calendar, MapPin, Users, Clock, Star, Share2, Download, 
   ExternalLink, Timer, Loader2, CheckCircle, AlertCircle, Play,
@@ -18,14 +19,12 @@ const tierColors = {
   bronze: 'from-orange-400 to-orange-600'
 };
 
-interface EventDetailPageProps {
-  eventId: string;
-}
-
-const EventDetailPage: React.FC<EventDetailPageProps> = ({ eventId }) => {
+const EventDetailPage: React.FC = () => {
   const { setBreadcrumbs } = useApp();
+  const { eventId } = useParams<{ eventId: string }>();
+  const navigate = useNavigate();
   const { isAuthenticated } = useAuth();
-  const { setCurrentView, setRegistrationData } = useApp();
+  const { setRegistrationData } = useApp();
   const [event, setEvent] = useState<EventDetail | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -69,6 +68,12 @@ const EventDetailPage: React.FC<EventDetailPageProps> = ({ eventId }) => {
   }, [event]);
 
   const loadEvent = async () => {
+    if (!eventId) {
+      setError('Event ID not provided');
+      setIsLoading(false);
+      return;
+    }
+    
     try {
       setIsLoading(true);
       setError(null);
@@ -141,7 +146,7 @@ const EventDetailPage: React.FC<EventDetailPageProps> = ({ eventId }) => {
       };
       
       setRegistrationData(registrationInfo);
-      setCurrentView('event-payment');
+      navigate('/event-payment');
     }
   };
 
@@ -213,7 +218,7 @@ const EventDetailPage: React.FC<EventDetailPageProps> = ({ eventId }) => {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Back Button */}
         <button
-          onClick={() => window.history.back()}
+          onClick={() => navigate('/discover')}
           className="inline-flex items-center space-x-2 text-indigo-600 hover:text-indigo-700 font-medium transition-colors duration-200 mb-8"
         >
           <ArrowLeft className="w-4 h-4" />

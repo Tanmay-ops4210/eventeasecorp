@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useApp } from '../../contexts/AppContext';
 import { useAuth } from '../../contexts/NewAuthContext';
 import { Save, Calendar, MapPin, Users, DollarSign, Image as ImageIcon, Type, ArrowLeft, Check, AlertTriangle, Loader2, Upload, IndianRupee as Rupee } from 'lucide-react';
@@ -6,6 +7,7 @@ import { organizerCrudService, EventFormData } from '../../services/organizerCru
 
 const CreateEventPage: React.FC = () => {
   const { setBreadcrumbs, setCurrentView } = useApp();
+  const navigate = useNavigate();
   const { user } = useAuth();
   const [isLoading, setIsLoading] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
@@ -101,7 +103,7 @@ const CreateEventPage: React.FC = () => {
 
       if (result.success) {
         alert(`Event ${markComplete ? 'created and marked complete' : 'saved as draft'} successfully!`);
-        setCurrentView('organizer-dashboard');
+        navigate('/organizer/dashboard');
       } else {
         alert(result.error || 'Failed to create event');
       }
@@ -123,7 +125,7 @@ const CreateEventPage: React.FC = () => {
         const publishResult = await organizerCrudService.publishEvent(result.event.id);
         if (publishResult.success) {
           alert('Event created and published successfully!');
-          setCurrentView('my-events');
+          navigate('/my-events');
         } else {
           alert(publishResult.error || 'Failed to publish event');
         }
@@ -152,7 +154,7 @@ const CreateEventPage: React.FC = () => {
         <div className="flex items-center justify-between mb-8">
           <h1 className="text-3xl font-bold text-gray-900">Create New Event</h1>
           <button
-            onClick={() => setCurrentView('organizer-dashboard')}
+            onClick={() => navigate('/organizer/dashboard')}
             className="flex items-center space-x-2 text-gray-600 hover:text-gray-900 transition-colors duration-200"
           >
             <ArrowLeft className="w-4 h-4" />

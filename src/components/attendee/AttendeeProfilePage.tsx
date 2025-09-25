@@ -1,10 +1,12 @@
 import React from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useApp } from '../../contexts/AppContext';
 import { useAuth } from '../../contexts/NewAuthContext';
 import { User, Mail, LogOut, Shield } from 'lucide-react';
 
 const AttendeeProfilePage: React.FC = () => {
   const { setBreadcrumbs, setCurrentView } = useApp();
+  const navigate = useNavigate();
   const { user, profile, logout } = useAuth();
 
   React.useEffect(() => {
@@ -13,7 +15,7 @@ const AttendeeProfilePage: React.FC = () => {
 
   const handleLogout = () => {
     logout();
-    setCurrentView('home');
+    navigate('/');
   };
 
   return (

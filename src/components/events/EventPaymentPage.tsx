@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { CreditCard, Lock, Check, ArrowLeft, MapPin, Calendar, Users, DollarSign } from 'lucide-react';
 import { useApp } from '../../contexts/AppContext';
 import { useAuth } from '../../contexts/NewAuthContext';
@@ -6,6 +7,7 @@ import { attendeeEventService } from '../../services/attendeeEventService';
 
 const EventPaymentPage: React.FC = () => {
   const { registrationData, setCurrentView } = useApp();
+  const navigate = useNavigate();
   const { user } = useAuth();
   const [paymentMethod, setPaymentMethod] = useState<'card' | 'upi' | 'netbanking'>('card');
   const [isProcessing, setIsProcessing] = useState(false);
@@ -46,7 +48,7 @@ const EventPaymentPage: React.FC = () => {
       );
 
       if (result.success) {
-        setCurrentView('event-payment-success');
+        navigate('/event-payment-success');
       } else {
         alert(result.error || 'Registration failed');
       }
@@ -78,7 +80,7 @@ const EventPaymentPage: React.FC = () => {
         <div className="text-center py-20">
           <p className="text-gray-600">No registration data found. Please go back and try again.</p>
           <button
-            onClick={() => setCurrentView('event-discovery')}
+            onClick={() => navigate('/discover')}
             className="mt-4 bg-indigo-600 text-white px-6 py-3 rounded-lg hover:bg-indigo-700"
           >
             Back to Events
@@ -260,7 +262,7 @@ const EventPaymentPage: React.FC = () => {
                 <div className="flex space-x-4 pt-6">
                   <button
                     type="button"
-                    onClick={() => setCurrentView('event-discovery')}
+                    onClick={() => navigate('/discover')}
                     className="flex-1 flex items-center justify-center space-x-2 px-6 py-3 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors duration-200"
                   >
                     <ArrowLeft className="w-4 h-4" />

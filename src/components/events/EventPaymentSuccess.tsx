@@ -1,9 +1,11 @@
 import React from 'react';
+import { useNavigate } from 'react-router-dom';
 import { CheckCircle, Download, Calendar, MapPin, Mail, Phone } from 'lucide-react';
 import { useApp } from '../../contexts/AppContext';
 
 const EventPaymentSuccess: React.FC = () => {
   const { registrationData, setCurrentView } = useApp();
+  const navigate = useNavigate();
   const bookingId = `REG-${Date.now().toString().slice(-8)}`;
   
   const handleDownloadReceipt = () => {
@@ -34,7 +36,7 @@ const EventPaymentSuccess: React.FC = () => {
         <div className="text-center py-20">
           <p className="text-gray-600">Registration data not found.</p>
           <button
-            onClick={() => setCurrentView('attendee-dashboard')}
+            onClick={() => navigate('/dashboard')}
             className="mt-4 bg-indigo-600 text-white px-6 py-3 rounded-lg hover:bg-indigo-700"
           >
             Go to Dashboard
@@ -167,7 +169,7 @@ const EventPaymentSuccess: React.FC = () => {
             {/* Action Buttons */}
             <div className="mt-8 flex flex-col sm:flex-row gap-4">
               <button
-                onClick={() => setCurrentView('my-events')}
+                onClick={() => navigate('/my-events')}
                 className="flex-1 bg-gradient-to-r from-indigo-600 to-purple-600 text-white py-3 px-6 rounded-lg font-medium hover:from-indigo-700 hover:to-purple-700 transition-all duration-200"
               >
                 View My Events

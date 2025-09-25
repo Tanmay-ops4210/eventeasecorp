@@ -1,34 +1,33 @@
 import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { 
   Home, Calendar, Users, Bell, User, Settings, Menu, X,
   Ticket, BookOpen, LogOut
 } from 'lucide-react';
-import { useApp } from '../../contexts/AppContext';
 import { useAuth } from '../../contexts/NewAuthContext';
 
 const AttendeeNavigation: React.FC = () => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [showProfileMenu, setShowProfileMenu] = useState(false);
-  const { setCurrentView } = useApp();
+  const navigate = useNavigate();
   const { user, profile, logout } = useAuth();
 
   const navigationItems = [
-    { label: 'Dashboard', view: 'attendee-dashboard' as const, icon: Home },
-    { label: 'My Events', view: 'my-events' as const, icon: Calendar },
-    { label: 'My Network', view: 'my-network' as const, icon: Users },
-    { label: 'Discover Events', view: 'event-discovery' as const, icon: Ticket },
-    { label: 'Resources', view: 'resource-library' as const, icon: BookOpen },
+    { label: 'Dashboard', path: '/dashboard', icon: Home },
+    { label: 'My Events', path: '/my-events', icon: Calendar },
+    { label: 'My Network', path: '/my-network', icon: Users },
+    { label: 'Discover Events', path: '/discover', icon: Ticket },
   ];
 
-  const handleNavigation = (view: any) => {
-    setCurrentView(view);
+  const handleNavigation = (path: string) => {
+    navigate(path);
     setIsMobileMenuOpen(false);
     setShowProfileMenu(false);
   };
 
   const handleLogout = () => {
     logout();
-    setCurrentView('home');
+    navigate('/');
     setShowProfileMenu(false);
     setIsMobileMenuOpen(false);
   };
@@ -40,7 +39,7 @@ const AttendeeNavigation: React.FC = () => {
           {/* Logo */}
           <div 
             className="flex-shrink-0 cursor-pointer order-1"
-            onClick={() => handleNavigation('attendee-dashboard')}
+            onClick={() => handleNavigation('/dashboard')}
           >
             <div className="flex items-center space-x-3">
               <div className="w-8 h-8 bg-gradient-to-r from-indigo-600 to-purple-600 rounded-full flex items-center justify-center">
@@ -57,8 +56,8 @@ const AttendeeNavigation: React.FC = () => {
                 const IconComponent = item.icon;
                 return (
                   <button
-                    key={item.view}
-                    onClick={() => handleNavigation(item.view)}
+                    key={item.path}
+                    onClick={() => handleNavigation(item.path)}
                     className="flex items-center space-x-2 text-gray-700 hover:text-indigo-600 px-3 py-2 text-sm font-medium transition-all duration-200 hover:bg-indigo-50 rounded-lg"
                   >
                     <IconComponent className="w-4 h-4" />
@@ -72,7 +71,7 @@ const AttendeeNavigation: React.FC = () => {
           {/* User Section */}
           <div className="hidden md:flex items-center space-x-4">
             <button
-              onClick={() => handleNavigation('notifications')}
+              onClick={() => handleNavigation('/notifications')}
               className="p-2 text-gray-400 hover:text-gray-600 transition-colors duration-200 relative"
             >
               <Bell className="w-5 h-5" />
@@ -97,7 +96,7 @@ const AttendeeNavigation: React.FC = () => {
               {showProfileMenu && (
                 <div className="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg py-2 z-50 animate-fade-in border border-gray-200">
                   <button
-                    onClick={() => handleNavigation('attendee-profile')}
+                    onClick={() => handleNavigation('/profile')}
                     className="w-full text-left flex items-center space-x-2 px-4 py-2 text-gray-700 hover:bg-gray-100 transition-colors duration-200"
                   >
                     <Settings className="w-4 h-4" />
@@ -137,8 +136,8 @@ const AttendeeNavigation: React.FC = () => {
               const IconComponent = item.icon;
               return (
                 <button
-                  key={item.view}
-                  onClick={() => handleNavigation(item.view)}
+                  key={item.path}
+                  onClick={() => handleNavigation(item.path)}
                   className="mobile-nav-item flex items-center space-x-3 text-gray-700 hover:text-indigo-600 block px-4 py-3 text-base font-medium w-full text-left rounded-lg hover:bg-indigo-50 transition-all duration-300 transform hover:scale-105 touch-manipulation"
                 >
                   <IconComponent className="w-5 h-5" />
@@ -153,14 +152,14 @@ const AttendeeNavigation: React.FC = () => {
                 <span className="text-base font-medium">{profile?.full_name || user?.email}</span>
               </div>
               <button
-                onClick={() => handleNavigation('notifications')}
+                onClick={() => handleNavigation('/notifications')}
                 className="mobile-nav-item flex items-center space-x-3 text-gray-700 hover:text-indigo-600 block px-4 py-3 text-base font-medium w-full text-left rounded-lg hover:bg-indigo-50 transition-all duration-300 transform hover:scale-105 touch-manipulation"
               >
                 <Bell className="w-5 h-5" />
                 <span>Notifications</span>
               </button>
               <button
-                onClick={() => handleNavigation('attendee-profile')}
+                onClick={() => handleNavigation('/profile')}
                 className="mobile-nav-item flex items-center space-x-3 text-gray-700 hover:text-indigo-600 block px-4 py-3 text-base font-medium w-full text-left rounded-lg hover:bg-indigo-50 transition-all duration-300 transform hover:scale-105 touch-manipulation"
               >
                 <Settings className="w-5 h-5" />

@@ -1,6 +1,6 @@
 import React from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Calendar, Users, Star, ArrowRight, Play, CheckCircle } from 'lucide-react';
-import { useApp } from '../../contexts/AppContext';
 import { useAuth } from '../../contexts/NewAuthContext';
 import ParallaxSection from '../ParallaxSection';
 import LoginPromptOverlay from '../common/LoginPromptOverlay';
@@ -9,7 +9,7 @@ import { useState } from 'react';
 import '../../styles/wave-animation.css';
 
 const NewHomePage: React.FC = () => {
-  const { setCurrentView, setSelectedEventId } = useApp();
+  const navigate = useNavigate();
   const { isAuthenticated } = useAuth();
   const [showLoginPrompt, setShowLoginPrompt] = React.useState(false);
   const [showAuthModal, setShowAuthModal] = React.useState(false);
@@ -92,8 +92,7 @@ const NewHomePage: React.FC = () => {
       setShowLoginPrompt(true);
       return;
     }
-    setSelectedEventId(eventId);
-    setCurrentView('event-page');
+    navigate(`/event/${eventId}`);
   };
 
   const handleLoginPromptClose = () => {
@@ -109,7 +108,7 @@ const NewHomePage: React.FC = () => {
   const handleOrganizerSignUp = () => {
     setAuthModalConfig({ 
       defaultRole: 'organizer',
-      redirectTo: 'organizer-dashboard'
+      redirectTo: '/organizer/dashboard'
     });
     setShowAuthModal(true);
   };
@@ -141,7 +140,7 @@ const NewHomePage: React.FC = () => {
             
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
               <button
-                onClick={() => setCurrentView('event-discovery')}
+                onClick={() => navigate('/discover')}
                 className="group relative inline-flex items-center justify-center px-8 py-4 text-lg font-medium text-indigo-600 bg-white rounded-full hover:bg-gray-100 transition-all duration-300 transform hover:scale-105 shadow-lg hover:shadow-xl"
               >
                 <span className="relative z-10">Discover Events</span>
@@ -149,7 +148,7 @@ const NewHomePage: React.FC = () => {
               </button>
               
               <button
-                onClick={() => setCurrentView('pricing')}
+                onClick={() => navigate('/pricing')}
                 className="group inline-flex items-center justify-center px-8 py-4 text-lg font-medium text-white border-2 border-white rounded-full hover:bg-white hover:text-indigo-600 transition-all duration-300 transform hover:scale-105"
               >
                 <Play className="mr-2 w-5 h-5" />
@@ -226,7 +225,7 @@ const NewHomePage: React.FC = () => {
 
           <div className="text-center mt-12">
             <button
-              onClick={() => setCurrentView('event-discovery')}
+              onClick={() => navigate('/discover')}
               className="bg-gradient-to-r from-indigo-600 to-purple-600 text-white px-8 py-4 rounded-full font-medium hover:from-indigo-700 hover:to-purple-700 transform hover:scale-105 transition-all duration-300 shadow-lg hover:shadow-xl"
             >
               View All Events
@@ -348,7 +347,7 @@ const NewHomePage: React.FC = () => {
           
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <button
-              onClick={() => setCurrentView('event-discovery')}
+              onClick={() => navigate('/discover')}
               className="bg-gradient-to-r from-indigo-600 to-purple-600 text-white px-8 py-4 rounded-full font-medium hover:from-indigo-700 hover:to-purple-700 transform hover:scale-105 transition-all duration-300 shadow-lg hover:shadow-xl"
             >
               Find Events

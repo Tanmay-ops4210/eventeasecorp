@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { X, User, Mail, Lock, Eye, EyeOff, Building, Calendar, Loader2, AlertCircle } from 'lucide-react';
 import { useAuth } from '../../contexts/NewAuthContext';
-import { useApp } from '../../contexts/AppContext';
 
 interface NewAuthModalProps {
   isOpen: boolean;
@@ -21,7 +21,7 @@ const NewAuthModal: React.FC<NewAuthModalProps> = ({
   redirectTo 
 }) => {
   const { login, register } = useAuth();
-  const { setCurrentView } = useApp();
+  const navigate = useNavigate();
   const [isLoginMode, setIsLoginMode] = useState(true);
   const [showPassword, setShowPassword] = useState(false);
   const [selectedRole, setSelectedRole] = useState<UserRole>(defaultRole);
@@ -99,19 +99,19 @@ const NewAuthModal: React.FC<NewAuthModalProps> = ({
       setTimeout(() => {
         if (redirectTo) {
           console.log('Redirecting to:', redirectTo);
-          setCurrentView(redirectTo as any);
+          navigate(redirectTo);
         } else {
           // Default redirection based on role
           console.log('Default redirection for role:', selectedRole);
           switch (selectedRole) {
             case 'organizer':
-              setCurrentView('organizer-dashboard');
+              navigate('/organizer/dashboard');
               break;
             case 'admin':
-              setCurrentView('admin-dashboard');
+              navigate('/admin/dashboard');
               break;
             default:
-              setCurrentView('attendee-dashboard');
+              navigate('/dashboard');
           }
         }
         
@@ -349,7 +349,7 @@ const NewAuthModal: React.FC<NewAuthModalProps> = ({
                   type="button"
                   onClick={() => {
                     onClose();
-                    setCurrentView('password-reset');
+                    navigate('/password-reset');
                   }}
                   className="text-sm text-indigo-600 hover:text-indigo-700 transition-colors duration-200"
                 >

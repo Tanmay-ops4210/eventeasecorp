@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { Menu, X, Calendar, Users, Building, BookOpen, Info, Phone, User, LogOut, Award } from 'lucide-react';
 import { useApp } from '../../contexts/AppContext';
 import { useAuth } from '../../contexts/NewAuthContext';
@@ -8,19 +9,20 @@ const NewPublicNavigation: React.FC = () => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
   const [showProfileMenu, setShowProfileMenu] = useState(false);
-  const { setCurrentView } = useApp();
+  const navigate = useNavigate();
+  const location = useLocation();
   const { isAuthenticated, user, profile, logout } = useAuth();
 
   const navigationItems = [
-    { label: 'Events', view: 'event-discovery' as const, icon: Calendar },
-    { label: 'Speakers', view: 'speaker-directory' as const, icon: Users },
-    { label: 'Blog', view: 'blog' as const, icon: BookOpen },
-    { label: 'About', view: 'about' as const, icon: Info },
-    { label: 'Contact', view: 'contact' as const, icon: Phone },
+    { label: 'Events', path: '/discover', icon: Calendar },
+    { label: 'Speakers', path: '/speakers', icon: Users },
+    { label: 'Blog', path: '/blog', icon: BookOpen },
+    { label: 'About', path: '/about', icon: Info },
+    { label: 'Contact', path: '/contact', icon: Phone },
   ];
 
-  const handleNavigation = (view: any) => {
-    setCurrentView(view);
+  const handleNavigation = (path: string) => {
+    navigate(path);
     setIsMobileMenuOpen(false);
     setShowProfileMenu(false);
   };
@@ -30,16 +32,16 @@ const NewPublicNavigation: React.FC = () => {
       // Route to appropriate dashboard based on role
       switch (profile.role) {
         case 'attendee':
-          setCurrentView('attendee-dashboard');
+          navigate('/dashboard');
           break;
         case 'organizer':
-          setCurrentView('organizer-dashboard');
+          navigate('/organizer/dashboard');
           break;
         case 'admin':
-          setCurrentView('admin-dashboard');
+          navigate('/admin/dashboard');
           break;
         default:
-          setCurrentView('attendee-dashboard');
+          navigate('/dashboard');
       }
     } else {
       setIsAuthModalOpen(true);
@@ -53,6 +55,7 @@ const NewPublicNavigation: React.FC = () => {
 
   const handleLogout = () => {
     logout();
+    navigate('/');
     setShowProfileMenu(false);
     setIsMobileMenuOpen(false);
   };
@@ -69,7 +72,7 @@ const NewPublicNavigation: React.FC = () => {
             {/* Logo */}
             <div
               className="flex-shrink-0 cursor-pointer md:order-1"
-              onClick={() => handleNavigation('home')}
+              onClick={() => handleNavigation('/')}
             >
               <div className="flex items-center space-x-3">
                 <div className="w-8 h-8 bg-white rounded-full flex items-center justify-center">
@@ -86,8 +89,8 @@ const NewPublicNavigation: React.FC = () => {
                   const IconComponent = item.icon;
                   return (
                     <button
-                      key={item.view}
-                      onClick={() => handleNavigation(item.view)}
+                      key={item.path}
+                      onClick={() => handleNavigation(item.path)}
                       className="flex items-center space-x-2 text-white hover:text-indigo-200 px-3 py-2 text-sm font-medium transition-all duration-200 hover:bg-white/10 rounded-lg"
                     >
                       <IconComponent className="w-4 h-4" />
@@ -101,7 +104,7 @@ const NewPublicNavigation: React.FC = () => {
             {/* Auth Section */}
             <div className="hidden md:flex items-center space-x-4">
               <button
-                onClick={() => handleNavigation('pricing')}
+                onClick={() => handleNavigation('/pricing')}
                 className="text-white hover:text-indigo-200 text-sm font-medium transition-colors duration-200 px-3 py-2 hover:bg-white/10 rounded-lg"
               >
                 Pricing
@@ -172,8 +175,8 @@ const NewPublicNavigation: React.FC = () => {
                 const IconComponent = item.icon;
                 return (
                   <button
-                    key={item.view}
-                    onClick={() => handleNavigation(item.view)}
+                    key={item.path}
+                    onClick={() => handleNavigation(item.path)}
                     className="mobile-nav-item flex items-center space-x-3 text-white hover:text-indigo-200 block px-4 py-3 text-base font-medium w-full text-left rounded-lg hover:bg-white/20 transition-all duration-300 transform hover:scale-105 touch-manipulation"
                   >
                     <IconComponent className="w-5 h-5" />
@@ -184,7 +187,7 @@ const NewPublicNavigation: React.FC = () => {
 
               <div className="border-t border-indigo-500 pt-3 mt-3">
                 <button
-                  onClick={() => handleNavigation('pricing')}
+                  onClick={() => handleNavigation('/pricing')}
                   className="mobile-nav-item text-white hover:text-indigo-200 block px-4 py-3 text-base font-medium w-full text-left rounded-lg hover:bg-white/20 transition-all duration-300 transform hover:scale-105 touch-manipulation"
                 >
                   Pricing

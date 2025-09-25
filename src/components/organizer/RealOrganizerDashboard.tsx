@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useApp } from '../../contexts/AppContext';
 import { useAuth } from '../../contexts/NewAuthContext';
 import { Calendar, Users, DollarSign, TrendingUp, Eye, Plus, BarChart3, Clock, CheckCircle, AlertCircle, Activity, Loader2, ArrowUp, ArrowDown, Ticket, Settings, CreditCard as Edit, Check, ExternalLink, RefreshCw, MapPin } from 'lucide-react';
@@ -6,6 +7,7 @@ import { organizerCrudService } from '../../services/organizerCrudService';
 
 const RealOrganizerDashboard: React.FC = () => {
   const { setBreadcrumbs, setCurrentView } = useApp();
+  const navigate = useNavigate();
   const { user, profile } = useAuth();
   const [events, setEvents] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -149,13 +151,13 @@ const RealOrganizerDashboard: React.FC = () => {
               <p className="text-gray-600 mb-6">You need organizer permissions to access this dashboard.</p>
               <div className="space-x-4">
                 <button
-                  onClick={() => setCurrentView('home')}
+                  onClick={() => navigate('/')}
                   className="bg-gray-600 text-white px-6 py-3 rounded-lg hover:bg-gray-700 transition-colors duration-200"
                 >
                   Go to Home
                 </button>
                 <button
-                  onClick={() => setCurrentView('pricing')}
+                  onClick={() => navigate('/pricing')}
                   className="bg-indigo-600 text-white px-6 py-3 rounded-lg hover:bg-indigo-700 transition-colors duration-200"
                 >
                   Upgrade to Organizer
@@ -308,28 +310,28 @@ const RealOrganizerDashboard: React.FC = () => {
           <h2 className="text-xl font-bold text-gray-900 mb-4">Quick Actions</h2>
           <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
             <button
-              onClick={() => setCurrentView('event-builder')}
+              onClick={() => navigate('/organizer/create-event')}
               className="flex items-center space-x-3 p-4 bg-gradient-to-r from-indigo-600 to-purple-600 text-white rounded-lg hover:from-indigo-700 hover:to-purple-700 transition-all duration-200"
             >
               <Plus className="w-5 h-5" />
               <span>Create Event</span>
             </button>
             <button
-              onClick={() => setCurrentView('my-events')}
+              onClick={() => navigate('/my-events')}
               className="flex items-center space-x-3 p-4 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors duration-200"
             >
               <Calendar className="w-5 h-5" />
               <span>My Events</span>
             </button>
             <button
-              onClick={() => setCurrentView('ticketing')}
+              onClick={() => navigate('/organizer/ticketing')}
               className="flex items-center space-x-3 p-4 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors duration-200"
             >
               <Ticket className="w-5 h-5" />
               <span>Ticketing</span>
             </button>
             <button
-              onClick={() => setCurrentView('organizer-settings')}
+              onClick={() => navigate('/organizer/settings')}
               className="flex items-center space-x-3 p-4 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors duration-200"
             >
               <Settings className="w-5 h-5" />
@@ -351,7 +353,7 @@ const RealOrganizerDashboard: React.FC = () => {
                 <span>Refresh</span>
               </button>
               <button
-                onClick={() => setCurrentView('event-builder')}
+                onClick={() => navigate('/organizer/create-event')}
                 className="flex items-center space-x-2 px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors duration-200"
               >
                 <Plus className="w-4 h-4" />
@@ -419,7 +421,7 @@ const RealOrganizerDashboard: React.FC = () => {
                         <button
                           onClick={() => {
                             // Navigate to edit event with this event's data
-                            setCurrentView('event-builder');
+                            navigate('/organizer/create-event');
                           }}
                           className="flex items-center space-x-1 px-3 py-1 bg-orange-100 text-orange-600 rounded-lg hover:bg-orange-200 transition-colors duration-200"
                           title="Complete Event Setup"
@@ -442,7 +444,7 @@ const RealOrganizerDashboard: React.FC = () => {
 
                       {event.status === 'published' && (
                         <button
-                          onClick={() => setCurrentView('my-events')}
+                          onClick={() => navigate('/my-events')}
                           className="flex items-center space-x-1 px-3 py-1 bg-blue-100 text-blue-600 rounded-lg hover:bg-blue-200 transition-colors duration-200"
                           title="View in My Events"
                         >
@@ -461,7 +463,7 @@ const RealOrganizerDashboard: React.FC = () => {
               <h3 className="text-xl font-semibold text-gray-900 mb-2">No events yet</h3>
               <p className="text-gray-600 mb-6">Create your first event to get started</p>
               <button
-                onClick={() => setCurrentView('event-builder')}
+                onClick={() => navigate('/organizer/create-event')}
                 className="bg-indigo-600 text-white px-6 py-3 rounded-lg hover:bg-indigo-700 transition-colors duration-200"
               >
                 Create Your First Event

@@ -1,36 +1,36 @@
 import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { 
   Home, Calendar, Settings, Users, BarChart3, Mail, Ticket, 
   LogOut, Menu, X, User, Bell, Plus, ChevronDown
 } from 'lucide-react';
-import { useApp } from '../../contexts/AppContext';
 import { useAuth } from '../../contexts/NewAuthContext';
 
 const OrganizerNavigation: React.FC = () => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [showProfileMenu, setShowProfileMenu] = useState(false);
-  const { setCurrentView } = useApp();
+  const navigate = useNavigate();
   const { user, profile, logout } = useAuth();
 
   const navigationItems = [
-    { label: 'Dashboard', view: 'organizer-dashboard' as const, icon: Home },
-    { label: 'Create Event', view: 'event-builder' as const, icon: Plus },
-    { label: 'My Events', view: 'my-events' as const, icon: Calendar },
-    { label: 'Attendees', view: 'attendee-management' as const, icon: Users },
-    { label: 'Analytics', view: 'analytics' as const, icon: BarChart3 },
-    { label: 'Ticketing', view: 'ticketing' as const, icon: Ticket },
-    { label: 'Marketing', view: 'email-campaigns' as const, icon: Mail },
+    { label: 'Dashboard', path: '/organizer/dashboard', icon: Home },
+    { label: 'Create Event', path: '/organizer/create-event', icon: Plus },
+    { label: 'My Events', path: '/my-events', icon: Calendar },
+    { label: 'Attendees', path: '/organizer/attendee-management', icon: Users },
+    { label: 'Analytics', path: '/organizer/analytics', icon: BarChart3 },
+    { label: 'Ticketing', path: '/organizer/ticketing', icon: Ticket },
+    { label: 'Marketing', path: '/organizer/email-campaigns', icon: Mail },
   ];
 
-  const handleNavigation = (view: any) => {
-    setCurrentView(view);
+  const handleNavigation = (path: string) => {
+    navigate(path);
     setIsMobileMenuOpen(false);
     setShowProfileMenu(false);
   };
 
   const handleLogout = () => {
     logout();
-    setCurrentView('home');
+    navigate('/');
     setShowProfileMenu(false);
     setIsMobileMenuOpen(false);
   };
@@ -46,7 +46,7 @@ const OrganizerNavigation: React.FC = () => {
           {/* Logo */}
           <div 
             className="flex-shrink-0 cursor-pointer md:order-1"
-            onClick={() => handleNavigation('organizer-dashboard')}
+            onClick={() => handleNavigation('/organizer/dashboard')}
           >
             <div className="flex items-center space-x-3">
               <div className="w-8 h-8 bg-gradient-to-r from-indigo-600 to-purple-600 rounded-full flex items-center justify-center">
@@ -66,8 +66,8 @@ const OrganizerNavigation: React.FC = () => {
                 const IconComponent = item.icon;
                 return (
                   <button
-                    key={item.view}
-                    onClick={() => handleNavigation(item.view)}
+                    key={item.path}
+                    onClick={() => handleNavigation(item.path)}
                     className="flex items-center space-x-2 text-gray-700 hover:text-indigo-600 px-3 py-2 text-sm font-medium transition-all duration-200 hover:bg-indigo-50 rounded-lg"
                   >
                     <IconComponent className="w-4 h-4" />
@@ -81,7 +81,7 @@ const OrganizerNavigation: React.FC = () => {
           {/* User Section */}
           <div className="hidden md:flex items-center space-x-4">
             <button
-              onClick={() => handleNavigation('notifications')}
+              onClick={() => handleNavigation('/notifications')}
               className="p-2 text-gray-400 hover:text-gray-600 transition-colors duration-200 relative"
             >
               <Bell className="w-5 h-5" />
@@ -107,7 +107,7 @@ const OrganizerNavigation: React.FC = () => {
               {showProfileMenu && (
                 <div className="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg py-2 z-50 animate-fade-in border border-gray-200">
                   <button
-                    onClick={() => handleNavigation('organizer-settings')}
+                    onClick={() => handleNavigation('/organizer/settings')}
                     className="w-full text-left flex items-center space-x-2 px-4 py-2 text-gray-700 hover:bg-gray-100 transition-colors duration-200"
                   >
                     <Settings className="w-4 h-4" />
@@ -148,8 +148,8 @@ const OrganizerNavigation: React.FC = () => {
               const IconComponent = item.icon;
               return (
                 <button
-                  key={item.view}
-                  onClick={() => handleNavigation(item.view)}
+                  key={item.path}
+                  onClick={() => handleNavigation(item.path)}
                   className="mobile-nav-item flex items-center space-x-3 text-gray-700 hover:text-indigo-600 block px-4 py-3 text-base font-medium w-full text-left rounded-lg hover:bg-indigo-50 transition-all duration-300 transform hover:scale-105 touch-manipulation"
                 >
                   <IconComponent className="w-5 h-5" />
@@ -164,14 +164,14 @@ const OrganizerNavigation: React.FC = () => {
                <span className="text-base font-medium">{profile?.full_name || user?.email}</span>
               </div>
               <button
-                onClick={() => handleNavigation('notifications')}
+                onClick={() => handleNavigation('/notifications')}
                 className="mobile-nav-item flex items-center space-x-3 text-gray-700 hover:text-indigo-600 block px-4 py-3 text-base font-medium w-full text-left rounded-lg hover:bg-indigo-50 transition-all duration-300 transform hover:scale-105 touch-manipulation"
               >
                 <Bell className="w-5 h-5" />
                 <span>Notifications</span>
               </button>
               <button
-                onClick={() => handleNavigation('organizer-settings')}
+                onClick={() => handleNavigation('/organizer/settings')}
                 className="mobile-nav-item flex items-center space-x-3 text-gray-700 hover:text-indigo-600 block px-4 py-3 text-base font-medium w-full text-left rounded-lg hover:bg-indigo-50 transition-all duration-300 transform hover:scale-105 touch-manipulation"
               >
                 <Settings className="w-5 h-5" />

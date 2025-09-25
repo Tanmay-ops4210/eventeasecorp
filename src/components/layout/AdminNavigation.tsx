@@ -1,15 +1,15 @@
 import React, { useState, useEffect, useRef } from 'react';
+import { useNavigate } from 'react-router-dom';
 import {
   Home, Users, Calendar, FileText, Settings,
   LogOut, Menu, X, User, Bell, Shield, ChevronDown, BarChart3,
   ChevronLeft, ChevronRight
 } from 'lucide-react';
-import { useApp } from '../../contexts/AppContext';
 import { useAuth } from '../../contexts/NewAuthContext';
 import '../../styles/admin-panel.css';
 
 const AdminNavigation: React.FC = () => {
-  const { setCurrentView } = useApp();
+  const navigate = useNavigate();
   const { user, profile, logout } = useAuth();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isSidebarExpanded, setIsSidebarExpanded] = useState(false);
@@ -42,38 +42,38 @@ const AdminNavigation: React.FC = () => {
   const navigationItems = [
     {
       label: 'Dashboard',
-      view: 'admin-dashboard' as const,
+      path: '/admin/dashboard',
       icon: Home,
       description: 'Overview & Analytics'
     },
     {
       label: 'User Management',
-      view: 'user-management' as const,
+      path: '/admin/dashboard', // User management is part of admin dashboard
       icon: Users,
       description: 'Manage Users & Roles'
     },
     {
       label: 'Event Oversight',
-      view: 'event-oversight' as const,
+      path: '/admin/event-oversight',
       icon: Calendar,
       description: 'Monitor Events'
     },
     {
       label: 'Content Management',
-      view: 'content-management' as const,
+      path: '/admin/content-management',
       icon: FileText,
       description: 'Site Content & Pages'
     },
   ];
 
-  const handleNavigation = (view: any) => {
-    setCurrentView(view);
+  const handleNavigation = (path: string) => {
+    navigate(path);
     setIsMobileMenuOpen(false);
   };
 
   const handleLogout = () => {
     logout();
-    setCurrentView('home');
+    navigate('/');
     setIsMobileMenuOpen(false);
   };
 
@@ -142,8 +142,8 @@ const AdminNavigation: React.FC = () => {
               const IconComponent = item.icon;
               return (
                 <button
-                  key={item.view}
-                  onClick={() => handleNavigation(item.view)}
+                  key={item.path}
+                  onClick={() => handleNavigation(item.path)}
                   className="admin-nav-item w-full text-left"
                 >
                   <IconComponent className="admin-nav-icon" />
@@ -159,7 +159,7 @@ const AdminNavigation: React.FC = () => {
           <div className="admin-nav-section">
             <div className="admin-nav-title">System</div>
             <button
-              onClick={() => handleNavigation('notifications')}
+              onClick={() => handleNavigation('/notifications')}
               className="admin-nav-item w-full text-left"
             >
               <div className="relative">

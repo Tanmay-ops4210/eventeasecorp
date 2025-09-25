@@ -1,6 +1,7 @@
 import React, { Suspense, lazy } from 'react';
+import { Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider, useAuth } from './contexts/NewAuthContext';
-import { AppProvider, useApp } from './contexts/AppContext';
+import { AppProvider } from './contexts/AppContext';
 import './index.css';
 import './components/chart-styles.css';
 import { Loader2 } from 'lucide-react';
@@ -31,7 +32,6 @@ const PricingPage = lazy(() => import('./components/pages/PricingPage'));
 const ContactPage = lazy(() => import('./components/pages/ContactPage'));
 const TermsPage = lazy(() => import('./components/pages/TermsPage'));
 const PrivacyPage = lazy(() => import('./components/pages/PrivacyPage'));
-const PasswordResetPage = lazy(() => import('./components/auth/PasswordResetPage'));
 const SimplePasswordReset = lazy(() => import('./components/auth/SimplePasswordReset'));
 
 // Attendee Components
@@ -43,24 +43,22 @@ const AttendeeProfilePage = lazy(() => import('./components/attendee/AttendeePro
 const AgendaBuilderPage = lazy(() => import('./components/attendee/AgendaBuilderPage'));
 const NetworkingHubPage = lazy(() => import('./components/attendee/NetworkingHubPage'));
 const LiveEventPage = lazy(() => import('./components/attendee/LiveEventPage'));
-const SessionRoomPage = lazy(() => import('./components/attendee/SessionRoomPage'));
 const ExpoHallPage = lazy(() => import('./components/attendee/ExpoHallPage'));
-const ResourceLibraryPage = lazy(() => import('./components/attendee/ResourceLibraryPage'));
 
-// Organizer Components
-const OrganizerDashboard = lazy(() => import('./components/organizer/OrganizerDashboard'));
-const EventBuilderPage = lazy(() => import('./components/organizer/EventBuilderPage'));
+// Organizer Components (using Real versions)
+const RealOrganizerDashboard = lazy(() => import('./components/organizer/RealOrganizerDashboard'));
+const CreateEventPage = lazy(() => import('./components/organizer/CreateEventPage'));
 const EventSettingsPage = lazy(() => import('./components/organizer/EventSettingsPage'));
 const LandingCustomizerPage = lazy(() => import('./components/organizer/LandingCustomizerPage'));
 const AgendaManagerPage = lazy(() => import('./components/organizer/AgendaManagerPage'));
 const VenueManagerPage = lazy(() => import('./components/organizer/VenueManagerPage'));
-const TicketingPage = lazy(() => import('./components/organizer/RealTicketingPage'));
+const RealTicketingPage = lazy(() => import('./components/organizer/RealTicketingPage'));
 const DiscountCodesPage = lazy(() => import('./components/organizer/DiscountCodesPage'));
-const EmailCampaignsPage = lazy(() => import('./components/organizer/RealEmailCampaignsPage'));
-const AttendeeManagementPage = lazy(() => import('./components/organizer/RealAttendeeManagementPage'));
+const RealEmailCampaignsPage = lazy(() => import('./components/organizer/RealEmailCampaignsPage'));
+const RealAttendeeManagementPage = lazy(() => import('./components/organizer/RealAttendeeManagementPage'));
 const SpeakerPortalPage = lazy(() => import('./components/organizer/SpeakerPortalPage'));
 const StaffRolesPage = lazy(() => import('./components/organizer/StaffRolesPage'));
-const AnalyticsPage = lazy(() => import('./components/organizer/RealAnalyticsPage'));
+const RealAnalyticsPage = lazy(() => import('./components/organizer/RealAnalyticsPage'));
 const OrganizerSettingsPage = lazy(() => import('./components/organizer/OrganizerSettingsPage'));
 const OrganizerMyEventsPage = lazy(() => import('./components/organizer/MyEventsPage'));
 
@@ -68,9 +66,6 @@ const OrganizerMyEventsPage = lazy(() => import('./components/organizer/MyEvents
 const AdminDashboard = lazy(() => import('./components/admin/AdminDashboard'));
 const EventOversightPage = lazy(() => import('./components/admin/EventOversightPage'));
 const ContentManagementPage = lazy(() => import('./components/admin/ContentManagementPage'));
-
-// Simple Pages
-const SimplePricingPage = lazy(() => import('./components/pages/SimplePricingPage'));
 
 const LoadingFallback: React.FC = () => (
   <div className="flex items-center justify-center h-screen bg-gray-50">
@@ -81,11 +76,25 @@ const LoadingFallback: React.FC = () => (
   </div>
 );
 
+// Protected Route Component
+const ProtectedRoute: React.FC<{ children: React.ReactElement; allowedRoles: string[] }> = ({ 
+  children, 
+  allowedRoles 
+}) => {
+  const { isAuthenticated, profile } = useAuth();
+  
+  if (!isAuthenticated) {
+    return <Navigate to="/" replace />;
+  }
+
+  const userRole = profile?.role || 'attendee';
+  return allowedRoles.includes(userRole) ? children : <Navigate to="/" replace />;
+};
+
 const AppContent: React.FC = () => {
   const { user, profile, isAuthenticated } = useAuth();
-  const { currentView, selectedEventId } = useApp();
 
-  console.log('AppContent render:', { user, profile, isAuthenticated, currentView });
+  console.log('AppContent render:', { user, profile, isAuthenticated });
 
   // Add loading state while auth is being determined
   if (user === undefined || (isAuthenticated && user && !profile)) {
@@ -104,124 +113,247 @@ const AppContent: React.FC = () => {
     return <NewPublicNavigation />;
   };
 
-  const renderPage = () => {
-    const hasRole = (roles: string[]) => {
-      if (!isAuthenticated || !user) return false;
-      const userRole = profile?.role || 'attendee';
-      return roles.includes(userRole);
-    };
-
-    console.log('Rendering page for view:', currentView);
-    console.log('User role check:', { isAuthenticated, hasUser: !!user, hasProfile: !!profile, role: profile?.role });
-
-    switch (currentView) {
-      // --- Public Views ---
-      case 'home': return <NewHomePage />;
-      case 'event-discovery': return <EventDiscoveryPage />;
-      case 'speaker-directory': return <SpeakerDirectoryPage />;
-      case 'organizer-directory': return <OrganizerDirectoryPage />;
-      case 'blog': return <BlogPage isStandalone={true} />;
-      case 'resources': return <ResourcesPage />;
-      case 'press': return <PressPage />;
-      case 'about': return <AboutPage />;
-      case 'pricing': return <SimplePricingPage />;
-      case 'contact': return <ContactPage />;
-      case 'terms': return <TermsPage />;
-      case 'privacy': return <PrivacyPage />;
-      case 'event-page': return <EventDetailPage eventId={selectedEventId || '1'} />;
-      case 'event-payment': return <EventPaymentPage />;
-      case 'event-payment-success': return <EventPaymentSuccess />;
-      case 'password-reset': return <SimplePasswordReset />;
-
-      // --- Authenticated Views ---
-      // Attendee
-      case 'attendee-dashboard': return hasRole(['attendee']) ? <AttendeeDashboard /> : <NewHomePage />;
-      case 'my-network': return hasRole(['attendee']) ? <MyNetworkPage /> : <NewHomePage />;
-      case 'attendee-profile': return hasRole(['attendee']) ? <AttendeeProfilePage /> : <NewHomePage />;
-      case 'agenda-builder': return hasRole(['attendee']) ? <AgendaBuilderPage /> : <NewHomePage />;
-      case 'networking-hub': return hasRole(['attendee']) ? <NetworkingHubPage /> : <NewHomePage />;
-      case 'live-event': return hasRole(['attendee']) ? <LiveEventPage /> : <NewHomePage />;
-      case 'session-room': return hasRole(['attendee']) ? <SessionRoomPage /> : <NewHomePage />;
-      case 'expo-hall': return hasRole(['attendee']) ? <ExpoHallPage /> : <NewHomePage />;
-      case 'resource-library': return hasRole(['attendee']) ? <ResourceLibraryPage /> : <NewHomePage />;
-      
-      // Organizer
-      case 'organizer-dashboard': 
-        console.log('Checking organizer dashboard access:', { hasRole: hasRole(['organizer']), isAuthenticated, role: profile?.role });
-        if (!isAuthenticated) {
-          console.log('Not authenticated, redirecting to home');
-          return <NewHomePage />;
-        }
-        if (!hasRole(['organizer'])) {
-          console.log('Not organizer role, redirecting to home');
-          return <NewHomePage />;
-        }
-        console.log('Rendering organizer dashboard');
-        return <OrganizerDashboard />;
-      case 'event-builder': 
-        return hasRole(['organizer']) ? <EventBuilderPage /> : <NewHomePage />;
-      case 'analytics': 
-        return hasRole(['organizer']) ? <AnalyticsPage /> : <NewHomePage />;
-      case 'organizer-settings': 
-        return hasRole(['organizer']) ? <OrganizerSettingsPage /> : <NewHomePage />;
-      case 'event-settings': 
-        return hasRole(['organizer']) ? <EventSettingsPage /> : <NewHomePage />;
-      case 'landing-customizer': 
-        return hasRole(['organizer']) ? <LandingCustomizerPage /> : <NewHomePage />;
-      case 'agenda-manager': 
-        return hasRole(['organizer']) ? <AgendaManagerPage /> : <NewHomePage />;
-      case 'venue-manager': 
-        return hasRole(['organizer']) ? <VenueManagerPage /> : <NewHomePage />;
-      case 'ticketing': 
-        return hasRole(['organizer']) ? <TicketingPage /> : <NewHomePage />;
-      case 'discount-codes': 
-        return hasRole(['organizer']) ? <DiscountCodesPage /> : <NewHomePage />;
-      case 'email-campaigns': 
-        return hasRole(['organizer']) ? <EmailCampaignsPage /> : <NewHomePage />;
-      case 'attendee-management': 
-        return hasRole(['organizer']) ? <AttendeeManagementPage /> : <NewHomePage />;
-      case 'speaker-portal': 
-        return hasRole(['organizer']) ? <SpeakerPortalPage /> : <NewHomePage />;
-      case 'staff-roles': 
-        return hasRole(['organizer']) ? <StaffRolesPage /> : <NewHomePage />;
-
-      // Admin
-      case 'admin-dashboard': 
-        return hasRole(['admin']) ? <AdminDashboard /> : <NewHomePage />;
-      case 'user-management': 
-        return hasRole(['admin']) ? <AdminDashboard /> : <NewHomePage />;
-      case 'event-oversight': 
-        return hasRole(['admin']) ? <EventOversightPage /> : <NewHomePage />;
-      case 'content-management': 
-        return hasRole(['admin']) ? <ContentManagementPage /> : <NewHomePage />;
-
-      // Shared (Multi-Role)
-      case 'my-events': 
-        if (hasRole(['attendee'])) return <AttendeeMyEventsPage />;
-        if (hasRole(['organizer'])) return <OrganizerMyEventsPage />;
-        return <NewHomePage />;
-      case 'notifications': 
-        return hasRole(['attendee', 'organizer']) ? <NotificationsPage /> : <NewHomePage />;
-
-      // Default fallback
-      default:
-        return <NewHomePage />;
-    }
-  };
-
-  const isPublicView = [
-    'home', 'event-discovery', 'speaker-directory', 'organizer-directory', 
-    'blog', 'resources', 'press', 'about', 'pricing', 'contact', 'terms', 
-    'privacy', 'password-reset', 'event-page'
-  ].includes(currentView);
-
   return (
     <div className="min-h-screen bg-gray-50">
       {renderNavigation()}
-      {!isPublicView && <Breadcrumbs />}
       <main>
         <Suspense fallback={<LoadingFallback />}>
-          {renderPage()}
+          <Routes>
+            {/* --- Public Routes --- */}
+            <Route path="/" element={<NewHomePage />} />
+            <Route path="/discover" element={<EventDiscoveryPage />} />
+            <Route path="/speakers" element={<SpeakerDirectoryPage />} />
+            <Route path="/organizers" element={<OrganizerDirectoryPage />} />
+            <Route path="/blog" element={<BlogPage isStandalone={true} />} />
+            <Route path="/resources" element={<ResourcesPage />} />
+            <Route path="/press" element={<PressPage />} />
+            <Route path="/about" element={<AboutPage />} />
+            <Route path="/pricing" element={<PricingPage />} />
+            <Route path="/contact" element={<ContactPage />} />
+            <Route path="/terms" element={<TermsPage />} />
+            <Route path="/privacy" element={<PrivacyPage />} />
+            <Route path="/password-reset" element={<SimplePasswordReset />} />
+            <Route path="/event/:eventId" element={<EventDetailPage eventId="1" />} />
+            <Route path="/event-payment" element={<EventPaymentPage />} />
+            <Route path="/event-payment-success" element={<EventPaymentSuccess />} />
+
+            {/* --- Attendee Routes --- */}
+            <Route 
+              path="/dashboard" 
+              element={
+                <ProtectedRoute allowedRoles={['attendee']}>
+                  <AttendeeDashboard />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/my-events" 
+              element={
+                <ProtectedRoute allowedRoles={['attendee', 'organizer']}>
+                  {profile?.role === 'attendee' ? <AttendeeMyEventsPage /> : <OrganizerMyEventsPage />}
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/my-network" 
+              element={
+                <ProtectedRoute allowedRoles={['attendee']}>
+                  <MyNetworkPage />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/notifications" 
+              element={
+                <ProtectedRoute allowedRoles={['attendee', 'organizer']}>
+                  <NotificationsPage />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/profile" 
+              element={
+                <ProtectedRoute allowedRoles={['attendee']}>
+                  <AttendeeProfilePage />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/agenda-builder" 
+              element={
+                <ProtectedRoute allowedRoles={['attendee']}>
+                  <AgendaBuilderPage />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/networking-hub" 
+              element={
+                <ProtectedRoute allowedRoles={['attendee']}>
+                  <NetworkingHubPage />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/live-event" 
+              element={
+                <ProtectedRoute allowedRoles={['attendee']}>
+                  <LiveEventPage />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/expo-hall" 
+              element={
+                <ProtectedRoute allowedRoles={['attendee']}>
+                  <ExpoHallPage />
+                </ProtectedRoute>
+              } 
+            />
+
+            {/* --- Organizer Routes --- */}
+            <Route 
+              path="/organizer/dashboard" 
+              element={
+                <ProtectedRoute allowedRoles={['organizer']}>
+                  <RealOrganizerDashboard />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/organizer/create-event" 
+              element={
+                <ProtectedRoute allowedRoles={['organizer']}>
+                  <CreateEventPage />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/organizer/analytics" 
+              element={
+                <ProtectedRoute allowedRoles={['organizer']}>
+                  <RealAnalyticsPage />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/organizer/settings" 
+              element={
+                <ProtectedRoute allowedRoles={['organizer']}>
+                  <OrganizerSettingsPage />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/organizer/event-settings" 
+              element={
+                <ProtectedRoute allowedRoles={['organizer']}>
+                  <EventSettingsPage />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/organizer/landing-customizer" 
+              element={
+                <ProtectedRoute allowedRoles={['organizer']}>
+                  <LandingCustomizerPage />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/organizer/agenda-manager" 
+              element={
+                <ProtectedRoute allowedRoles={['organizer']}>
+                  <AgendaManagerPage />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/organizer/venue-manager" 
+              element={
+                <ProtectedRoute allowedRoles={['organizer']}>
+                  <VenueManagerPage />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/organizer/ticketing" 
+              element={
+                <ProtectedRoute allowedRoles={['organizer']}>
+                  <RealTicketingPage />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/organizer/discount-codes" 
+              element={
+                <ProtectedRoute allowedRoles={['organizer']}>
+                  <DiscountCodesPage />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/organizer/email-campaigns" 
+              element={
+                <ProtectedRoute allowedRoles={['organizer']}>
+                  <RealEmailCampaignsPage />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/organizer/attendee-management" 
+              element={
+                <ProtectedRoute allowedRoles={['organizer']}>
+                  <RealAttendeeManagementPage />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/organizer/speaker-portal" 
+              element={
+                <ProtectedRoute allowedRoles={['organizer']}>
+                  <SpeakerPortalPage />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/organizer/staff-roles" 
+              element={
+                <ProtectedRoute allowedRoles={['organizer']}>
+                  <StaffRolesPage />
+                </ProtectedRoute>
+              } 
+            />
+
+            {/* --- Admin Routes --- */}
+            <Route 
+              path="/admin/dashboard" 
+              element={
+                <ProtectedRoute allowedRoles={['admin']}>
+                  <AdminDashboard />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/admin/event-oversight" 
+              element={
+                <ProtectedRoute allowedRoles={['admin']}>
+                  <EventOversightPage />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/admin/content-management" 
+              element={
+                <ProtectedRoute allowedRoles={['admin']}>
+                  <ContentManagementPage />
+                </ProtectedRoute>
+              } 
+            />
+
+            {/* Fallback Route */}
+            <Route path="*" element={<Navigate to="/" replace />} />
+          </Routes>
         </Suspense>
       </main>
     </div>

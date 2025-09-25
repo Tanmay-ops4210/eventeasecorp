@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Search, Filter, Calendar, MapPin, Users, Star, ArrowRight } from 'lucide-react';
-import { useApp } from '../../contexts/AppContext';
 import { useAuth } from '../../contexts/NewAuthContext';
 import LoginPromptOverlay from '../common/LoginPromptOverlay';
 import AuthModal from '../auth/AuthModal';
@@ -9,7 +9,7 @@ const EventDiscoveryPage: React.FC = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('all');
   const [viewMode, setViewMode] = useState<'list' | 'map'>('list');
-  const { setCurrentView, setSelectedEventId } = useApp();
+  const navigate = useNavigate();
   const { isAuthenticated } = useAuth();
   const [showLoginPrompt, setShowLoginPrompt] = useState(false);
   const [showAuthModal, setShowAuthModal] = useState(false);
@@ -260,8 +260,7 @@ const EventDiscoveryPage: React.FC = () => {
       setShowLoginPrompt(true);
       return;
     }
-    setSelectedEventId(eventId);
-    setCurrentView('event-page');
+    navigate(`/event/${eventId}`);
   };
 
   const handleLoginPromptClose = () => {

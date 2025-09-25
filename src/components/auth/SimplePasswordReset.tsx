@@ -1,10 +1,12 @@
 import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useApp } from '../../contexts/AppContext';
 import { useAuth } from '../../contexts/NewAuthContext';
 import { Mail, ArrowLeft, CheckCircle } from 'lucide-react';
 
 const SimplePasswordReset: React.FC = () => {
   const { setBreadcrumbs, setCurrentView } = useApp();
+  const navigate = useNavigate();
   const { resetPassword } = useAuth();
   const [email, setEmail] = useState('');
   const [isLoading, setIsLoading] = useState(false);
@@ -59,7 +61,7 @@ const SimplePasswordReset: React.FC = () => {
               </p>
             </div>
             <button
-              onClick={() => setCurrentView('home')}
+              onClick={() => navigate('/')}
               className="bg-gradient-to-r from-indigo-600 to-purple-600 text-white px-6 py-3 rounded-lg font-medium hover:from-indigo-700 hover:to-purple-700 transition-all duration-200"
             >
               Back to Home
@@ -124,7 +126,7 @@ const SimplePasswordReset: React.FC = () => {
 
           <div className="text-center mt-6">
             <button
-              onClick={() => setCurrentView('home')}
+              onClick={() => navigate('/')}
               className="inline-flex items-center space-x-2 text-indigo-600 hover:text-indigo-700 font-medium transition-colors duration-200"
             >
               <ArrowLeft className="w-4 h-4" />
