@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Shield, Mail, Lock, Eye, EyeOff, AlertTriangle, CheckCircle } from 'lucide-react';
 import { adminAuthService } from '../../lib/adminAuthService';
 
+const MAX_LOGIN_ATTEMPTS = 5;
 interface AdminLoginProps {
   onLoginSuccess: () => void;
 }
@@ -25,7 +26,7 @@ const AdminLogin: React.FC<AdminLoginProps> = ({ onLoginSuccess }) => {
 
   React.useEffect(() => {
     // Check for existing lockout
-    const lockoutData = localStorage.getItem('admin_lockout');
+    const lockoutData = localStorage.getItem('dummy_admin_lockout');
     if (lockoutData) {
       const { timestamp, attempts } = JSON.parse(lockoutData);
       const timeSinceLockout = Date.now() - timestamp;
@@ -42,7 +43,7 @@ const AdminLogin: React.FC<AdminLoginProps> = ({ onLoginSuccess }) => {
             setIsLocked(false);
             setLockoutTime(0);
             setLoginAttempts(0);
-            localStorage.removeItem('admin_lockout');
+            localStorage.removeItem('dummy_admin_lockout');
             clearInterval(timer);
           } else {
             setLockoutTime(remaining);
@@ -52,7 +53,7 @@ const AdminLogin: React.FC<AdminLoginProps> = ({ onLoginSuccess }) => {
         return () => clearInterval(timer);
       } else {
         // Lockout expired
-        localStorage.removeItem('admin_lockout');
+        localStorage.removeItem('dummy_admin_lockout');
       }
     }
   }, []);
@@ -68,7 +69,7 @@ const AdminLogin: React.FC<AdminLoginProps> = ({ onLoginSuccess }) => {
       timestamp: Date.now(),
       attempts: loginAttempts + 1
     };
-    localStorage.setItem('admin_lockout', JSON.stringify(lockoutData));
+    localStorage.setItem('dummy_admin_lockout', JSON.stringify(lockoutData));
     setIsLocked(true);
     setLockoutTime(15 * 60 * 1000);
     setError(`Too many failed attempts. Account locked for 15 minutes.`);
@@ -95,7 +96,7 @@ const AdminLogin: React.FC<AdminLoginProps> = ({ onLoginSuccess }) => {
       
       if (result.success) {
         // Clear any lockout data on successful login
-        localStorage.removeItem('admin_lockout');
+        localStorage.removeItem('dummy_admin_lockout');
         setLoginAttempts(0);
         
         onLoginSuccess();

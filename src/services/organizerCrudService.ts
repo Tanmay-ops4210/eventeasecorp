@@ -1,73 +1,15 @@
-import { supabase } from '../lib/supabaseAuth';
+import { dummyDb, DummyEvent, DummyTicketType, DummyAttendee, DummyEventAnalytics, DummyMarketingCampaign } from '../lib/dummyDatabase';
+import { dummyAuth } from '../lib/dummyAuth';
 
-export interface OrganizerEvent {
-  id: string;
-  organizer_id: string;
-  title: string;
-  description?: string;
-  category: string;
-  event_date: string;
-  time: string;
-  end_time?: string;
-  venue: string;
-  capacity: number;
-  image_url?: string;
-  status: 'draft' | 'published' | 'ongoing' | 'completed' | 'cancelled';
-  visibility: 'public' | 'private' | 'unlisted';
-  created_at: string;
-  updated_at: string;
-  price?: number;
-  currency?: string;
-}
+export type OrganizerEvent = DummyEvent;
 
-export interface OrganizerTicketType {
-  id: string;
-  event_id: string;
-  name: string;
-  description?: string;
-  price: number;
-  currency: string;
-  quantity: number;
-  sold: number;
-  sale_start: string;
-  sale_end?: string;
-  is_active: boolean;
-  benefits: string[];
-  restrictions: string[];
-  created_at: string;
-}
+export type OrganizerTicketType = DummyTicketType;
 
-export interface OrganizerEventAnalytics {
-  id: string;
-  event_id: string;
-  views: number;
-  registrations: number;
-  conversion_rate: number;
-  revenue: number;
-  top_referrers: string[];
-  created_at: string;
-  updated_at: string;
-}
+export type OrganizerEventAnalytics = DummyEventAnalytics;
 
-export interface OrganizerAttendee {
-  id: string;
-  event_id: string;
-  user_id: string;
-  ticket_type_id?: string;
-  registration_date: string;
-  check_in_status: 'pending' | 'checked-in' | 'no-show';
-  payment_status: 'pending' | 'completed' | 'refunded';
-  additional_info: any;
-  user?: {
-    full_name: string;
-    email: string;
-  };
-  ticket_type?: {
-    name: string;
-    price: number;
-  };
-}
+export type OrganizerAttendee = DummyAttendee;
 
+export type MarketingCampaign = DummyMarketingCampaign;
 export interface EventFormData {
   title: string;
   description?: string;
@@ -124,7 +66,7 @@ class OrganizerCrudService {
   // Check if user is authenticated and has organizer role
   private async checkOrganizerAccess(): Promise<{ success: boolean; error?: string }> {
     try {
-      const { data: { user }, error: userError } = await supabase.auth.getUser();
+      const { data: { user }, error: userError } = await dummyAuth.getCurrentUser();
       
       if (userError || !user) {
         console.error('User authentication error:', userError);
@@ -133,14 +75,10 @@ class OrganizerCrudService {
 
       console.log('Checking organizer access for user:', user.id);
 
-      const { data: profile, error } = await supabase
-        .from('profiles')
-        .select('role')
-        .eq('id', user.id)
-        .single();
+      const profile = await dummyAuth.getUserProfile(user.id);
 
-      if (error) {
-        console.error('Profile fetch error:', error);
+      if (!profile) {
+        console.error('Profile not found');
         return { success: false, error: 'Failed to verify user permissions' };
       }
 
@@ -173,40 +111,30 @@ class OrganizerCrudService {
         return { success: false, error: 'Missing required fields: title, venue, date, and time are required' };
       }
 
-      const { data, error } = await supabase
-        .from('organizer_events')
-        .insert([{
-          organizer_id: organizerId,
-          title: eventData.title,
-          description: eventData.description,
-          category: eventData.category || 'conference',
-          event_date: eventData.event_date,
-          time: eventData.time,
-          end_time: eventData.end_time,
-          venue: eventData.venue,
-          capacity: eventData.capacity,
-          image_url: eventData.image_url,
-          status: 'draft',
-          visibility: eventData.visibility || 'public',
-          price: eventData.price || 0,
-          currency: eventData.currency || 'INR'
-        }])
-        .select('*')
-        .single();
+      const result = await dummyDb.createEvent({
+        organizer_id: organizerId,
+        title: eventData.title,
+        description: eventData.description,
+        category: eventData.category || 'conference',
+        event_date: eventData.event_date,
+        time: eventData.time,
+        end_time: eventData.end_time,
+        venue: eventData.venue,
+        capacity: eventData.capacity,
+        image_url: eventData.image_url,
+        status: 'draft',
+        visibility: eventData.visibility || 'public',
+        price: eventData.price || 0,
+        currency: eventData.currency || 'INR'
+      });
 
-      if (error) {
-        console.error('Supabase insert error:', error);
-        
-        // Handle specific RLS errors
-        if (error.message.includes('permission denied') || error.message.includes('row-level security')) {
-          return { success: false, error: 'Permission denied. Please ensure you have organizer permissions and try again.' };
-        }
-        
-        return { success: false, error: error.message };
+      if (!result.success) {
+        console.error('Database insert error:', result.error);
+        return { success: false, error: result.error };
       }
 
-      console.log('Event created successfully:', data);
-      return { success: true, event: data };
+      console.log('Event created successfully:', result.event);
+      return { success: true, event: result.event };
     } catch (error) {
       console.error('Create event error:', error);
       const message = error instanceof Error ? error.message : 'An unexpected error occurred';
@@ -225,25 +153,17 @@ class OrganizerCrudService {
         return { success: false, error: accessCheck.error };
       }
 
-      const { data, error } = await supabase
-        .from('organizer_events')
-        .select('*')
-        .eq('organizer_id', organizerId)
-        .order('created_at', { ascending: false });
+      const result = await dummyDb.getEvents({
+        organizer_id: organizerId
+      });
 
-      if (error) {
-        console.error('Supabase select error:', error);
-        
-        // Handle specific RLS errors
-        if (error.message.includes('permission denied') || error.message.includes('row-level security')) {
-          return { success: false, error: 'Permission denied. Please check your organizer permissions.' };
-        }
-        
-        return { success: false, error: error.message };
+      if (!result.success) {
+        console.error('Database select error:', result.error);
+        return { success: false, error: result.error };
       }
 
-      console.log('Events fetched successfully:', data?.length || 0, 'events');
-      return { success: true, events: data || [] };
+      console.log('Events fetched successfully:', result.events?.length || 0, 'events');
+      return { success: true, events: result.events || [] };
     } catch (error) {
       console.error('Get events error:', error);
       const message = error instanceof Error ? error.message : 'An unexpected error occurred';
@@ -261,14 +181,11 @@ class OrganizerCrudService {
         return { success: false, error: accessCheck.error };
       }
       
-      const { error } = await supabase
-        .from('organizer_events')
-        .update({ status: 'published' })
-        .eq('id', eventId);
+      const result = await dummyDb.updateEvent(eventId, { status: 'published' });
 
-      if (error) {
-        console.error('Publish error:', error);
-        return { success: false, error: error.message };
+      if (!result.success) {
+        console.error('Publish error:', result.error);
+        return { success: false, error: result.error };
       }
 
       console.log('Event published successfully');
@@ -287,40 +204,13 @@ class OrganizerCrudService {
         return { success: false, error: accessCheck.error };
       }
 
-      const { data, error } = await supabase
-        .from('organizer_event_analytics')
-        .select('*')
-        .eq('event_id', eventId)
-        .single();
+      const result = await dummyDb.getEventAnalytics(eventId);
 
-      if (error) {
-        // If no analytics record exists, create a default one
-        if (error.code === 'PGRST116') {
-          const defaultAnalytics: Partial<OrganizerEventAnalytics> = {
-            event_id: eventId,
-            views: Math.floor(Math.random() * 1000) + 100,
-            registrations: Math.floor(Math.random() * 50) + 10,
-            conversion_rate: Math.random() * 15 + 5,
-            revenue: Math.floor(Math.random() * 10000) + 1000,
-            top_referrers: ['Direct', 'Social Media', 'Email Campaign']
-          };
-
-          const { data: newData, error: insertError } = await supabase
-            .from('organizer_event_analytics')
-            .insert([defaultAnalytics])
-            .select()
-            .single();
-
-          if (insertError) {
-            return { success: false, error: insertError.message };
-          }
-
-          return { success: true, analytics: newData };
-        }
-        return { success: false, error: error.message };
+      if (!result.success) {
+        return { success: false, error: result.error };
       }
 
-      return { success: true, analytics: data };
+      return { success: true, analytics: result.analytics };
     } catch (error) {
       return { success: false, error: 'Failed to fetch analytics' };
     }
@@ -334,21 +224,17 @@ class OrganizerCrudService {
         return { success: false, error: accessCheck.error };
       }
 
-      const { data, error } = await supabase
-        .from('organizer_ticket_types')
-        .insert([{
-          ...ticketData,
-          event_id: eventId,
-          sold: 0
-        }])
-        .select()
-        .single();
+      const result = await dummyDb.createTicketType({
+        ...ticketData,
+        event_id: eventId,
+        sold: 0
+      });
 
-      if (error) {
-        return { success: false, error: error.message };
+      if (!result.success) {
+        return { success: false, error: result.error };
       }
 
-      return { success: true, ticket: data };
+      return { success: true, ticket: result.ticket };
     } catch (error) {
       return { success: false, error: 'Failed to create ticket type' };
     }
@@ -362,17 +248,13 @@ class OrganizerCrudService {
         return { success: false, error: accessCheck.error };
       }
 
-      const { data, error } = await supabase
-        .from('organizer_ticket_types')
-        .select('*')
-        .eq('event_id', eventId)
-        .order('created_at', { ascending: true });
+      const result = await dummyDb.getTicketTypesByEvent(eventId);
 
-      if (error) {
-        return { success: false, error: error.message };
+      if (!result.success) {
+        return { success: false, error: result.error };
       }
 
-      return { success: true, tickets: data || [] };
+      return { success: true, tickets: result.tickets || [] };
     } catch (error) {
       return { success: false, error: 'Failed to fetch ticket types' };
     }
@@ -386,13 +268,10 @@ class OrganizerCrudService {
         return { success: false, error: accessCheck.error };
       }
 
-      const { error } = await supabase
-        .from('organizer_ticket_types')
-        .update(updates)
-        .eq('id', ticketId);
+      const result = await dummyDb.updateTicketType(ticketId, updates);
 
-      if (error) {
-        return { success: false, error: error.message };
+      if (!result.success) {
+        return { success: false, error: result.error };
       }
 
       return { success: true };
@@ -409,24 +288,10 @@ class OrganizerCrudService {
         return { success: false, error: accessCheck.error };
       }
 
-      // Check if ticket has sales
-      const { data: ticket } = await supabase
-        .from('organizer_ticket_types')
-        .select('sold')
-        .eq('id', ticketId)
-        .single();
+      const result = await dummyDb.deleteTicketType(ticketId);
 
-      if (ticket && ticket.sold > 0) {
-        return { success: false, error: 'Cannot delete ticket type with existing sales' };
-      }
-
-      const { error } = await supabase
-        .from('organizer_ticket_types')
-        .delete()
-        .eq('id', ticketId);
-
-      if (error) {
-        return { success: false, error: error.message };
+      if (!result.success) {
+        return { success: false, error: result.error };
       }
 
       return { success: true };
@@ -443,21 +308,13 @@ class OrganizerCrudService {
         return { success: false, error: accessCheck.error };
       }
 
-      const { data, error } = await supabase
-        .from('organizer_attendees')
-        .select(`
-          *,
-          user:profiles!user_id(full_name, email),
-          ticket_type:organizer_ticket_types!ticket_type_id(name, price)
-        `)
-        .eq('event_id', eventId)
-        .order('registration_date', { ascending: false });
+      const result = await dummyDb.getEventAttendees(eventId);
 
-      if (error) {
-        return { success: false, error: error.message };
+      if (!result.success) {
+        return { success: false, error: result.error };
       }
 
-      return { success: true, attendees: data || [] };
+      return { success: true, attendees: result.attendees || [] };
     } catch (error) {
       return { success: false, error: 'Failed to fetch attendees' };
     }
@@ -471,13 +328,10 @@ class OrganizerCrudService {
         return { success: false, error: accessCheck.error };
       }
 
-      const { error } = await supabase
-        .from('organizer_attendees')
-        .update({ check_in_status: checkInStatus })
-        .eq('id', attendeeId);
+      const result = await dummyDb.updateAttendeeStatus(attendeeId, checkInStatus);
 
-      if (error) {
-        return { success: false, error: error.message };
+      if (!result.success) {
+        return { success: false, error: result.error };
       }
 
       return { success: true };
@@ -494,17 +348,9 @@ class OrganizerCrudService {
         return { success: false, error: accessCheck.error };
       }
 
-      // Create mock campaign since table doesn't exist in schema
-      const mockCampaign: MarketingCampaign = {
-        id: `campaign_${Date.now()}`,
-        event_id: eventId,
-        ...campaignData,
-        open_rate: Math.random() * 30 + 10,
-        click_rate: Math.random() * 10 + 2,
-        created_at: new Date().toISOString()
-      };
+      const result = await dummyDb.createMarketingCampaign(eventId, campaignData);
 
-      return { success: true, campaign: mockCampaign };
+      return result;
     } catch (error) {
       return { success: false, error: 'Failed to create campaign' };
     }
@@ -518,38 +364,9 @@ class OrganizerCrudService {
         return { success: false, error: accessCheck.error };
       }
 
-      // Return mock campaigns since table doesn't exist
-      const mockCampaigns: MarketingCampaign[] = [
-        {
-          id: '1',
-          event_id: eventId,
-          name: 'Pre-Event Announcement',
-          type: 'email',
-          subject: 'Don\'t miss our upcoming event!',
-          content: 'Join us for an amazing event experience...',
-          audience: 'all_subscribers',
-          status: 'sent',
-          sent_date: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString(),
-          open_rate: 24.5,
-          click_rate: 8.2,
-          created_at: new Date(Date.now() - 10 * 24 * 60 * 60 * 1000).toISOString()
-        },
-        {
-          id: '2',
-          event_id: eventId,
-          name: 'Last Chance Registration',
-          type: 'email',
-          subject: 'Final days to register!',
-          content: 'Don\'t miss out on this incredible opportunity...',
-          audience: 'prospects',
-          status: 'draft',
-          open_rate: 0,
-          click_rate: 0,
-          created_at: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString()
-        }
-      ];
+      const result = await dummyDb.getMarketingCampaigns(eventId);
 
-      return { success: true, campaigns: mockCampaigns };
+      return result;
     } catch (error) {
       return { success: false, error: 'Failed to fetch campaigns' };
     }
@@ -563,8 +380,8 @@ class OrganizerCrudService {
         return { success: false, error: accessCheck.error };
       }
 
-      // Mock update since table doesn't exist
-      return { success: true };
+      const result = await dummyDb.updateMarketingCampaign(campaignId, updates);
+      return result;
     } catch (error) {
       return { success: false, error: 'Failed to update campaign' };
     }
@@ -578,8 +395,8 @@ class OrganizerCrudService {
         return { success: false, error: accessCheck.error };
       }
 
-      // Mock delete since table doesn't exist
-      return { success: true };
+      const result = await dummyDb.deleteMarketingCampaign(campaignId);
+      return result;
     } catch (error) {
       return { success: false, error: 'Failed to delete campaign' };
     }

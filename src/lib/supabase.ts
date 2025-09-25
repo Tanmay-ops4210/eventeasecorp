@@ -1,159 +1,29 @@
-import { createClient } from '@supabase/supabase-js';
+import { dummyDb, DummyEvent } from './dummyDatabase';
+import { dummyAuth, DummyUser } from './dummyAuth';
 
-// Get Supabase configuration from environment variables
-const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
-const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
-
-// Use fallback values for development if environment variables are not set
-const finalSupabaseUrl = supabaseUrl || 'https://placeholder.supabase.co';
-const finalSupabaseAnonKey = supabaseAnonKey || 'placeholder-anon-key';
-
-// Create Supabase client
-export const supabase = createClient(finalSupabaseUrl, finalSupabaseAnonKey, {
-  auth: {
-    autoRefreshToken: true,
-    persistSession: true,
-    detectSessionInUrl: false,
-    flowType: 'pkce'
-  },
-  global: {
-    headers: {
-      'X-Client-Info': 'eventease-web'
-    }
-  }
-});
-
-// Add connection test
-console.log('Supabase client initialized with URL:', finalSupabaseUrl);
-console.log('Environment check:', {
-  hasUrl: !!supabaseUrl,
-  hasKey: !!supabaseAnonKey,
-  isDev: import.meta.env.DEV
-});
+console.log('Dummy database service initialized');
 
 // Database types
-export interface Database {
-  public: {
-    Tables: {
-      profiles: {
-        Row: {
-          id: string;
-          email: string;
-          username: string;
-          full_name: string | null;
-          role: 'attendee' | 'organizer' | 'admin';
-          plan: string;
-          company: string | null;
-          title: string | null;
-          avatar_url: string | null;
-          created_at: string;
-          updated_at: string;
-        };
-        Insert: {
-          id: string;
-          email: string;
-          username: string;
-          full_name?: string | null;
-          role?: 'attendee' | 'organizer' | 'admin';
-          plan?: string;
-          company?: string | null;
-          title?: string | null;
-          avatar_url?: string | null;
-        };
-        Update: {
-          email?: string;
-          username?: string;
-          full_name?: string | null;
-          role?: 'attendee' | 'organizer' | 'admin';
-          plan?: string;
-          company?: string | null;
-          title?: string | null;
-          avatar_url?: string | null;
-          updated_at?: string;
-        };
-      };
-      events: {
-        Row: {
-          id: string;
-          organizer_id: string;
-          title: string;
-          description: string | null;
-          full_description: string | null;
-          category: string;
-          event_date: string;
-          start_time: string;
-          end_time: string | null;
-          venue: string;
-          venue_address: string | null;
-          image_url: string | null;
-          status: 'draft' | 'published' | 'ongoing' | 'completed' | 'cancelled';
-          visibility: 'public' | 'private' | 'unlisted';
-          max_attendees: number;
-          capacity: number;
-          created_at: string;
-          updated_at: string;
-        };
-        Insert: {
-          organizer_id: string;
-          title: string;
-          description?: string | null;
-          full_description?: string | null;
-          category?: string;
-          event_date: string;
-          start_time: string;
-          end_time?: string | null;
-          venue: string;
-          venue_address?: string | null;
-          image_url?: string | null;
-          status?: 'draft' | 'published' | 'ongoing' | 'completed' | 'cancelled';
-          visibility?: 'public' | 'private' | 'unlisted';
-          max_attendees?: number;
-          capacity?: number;
-        };
-        Update: {
-          title?: string;
-          description?: string | null;
-          full_description?: string | null;
-          category?: string;
-          event_date?: string;
-          start_time?: string;
-          end_time?: string | null;
-          venue?: string;
-          venue_address?: string | null;
-          image_url?: string | null;
-          status?: 'draft' | 'published' | 'ongoing' | 'completed' | 'cancelled';
-          visibility?: 'public' | 'private' | 'unlisted';
-          max_attendees?: number;
-          capacity?: number;
-          updated_at?: string;
-        };
-      };
-    };
-  };
-}
+export type Database = any; // Dummy type for compatibility
 
-// Database service for CRUD operations
-export class SupabaseDatabaseService {
-  private static instance: SupabaseDatabaseService;
+// Dummy Database service for CRUD operations
+export class DummyDatabaseService {
+  private static instance: DummyDatabaseService;
 
-  static getInstance(): SupabaseDatabaseService {
-    if (!SupabaseDatabaseService.instance) {
-      SupabaseDatabaseService.instance = new SupabaseDatabaseService();
+  static getInstance(): DummyDatabaseService {
+    if (!DummyDatabaseService.instance) {
+      DummyDatabaseService.instance = new DummyDatabaseService();
     }
-    return SupabaseDatabaseService.instance;
+    return DummyDatabaseService.instance;
   }
 
   // Events CRUD
-  async createEvent(eventData: Database['public']['Tables']['events']['Insert']) {
+  async createEvent(eventData: Partial<DummyEvent>) {
     try {
-      const { data, error } = await supabase
-        .from('events')
-        .insert([eventData])
-        .select()
-        .single();
+      const result = await dummyDb.createEvent(eventData as any);
 
-      if (error) throw error;
-      return { success: true, event: data };
+      if (!result.success) throw new Error(result.error);
+      return { success: true, event: result.event };
     } catch (error) {
       return { 
         success: false, 
@@ -170,33 +40,10 @@ export class SupabaseDatabaseService {
     offset?: number;
   }) {
     try {
-      let query = supabase
-        .from('events')
-        .select(`
-          *,
-          organizer:profiles!organizer_id(username, full_name, avatar_url)
-        `);
+      const result = await dummyDb.getEvents(filters);
 
-      if (filters?.status) {
-        query = query.eq('status', filters.status);
-      }
-      if (filters?.category) {
-        query = query.eq('category', filters.category);
-      }
-      if (filters?.organizer_id) {
-        query = query.eq('organizer_id', filters.organizer_id);
-      }
-      if (filters?.limit) {
-        query = query.limit(filters.limit);
-      }
-      if (filters?.offset) {
-        query = query.range(filters.offset, filters.offset + (filters.limit || 10) - 1);
-      }
-
-      const { data, error } = await query.order('created_at', { ascending: false });
-
-      if (error) throw error;
-      return { success: true, events: data };
+      if (!result.success) throw new Error(result.error);
+      return { success: true, events: result.events };
     } catch (error) {
       return { 
         success: false, 
@@ -207,17 +54,10 @@ export class SupabaseDatabaseService {
 
   async getEventById(eventId: string) {
     try {
-      const { data, error } = await supabase
-        .from('events')
-        .select(`
-          *,
-          organizer:profiles!organizer_id(username, full_name, avatar_url, email)
-        `)
-        .eq('id', eventId)
-        .single();
+      const result = await dummyDb.getEventById(eventId);
 
-      if (error) throw error;
-      return { success: true, event: data };
+      if (!result.success) throw new Error(result.error);
+      return { success: true, event: result.event };
     } catch (error) {
       return { 
         success: false, 
@@ -226,20 +66,12 @@ export class SupabaseDatabaseService {
     }
   }
 
-  async updateEvent(eventId: string, updates: Database['public']['Tables']['events']['Update']) {
+  async updateEvent(eventId: string, updates: Partial<DummyEvent>) {
     try {
-      const { data, error } = await supabase
-        .from('events')
-        .update({
-          ...updates,
-          updated_at: new Date().toISOString()
-        })
-        .eq('id', eventId)
-        .select()
-        .single();
+      const result = await dummyDb.updateEvent(eventId, updates);
 
-      if (error) throw error;
-      return { success: true, event: data };
+      if (!result.success) throw new Error(result.error);
+      return { success: true, event: result.event };
     } catch (error) {
       return { 
         success: false, 
@@ -250,12 +82,9 @@ export class SupabaseDatabaseService {
 
   async deleteEvent(eventId: string) {
     try {
-      const { error } = await supabase
-        .from('events')
-        .delete()
-        .eq('id', eventId);
+      const result = await dummyDb.deleteEvent(eventId);
 
-      if (error) throw error;
+      if (!result.success) throw new Error(result.error);
       return { success: true };
     } catch (error) {
       return { 
@@ -268,13 +97,10 @@ export class SupabaseDatabaseService {
   // User management
   async getAllUsers() {
     try {
-      const { data, error } = await supabase
-        .from('profiles')
-        .select('*')
-        .order('created_at', { ascending: false });
+      const result = await dummyAuth.getAllUsersForAdmin();
 
-      if (error) throw error;
-      return { success: true, users: data };
+      if (!result.success) throw new Error(result.error);
+      return { success: true, users: result.users };
     } catch (error) {
       return { 
         success: false, 
@@ -285,10 +111,9 @@ export class SupabaseDatabaseService {
 
   async deleteUser(userId: string) {
     try {
-      // Delete the auth user, which will cascade to profile
-      const { error } = await supabase.auth.admin.deleteUser(userId);
+      const result = await dummyAuth.deleteUser(userId);
 
-      if (error) throw error;
+      if (!result.success) throw new Error(result.error);
       return { success: true };
     } catch (error) {
       return { 
@@ -300,31 +125,32 @@ export class SupabaseDatabaseService {
 
   // Real-time subscriptions
   subscribeToEvents(callback: (payload: any) => void) {
-    return supabase
-      .channel('events-changes')
-      .on('postgres_changes', {
-        event: '*',
-        schema: 'public',
-        table: 'events'
-      }, callback)
-      .subscribe();
+    // Dummy subscription - just return a mock subscription object
+    return {
+      unsubscribe: () => {}
+    };
   }
 
   subscribeToUserProfile(userId: string, callback: (payload: any) => void) {
-    return supabase
-      .channel('profile-changes')
-      .on('postgres_changes', {
-        event: '*',
-        schema: 'public',
-        table: 'profiles',
-        filter: `id=eq.${userId}`
-      }, callback)
-      .subscribe();
+    // Dummy subscription - just return a mock subscription object
+    return {
+      unsubscribe: () => {}
+    };
   }
 }
 
 // Export service instances
-export const dbService = SupabaseDatabaseService.getInstance();
+export const dbService = DummyDatabaseService.getInstance();
 
-// Export Supabase client for direct use
-export { supabase as default };
+// Export dummy client for compatibility
+export const supabase = {
+  auth: dummyAuth,
+  from: () => ({
+    select: () => ({ data: [], error: null }),
+    insert: () => ({ data: [], error: null }),
+    update: () => ({ data: [], error: null }),
+    delete: () => ({ data: [], error: null })
+  })
+};
+
+export default supabase;

@@ -16,12 +16,15 @@ import {
   User
 } from 'lucide-react';
 import { dbService } from '../../lib/supabase';
-import type { AppUser, Event } from '../../types/database';
+import { DummyUser } from '../../lib/dummyAuth';
+import { DummyEvent } from '../../lib/dummyDatabase';
 import '../../styles/admin-panel.css';
 
+type AppUser = DummyUser;
+type Event = DummyEvent;
 interface MemberManagementProps {
   users: AppUser[];
-  events: Event[];
+  events: DummyEvent[];
   onRefresh: () => void;
 }
 
@@ -53,7 +56,7 @@ const MemberManagement: React.FC<MemberManagementProps> = ({ users, events, onRe
   }, [augmentedUsers, searchTerm, roleFilter, statusFilter]);
 
   const getUserEventCount = (userId: string) => {
-    return events.filter(event => event.user_id === userId).length;
+    return events.filter(event => event.organizer_id === userId).length;
   };
 
   const handleDelete = (user: AppUser) => {
@@ -145,7 +148,7 @@ const MemberManagement: React.FC<MemberManagementProps> = ({ users, events, onRe
                         <User className="w-5 h-5 text-purple-600" />
                       </div>
                       <div>
-                        <div className="font-medium text-gray-900">{user.username}</div>
+                        <div className="font-medium text-gray-900">{user.name || user.full_name}</div>
                         <div className="text-sm text-gray-500">{user.email}</div>
                       </div>
                     </div>
@@ -153,16 +156,16 @@ const MemberManagement: React.FC<MemberManagementProps> = ({ users, events, onRe
                   <td>{getRoleBadge(user.role)}</td>
                   <td>{getUserEventCount(user.id)}</td>
                   <td>
-                    <span className={`admin-badge-status ${user.status === 'active' ? 'admin-badge-success' : 'admin-badge-danger'}`}>
-                      {user.status}
+                    <span className={`admin-badge-status admin-badge-success`}>
+                      active
                     </span>
                   </td>
                   <td>
                     <div className="flex items-center gap-2">
                         <button className="admin-action-btn admin-tooltip" data-tooltip="Edit (Soon)" disabled><Edit className="w-4 h-4" /></button>
                         <button onClick={() => handleDelete(user)} className="admin-action-btn danger admin-tooltip" data-tooltip="Delete"><Trash2 className="w-4 h-4" /></button>
-                        <button className={`admin-action-btn admin-tooltip ${user.status === 'active' ? 'danger' : ''}`} data-tooltip={user.status === 'active' ? 'Ban User' : 'Unban User'}>
-                           {user.status === 'active' ? <XCircle className="w-4 h-4"/> : <CheckCircle className="w-4 h-4"/>}
+                        <button className={`admin-action-btn admin-tooltip danger`} data-tooltip="Ban User">
+                           <XCircle className="w-4 h-4"/>
                         </button>
                     </div>
                   </td>
@@ -192,7 +195,7 @@ const MemberManagement: React.FC<MemberManagementProps> = ({ users, events, onRe
                   <AlertTriangle className="w-8 h-8 text-red-600"/>
                 </div>
                 <h4 className="text-lg font-semibold text-gray-900 mb-2">Are you sure?</h4>
-                <p className="text-gray-600 mb-6">This will permanently delete "{selectedUser.username}" and all associated data. This action cannot be undone.</p>
+                <p className="text-gray-600 mb-6">This will permanently delete "{selectedUser.name || selectedUser.full_name}" and all associated data. This action cannot be undone.</p>
             </div>
             <div className="admin-modal-footer">
               <button onClick={() => setShowDeleteModal(false)} className="admin-btn admin-btn-secondary">Cancel</button>

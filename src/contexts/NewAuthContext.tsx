@@ -1,11 +1,10 @@
 import React, { createContext, useContext, useEffect, useState, ReactNode } from 'react';
-import { User, Session } from '@supabase/supabase-js';
-import { supabaseAuth, UserProfile } from '../lib/supabaseAuth';
+import { dummyAuth, DummyUser } from '../lib/dummyAuth';
 
 interface AuthContextType {
-  user: User | null;
-  profile: UserProfile | null;
-  session: Session | null;
+  user: DummyUser | null;
+  profile: DummyUser | null;
+  session: any | null;
   loading: boolean;
   isAuthenticated: boolean;
   login: (email: string, password: string, role?: 'attendee' | 'organizer' | 'admin') => Promise<void>;
@@ -13,7 +12,7 @@ interface AuthContextType {
   logout: () => Promise<void>;
   resetPassword: (email: string) => Promise<void>;
   updatePassword: (newPassword: string) => Promise<void>;
-  updateProfile: (updates: Partial<UserProfile>) => Promise<void>;
+  updateProfile: (updates: Partial<DummyUser>) => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -31,29 +30,29 @@ interface AuthProviderProps {
 }
 
 export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
-  const [user, setUser] = useState<User | null>(null);
-  const [profile, setProfile] = useState<UserProfile | null>(null);
-  const [session, setSession] = useState<Session | null>(null);
+  const [user, setUser] = useState<DummyUser | null>(null);
+  const [profile, setProfile] = useState<DummyUser | null>(null);
+  const [session, setSession] = useState<any | null>(null);
   const [loading, setLoading] = useState(true);
 
   console.log('AuthProvider state:', { user: !!user, profile: !!profile, session: !!session, loading });
 
   useEffect(() => {
-    console.log('AuthProvider useEffect - getting initial session');
+    console.log('AuthProvider useEffect - getting initial dummy session');
     
     let mounted = true;
 
     const initializeAuth = async () => {
       try {
-        const { data: { session } } = await supabaseAuth.getCurrentSession();
-        console.log('Initial session:', !!session);
+        const { data: { session } } = await dummyAuth.getCurrentSession();
+        console.log('Initial dummy session:', !!session);
         
         if (mounted) {
           setSession(session);
           setUser(session?.user ?? null);
           
           if (session?.user) {
-            const userProfile = await supabaseAuth.getUserProfile(session.user.id);
+            const userProfile = await dummyAuth.getUserProfile(session.user.id);
             if (mounted) {
               setProfile(userProfile);
             }
@@ -71,8 +70,8 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
     initializeAuth();
 
-    // Listen for auth changes
-    const { data: { subscription } } = supabaseAuth.onAuthStateChange(
+    // Listen for auth changes (dummy implementation)
+    const { data: { subscription } } = dummyAuth.onAuthStateChange(
       async (event, session) => {
         console.log('Auth state change:', event, !!session);
         
@@ -83,7 +82,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         
         if (session?.user) {
           try {
-            const userProfile = await supabaseAuth.getUserProfile(session.user.id);
+            const userProfile = await dummyAuth.getUserProfile(session.user.id);
             if (mounted) {
               setProfile(userProfile);
             }
@@ -111,7 +110,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     try {
       console.log('Attempting login for:', email, 'with role:', role);
       
-      const result = await supabaseAuth.signIn(email, password);
+      const result = await dummyAuth.signIn(email, password);
       if (!result.success) {
         console.error('Login failed:', result.error);
         throw new Error(result.error || 'Login failed');
@@ -134,7 +133,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     try {
       console.log('Attempting registration for:', email, 'with role:', role);
       
-      const result = await supabaseAuth.signUp(email, password, {
+      const result = await dummyAuth.signUp(email, password, {
         username: name.toLowerCase().replace(/\s+/g, '_'),
         full_name: name,
         role,
@@ -163,7 +162,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     try {
       console.log('Attempting logout');
       
-      const result = await supabaseAuth.signOut();
+      const result = await dummyAuth.signOut();
       if (!result.success) {
         console.error('Logout failed:', result.error);
         throw new Error(result.error || 'Logout failed');
@@ -180,7 +179,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     try {
       console.log('Attempting password reset for:', email);
       
-      const result = await supabaseAuth.resetPassword(email);
+      const result = await dummyAuth.resetPassword(email);
       if (!result.success) {
         console.error('Password reset failed:', result.error);
         throw new Error(result.error || 'Password reset failed');
@@ -194,21 +193,21 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   };
 
   const updatePassword = async (newPassword: string) => {
-    const result = await supabaseAuth.updatePassword(newPassword);
+    const result = await dummyAuth.updatePassword(newPassword);
     if (!result.success) {
       throw new Error(result.error || 'Password update failed');
     }
   };
 
-  const updateProfile = async (updates: Partial<UserProfile>) => {
-    const result = await supabaseAuth.updateUserProfile(updates);
+  const updateProfile = async (updates: Partial<DummyUser>) => {
+    const result = await dummyAuth.updateUserProfile(updates);
     if (!result.success) {
       throw new Error(result.error || 'Profile update failed');
     }
     
     // Reload profile after update
     if (user) {
-      const updatedProfile = await supabaseAuth.getUserProfile(user.id);
+      const updatedProfile = await dummyAuth.getUserProfile(user.id);
       setProfile(updatedProfile);
     }
   };

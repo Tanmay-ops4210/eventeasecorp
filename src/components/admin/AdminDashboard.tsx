@@ -7,10 +7,13 @@ import {
   UserPlus, Plus, Settings, Shield, Bell, Lock, Loader2
 } from 'lucide-react';
 import { dbService } from '../../lib/supabase';
-import type { AppUser, Event } from '../../types/database';
+import { DummyUser } from '../../lib/dummyAuth';
+import { DummyEvent } from '../../lib/dummyDatabase';
 import UserManagementPage from './UserManagementPage';
 import AdminSecurityDashboard from './AdminSecurityDashboard';
 
+type AppUser = DummyUser;
+type Event = DummyEvent;
 const AdminDashboard: React.FC = () => {
   const { setBreadcrumbs } = useApp();
   const { user, profile, isAuthenticated } = useAuth();
@@ -23,7 +26,7 @@ const AdminDashboard: React.FC = () => {
     eventsThisMonth: 0
   });
   const [users, setUsers] = useState<AppUser[]>([]);
-  const [events, setEvents] = useState<Event[]>([]);
+  const [events, setEvents] = useState<DummyEvent[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [currentPage, setCurrentPage] = useState<'overview' | 'users' | 'events' | 'content' | 'security'>('overview');
 
@@ -47,19 +50,7 @@ const AdminDashboard: React.FC = () => {
       ]);
 
       if (usersResponse.success && usersResponse.users) {
-        setUsers(usersResponse.users.map(user => ({
-          id: user.id,
-          username: user.username,
-          email: user.email || '',
-          created_at: user.created_at,
-          updated_at: user.updated_at,
-          role: user.role,
-          status: 'active',
-          full_name: user.full_name,
-          company: user.company,
-          avatar_url: user.avatar_url,
-          plan: user.plan
-        })));
+        setUsers(usersResponse.users);
         
         // Calculate user stats
         const totalUsers = usersResponse.users.length;
@@ -77,19 +68,7 @@ const AdminDashboard: React.FC = () => {
       }
 
       if (eventsResponse.success && eventsResponse.events) {
-        setEvents(eventsResponse.events.map(event => ({
-          id: event.id,
-          event_name: event.title,
-          event_type: event.category,
-          event_date: event.event_date,
-          user_id: event.organizer_id,
-          expected_attendees: event.max_attendees,
-          current_attendees: 0,
-          title: event.title,
-          category: event.category,
-          status: event.status,
-          created_at: event.created_at
-        })));
+        setEvents(eventsResponse.events);
         
         // Calculate event stats
         const totalEvents = eventsResponse.events.length;
@@ -285,7 +264,7 @@ const AdminDashboard: React.FC = () => {
                     <Users className="w-5 h-5 text-indigo-600" />
                   </div>
                   <div className="flex-1">
-                    <p className="font-medium text-gray-900">{user.full_name || user.username}</p>
+                      <p className="font-medium text-gray-900">{user.full_name || user.name}</p>
                     <p className="text-sm text-gray-500 capitalize">{user.role}</p>
                   </div>
                   <span className="text-xs text-gray-400">

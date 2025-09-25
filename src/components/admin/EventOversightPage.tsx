@@ -1,16 +1,17 @@
 import React, { useState, useEffect } from 'react';
 import { useApp } from '../../contexts/AppContext';
 import { dbService } from '../../lib/supabase';
-import type { Event } from '../../types/database';
+import { DummyEvent } from '../../lib/dummyDatabase';
 import { Search, Filter, CheckCircle, XCircle, AlertTriangle, Eye } from 'lucide-react';
 
+type Event = DummyEvent;
 const EventOversightPage: React.FC = () => {
   const { setBreadcrumbs } = useApp();
-  const [events, setEvents] = useState<Event[]>([]);
+  const [events, setEvents] = useState<DummyEvent[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedStatus, setSelectedStatus] = useState('all');
-  const [selectedEvent, setSelectedEvent] = useState<Event | null>(null);
+  const [selectedEvent, setSelectedEvent] = useState<DummyEvent | null>(null);
   const [showApproveModal, setShowApproveModal] = useState(false);
   const [showRejectModal, setShowRejectModal] = useState(false);
 
@@ -21,15 +22,9 @@ const EventOversightPage: React.FC = () => {
       // Add a status to each event for moderation purposes
       const eventsWithStatus = eventsResponse.events.map(event => ({
         ...event,
-        event_name: event.title,
-        event_type: event.category,
-        event_date: event.event_date,
-        user_id: event.organizer_id,
-        expected_attendees: event.max_attendees,
-        current_attendees: 0,
         status: ['pending', 'approved', 'rejected'][Math.floor(Math.random() * 3)]
       }));
-      setEvents(eventsWithStatus as any);
+      setEvents(eventsWithStatus);
     }
     setIsLoading(false);
   };
@@ -40,17 +35,17 @@ const EventOversightPage: React.FC = () => {
   }, [setBreadcrumbs]);
 
   const filteredEvents = events.filter(event => {
-    const matchesSearch = (event.event_name || '').toLowerCase().includes(searchTerm.toLowerCase());
+    const matchesSearch = (event.title || '').toLowerCase().includes(searchTerm.toLowerCase());
     const matchesStatus = selectedStatus === 'all' || (event as any).status === selectedStatus;
     return matchesSearch && matchesStatus;
   });
 
-  const handleApprove = (event: Event) => {
+  const handleApprove = (event: DummyEvent) => {
     setSelectedEvent(event);
     setShowApproveModal(true);
   };
 
-  const handleReject = (event: Event) => {
+  const handleReject = (event: DummyEvent) => {
     setSelectedEvent(event);
     setShowRejectModal(true);
   };
@@ -58,7 +53,7 @@ const EventOversightPage: React.FC = () => {
   const confirmApprove = () => {
     if (!selectedEvent) return;
     // In a real app, you'd update the event status in the database
-    alert(`Event "${selectedEvent.event_name}" approved.`);
+    alert(`Event "${selectedEvent.title}" approved.`);
     setShowApproveModal(false);
     onRefresh();
   };
@@ -66,7 +61,7 @@ const EventOversightPage: React.FC = () => {
   const confirmReject = () => {
     if (!selectedEvent) return;
     // In a real app, you'd update the event status in the database
-    alert(`Event "${selectedEvent.event_name}" rejected.`);
+    alert(`Event "${selectedEvent.title}" rejected.`);
     setShowRejectModal(false);
     onRefresh();
   };
@@ -128,8 +123,8 @@ const EventOversightPage: React.FC = () => {
                     <tbody className="bg-white divide-y divide-gray-200">
                         {filteredEvents.map((event) => (
                             <tr key={event.id}>
-                                <td className="px-6 py-4 whitespace-nowrap">{event.event_name}</td>
-                                <td className="px-6 py-4 whitespace-nowrap">{(event as any).app_users?.username || 'N/A'}</td>
+                                <td className="px-6 py-4 whitespace-nowrap">{event.title}</td>
+                                <td className="px-6 py-4 whitespace-nowrap">Organizer</td>
                                 <td className="px-6 py-4 whitespace-nowrap">
                                     <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
                                         (event as any).status === 'approved' ? 'bg-green-100 text-green-800' :
@@ -156,7 +151,7 @@ const EventOversightPage: React.FC = () => {
             <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black bg-opacity-50 backdrop-blur-sm">
                 <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full p-6 text-center">
                     <h3 className="text-lg font-semibold mb-4">Approve Event</h3>
-                    <p>Are you sure you want to approve "{selectedEvent.event_name}"?</p>
+                    <p>Are you sure you want to approve "{selectedEvent.title}"?</p>
                     <div className="flex space-x-4 mt-6">
                         <button onClick={() => setShowApproveModal(false)} className="flex-1 px-4 py-2 border rounded-lg">Cancel</button>
                         <button onClick={confirmApprove} className="flex-1 px-4 py-2 bg-green-600 text-white rounded-lg">Approve</button>
@@ -168,7 +163,7 @@ const EventOversightPage: React.FC = () => {
             <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black bg-opacity-50 backdrop-blur-sm">
                 <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full p-6 text-center">
                     <h3 className="text-lg font-semibold mb-4">Reject Event</h3>
-                    <p>Are you sure you want to reject "{selectedEvent.event_name}"?</p>
+                    <p>Are you sure you want to reject "{selectedEvent.title}"?</p>
                     <div className="flex space-x-4 mt-6">
                         <button onClick={() => setShowRejectModal(false)} className="flex-1 px-4 py-2 border rounded-lg">Cancel</button>
                         <button onClick={confirmReject} className="flex-1 px-4 py-2 bg-red-600 text-white rounded-lg">Reject</button>
