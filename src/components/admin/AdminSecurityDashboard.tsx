@@ -162,6 +162,7 @@ const AdminSecurityDashboard: React.FC = () => {
               placeholder="Search by email, IP, or user agent..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
+             autoComplete="off"
               className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
             />
           </div>

@@ -160,6 +160,7 @@ const ResourcesPage: React.FC = () => {
                 placeholder="Search resources..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
+                autoComplete="off"
                 className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-colors duration-200"
               />
             </div>
@@ -307,57 +308,4 @@ const ResourcesPage: React.FC = () => {
                       </div>
                     </div>
                     
-                    <button className="w-full bg-gradient-to-r from-indigo-600 to-purple-600 text-white py-3 rounded-lg font-medium hover:from-indigo-700 hover:to-purple-700 transition-all duration-200 flex items-center justify-center space-x-2">
-                      <Download className="w-4 h-4" />
-                      <span>Download Free</span>
-                    </button>
-                  </div>
-                </div>
-              ))}
-            </div>
-          ) : (
-            <div className="text-center py-20">
-              <div className="bg-white rounded-2xl p-12 shadow-lg">
-                <BookOpen className="w-16 h-16 text-gray-400 mx-auto mb-4" />
-                <h3 className="text-xl font-semibold text-gray-900 mb-2">No resources found</h3>
-                <p className="text-gray-600 mb-6">
-                  Try adjusting your search criteria or browse all resources
-                </p>
-                <button
-                  onClick={() => {
-                    setSearchTerm('');
-                    setSelectedCategory('All');
-                    setSelectedType('All');
-                  }}
-                  className="bg-indigo-600 text-white px-6 py-3 rounded-lg hover:bg-indigo-700 transition-colors duration-200"
-                >
-                  Clear Filters
-                </button>
-              </div>
-            </div>
-          )}
-        </div>
-
-        {/* Newsletter Signup */}
-        <div className="bg-gradient-to-br from-indigo-600 to-purple-600 rounded-3xl p-8 md:p-12 text-white text-center">
-          <h2 className="text-3xl md:text-4xl font-bold mb-4">Stay Updated</h2>
-          <p className="text-xl text-white/90 mb-8 max-w-2xl mx-auto">
-            Get notified when we add new resources and guides to help you plan better events
-          </p>
-          <div className="flex flex-col sm:flex-row gap-4 justify-center max-w-md mx-auto">
-            <input
-              type="email"
-              placeholder="Enter your email"
-              className="flex-1 px-4 py-3 rounded-lg text-gray-900 focus:ring-2 focus:ring-white focus:outline-none"
-            />
-            <button className="bg-white text-indigo-600 px-6 py-3 rounded-lg font-medium hover:bg-gray-100 transition-colors duration-200">
-              Subscribe
-            </button>
-          </div>
-        </div>
-      </div>
-    </div>
-  );
-};
-
-export default ResourcesPage;
+                
