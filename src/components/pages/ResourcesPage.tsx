@@ -308,4 +308,26 @@ const ResourcesPage: React.FC = () => {
                       </div>
                     </div>
                     
+                    <button className="w-full bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-lg font-medium transition-colors duration-200 flex items-center justify-center space-x-2">
+                      <Download className="w-4 h-4" />
+                      <span>Download</span>
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <div className="text-center py-12">
+              <FileText className="w-16 h-16 text-gray-300 mx-auto mb-4" />
+              <h3 className="text-xl font-medium text-gray-900 mb-2">No resources found</h3>
+              <p className="text-gray-500">Try adjusting your search or filter criteria</p>
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+};
+
+export default ResourcesPage;
                 
