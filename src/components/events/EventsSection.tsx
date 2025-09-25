@@ -122,7 +122,7 @@ const mockEvents: Event[] = [
     image: 'https://images.pexels.com/photos/3184360/pexels-photo-3184360.jpeg?auto=compress&cs=tinysrgb&w=800',
     category: 'networking',
     rating: 4.4
-  }
+  },
   {
     id: '7',
     title: 'Mumbai Grand Wedding Exhibition',
@@ -440,6 +440,7 @@ const EventsSection: React.FC<EventsSectionProps> = ({
                   placeholder="Search events by title, description, or location..."
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
+                  autoComplete="off"
                   className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-colors duration-200"
                 />
               </div>

@@ -245,6 +245,7 @@ const EventsPage: React.FC = () => {
                   <img
                     src={event.image}
                     alt={event.title}
+                   autoComplete="off"
                     className="w-full h-48 object-cover group-hover:scale-110 transition-transform duration-500"
                   />
                   <div className="absolute top-4 left-4 flex space-x-2">
