@@ -1,5 +1,4 @@
-import { supabase } from '../lib/supabaseClient';
-import { authService } from '../lib/supabase';
+import { supabase } from '../lib/supabase';
 
 export interface OrganizerEvent {
   id: string;
@@ -78,6 +77,7 @@ export interface EventFormData {
   capacity: number;
   image_url?: string;
   visibility: 'public' | 'private' | 'unlisted';
+  price?: number;
 }
 
 export interface TicketFormData {
@@ -91,17 +91,6 @@ export interface TicketFormData {
   is_active: boolean;
   benefits: string[];
   restrictions: string[];
-}
-
-export interface DashboardStats {
-  totalEvents: number;
-  publishedEvents: number;
-  draftEvents: number;
-  totalTicketsSold: number;
-  totalRevenue: number;
-  upcomingEvents: number;
-  completedEvents: number;
-  averageAttendance: number;
 }
 
 export interface MarketingCampaign {
@@ -131,30 +120,27 @@ class OrganizerCrudService {
 
   // ==================== EVENT CRUD ====================
 
-  private async ensureAuth(): Promise<boolean> {
-    try {
-      const { data: { user } } = await authService.getCurrentUser();
-      if (!user) {
-        console.error('No authenticated user found');
-        return false;
-      }
-      
-      return true;
-    } catch (error) {
-      console.error('Failed to ensure auth:', error);
-      return false;
-    }
-  }
   async createEvent(eventData: EventFormData, organizerId: string): Promise<{ success: boolean; event?: OrganizerEvent; error?: string }> {
     try {
       console.log('Creating event with data:', eventData, 'for organizer:', organizerId);
 
+      // Use the correct table name from the schema
       const { data, error } = await supabase
-        .from('organizer_events')
+        .from('events')
         .insert([{
-          ...eventData,
           organizer_id: organizerId,
-          status: 'draft' // Always start as draft
+          title: eventData.title,
+          description: eventData.description,
+          category: eventData.category || 'conference',
+          event_date: eventData.event_date,
+          start_time: eventData.time,
+          end_time: eventData.end_time,
+          venue: eventData.venue,
+          capacity: eventData.capacity,
+          max_attendees: eventData.capacity,
+          image_url: eventData.image_url,
+          status: 'draft',
+          visibility: eventData.visibility || 'public'
         }])
         .select('*')
         .single();
@@ -166,23 +152,26 @@ class OrganizerCrudService {
 
       console.log('Event created successfully:', data);
 
-      // Create analytics record for the new event
-      const analyticsResult = await supabase
-        .from('organizer_event_analytics')
-        .insert([{
-          event_id: data.id,
-          views: 0,
-          registrations: 0,
-          conversion_rate: 0,
-          revenue: 0,
-          top_referrers: []
-        }]);
-      
-      if (analyticsResult.error) {
-        console.warn('Failed to create analytics record:', analyticsResult.error);
-      }
+      // Map the response to match our interface
+      const mappedEvent: OrganizerEvent = {
+        id: data.id,
+        organizer_id: data.organizer_id,
+        title: data.title,
+        description: data.description,
+        category: data.category,
+        event_date: data.event_date,
+        time: data.start_time,
+        end_time: data.end_time,
+        venue: data.venue,
+        capacity: data.capacity,
+        image_url: data.image_url,
+        status: data.status,
+        visibility: data.visibility,
+        created_at: data.created_at,
+        updated_at: data.updated_at
+      };
 
-      return { success: true, event: data };
+      return { success: true, event: mappedEvent };
     } catch (error) {
       console.error('Create event error:', error);
       const message = error instanceof Error ? error.message : 'An unexpected error occurred';
@@ -195,7 +184,7 @@ class OrganizerCrudService {
       console.log('Fetching events for organizer:', organizerId);
 
       const { data, error } = await supabase
-        .from('organizer_events')
+        .from('events')
         .select('*')
         .eq('organizer_id', organizerId)
         .order('created_at', { ascending: false });
@@ -206,67 +195,31 @@ class OrganizerCrudService {
       }
 
       console.log('Events fetched successfully:', data);
-      return { success: true, events: data || [] };
+
+      // Map the response to match our interface
+      const mappedEvents: OrganizerEvent[] = (data || []).map(event => ({
+        id: event.id,
+        organizer_id: event.organizer_id,
+        title: event.title,
+        description: event.description,
+        category: event.category,
+        event_date: event.event_date,
+        time: event.start_time,
+        end_time: event.end_time,
+        venue: event.venue,
+        capacity: event.capacity,
+        image_url: event.image_url,
+        status: event.status,
+        visibility: event.visibility,
+        created_at: event.created_at,
+        updated_at: event.updated_at
+      }));
+
+      return { success: true, events: mappedEvents };
     } catch (error) {
       console.error('Get events error:', error);
       const message = error instanceof Error ? error.message : 'An unexpected error occurred';
       return { success: false, error: `Failed to fetch events: ${message}` };
-    }
-  }
-
-  async getEventById(eventId: string): Promise<{ success: boolean; event?: OrganizerEvent; error?: string }> {
-    try {
-      const { data, error } = await supabase
-        .from('organizer_events')
-        .select('*')
-        .eq('id', eventId)
-        .single();
-
-      if (error) {
-        return { success: false, error: error.message };
-      }
-
-      return { success: true, event: data };
-    } catch (error) {
-      const message = error instanceof Error ? error.message : 'An unexpected error occurred';
-      return { success: false, error: `Failed to fetch event: ${message}` };
-    }
-  }
-
-  async updateEvent(eventId: string, updates: Partial<EventFormData>): Promise<{ success: boolean; event?: OrganizerEvent; error?: string }> {
-    try {
-      const { data, error } = await supabase
-        .from('organizer_events')
-        .update(updates)
-        .eq('id', eventId)
-        .select()
-        .single();
-
-      if (error) {
-        return { success: false, error: error.message };
-      }
-
-      return { success: true, event: data };
-    } catch (error) {
-      const message = error instanceof Error ? error.message : 'An unexpected error occurred';
-      return { success: false, error: `Failed to update event: ${message}` };
-    }
-  }
-
-  async deleteEvent(eventId: string): Promise<{ success: boolean; error?: string }> {
-    try {
-      const { error } = await supabase
-        .from('organizer_events')
-        .delete()
-        .eq('id', eventId);
-
-      if (error) {
-        return { success: false, error: error.message };
-      }
-
-      return { success: true };
-    } catch (error) {
-      return { success: false, error: 'Failed to delete event' };
     }
   }
 
@@ -275,7 +228,7 @@ class OrganizerCrudService {
       console.log('Publishing event:', eventId);
       
       const { error } = await supabase
-        .from('organizer_events')
+        .from('events')
         .update({ status: 'published' })
         .eq('id', eventId);
 
@@ -292,8 +245,113 @@ class OrganizerCrudService {
     }
   }
 
-  // ==================== DASHBOARD STATS ====================
+  async getEventById(eventId: string): Promise<{ success: boolean; event?: OrganizerEvent; error?: string }> {
+    try {
+      const { data, error } = await supabase
+        .from('events')
+        .select('*')
+        .eq('id', eventId)
+        .single();
 
+      if (error) {
+        return { success: false, error: error.message };
+      }
+
+      const mappedEvent: OrganizerEvent = {
+        id: data.id,
+        organizer_id: data.organizer_id,
+        title: data.title,
+        description: data.description,
+        category: data.category,
+        event_date: data.event_date,
+        time: data.start_time,
+        end_time: data.end_time,
+        venue: data.venue,
+        capacity: data.capacity,
+        image_url: data.image_url,
+        status: data.status,
+        visibility: data.visibility,
+        created_at: data.created_at,
+        updated_at: data.updated_at
+      };
+
+      return { success: true, event: mappedEvent };
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'An unexpected error occurred';
+      return { success: false, error: `Failed to fetch event: ${message}` };
+    }
+  }
+
+  async updateEvent(eventId: string, updates: Partial<EventFormData>): Promise<{ success: boolean; event?: OrganizerEvent; error?: string }> {
+    try {
+      const dbUpdates: any = {};
+      
+      if (updates.title) dbUpdates.title = updates.title;
+      if (updates.description) dbUpdates.description = updates.description;
+      if (updates.category) dbUpdates.category = updates.category;
+      if (updates.event_date) dbUpdates.event_date = updates.event_date;
+      if (updates.time) dbUpdates.start_time = updates.time;
+      if (updates.end_time) dbUpdates.end_time = updates.end_time;
+      if (updates.venue) dbUpdates.venue = updates.venue;
+      if (updates.capacity) {
+        dbUpdates.capacity = updates.capacity;
+        dbUpdates.max_attendees = updates.capacity;
+      }
+      if (updates.image_url) dbUpdates.image_url = updates.image_url;
+      if (updates.visibility) dbUpdates.visibility = updates.visibility;
+
+      const { data, error } = await supabase
+        .from('events')
+        .update(dbUpdates)
+        .eq('id', eventId)
+        .select()
+        .single();
+
+      if (error) {
+        return { success: false, error: error.message };
+      }
+
+      const mappedEvent: OrganizerEvent = {
+        id: data.id,
+        organizer_id: data.organizer_id,
+        title: data.title,
+        description: data.description,
+        category: data.category,
+        event_date: data.event_date,
+        time: data.start_time,
+        end_time: data.end_time,
+        venue: data.venue,
+        capacity: data.capacity,
+        image_url: data.image_url,
+        status: data.status,
+        visibility: data.visibility,
+        created_at: data.created_at,
+        updated_at: data.updated_at
+      };
+
+      return { success: true, event: mappedEvent };
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'An unexpected error occurred';
+      return { success: false, error: `Failed to update event: ${message}` };
+    }
+  }
+
+  async deleteEvent(eventId: string): Promise<{ success: boolean; error?: string }> {
+    try {
+      const { error } = await supabase
+        .from('events')
+        .delete()
+        .eq('id', eventId);
+
+      if (error) {
+        return { success: false, error: error.message };
+      }
+
+      return { success: true };
+    } catch (error) {
+      return { success: false, error: 'Failed to delete event' };
+    }
+  }
 
   // ==================== ANALYTICS ====================
 
@@ -306,29 +364,35 @@ class OrganizerCrudService {
         .single();
 
       if (error) {
+        // If no analytics record exists, create a default one
+        if (error.code === 'PGRST116') {
+          const defaultAnalytics: Partial<OrganizerEventAnalytics> = {
+            event_id: eventId,
+            views: 0,
+            registrations: 0,
+            conversion_rate: 0,
+            revenue: 0,
+            top_referrers: []
+          };
+
+          const { data: newData, error: insertError } = await supabase
+            .from('organizer_event_analytics')
+            .insert([defaultAnalytics])
+            .select()
+            .single();
+
+          if (insertError) {
+            return { success: false, error: insertError.message };
+          }
+
+          return { success: true, analytics: newData };
+        }
         return { success: false, error: error.message };
       }
 
       return { success: true, analytics: data };
     } catch (error) {
       return { success: false, error: 'Failed to fetch analytics' };
-    }
-  }
-
-  async updateEventAnalytics(eventId: string, updates: Partial<OrganizerEventAnalytics>): Promise<{ success: boolean; error?: string }> {
-    try {
-      const { error } = await supabase
-        .from('organizer_event_analytics')
-        .update(updates)
-        .eq('event_id', eventId);
-
-      if (error) {
-        return { success: false, error: error.message };
-      }
-
-      return { success: true };
-    } catch (error) {
-      return { success: false, error: 'Failed to update analytics' };
     }
   }
 
@@ -340,7 +404,8 @@ class OrganizerCrudService {
         .from('organizer_ticket_types')
         .insert([{
           ...ticketData,
-          event_id: eventId
+          event_id: eventId,
+          sold: 0
         }])
         .select()
         .single();
@@ -463,8 +528,7 @@ class OrganizerCrudService {
 
   async createMarketingCampaign(eventId: string, campaignData: Omit<MarketingCampaign, 'id' | 'event_id' | 'created_at' | 'open_rate' | 'click_rate'>): Promise<{ success: boolean; campaign?: MarketingCampaign; error?: string }> {
     try {
-      // Since we don't have a marketing_campaigns table in the new schema,
-      // we'll simulate this functionality
+      // Create mock campaign since table doesn't exist in schema
       const mockCampaign: MarketingCampaign = {
         id: `campaign_${Date.now()}`,
         event_id: eventId,
@@ -474,8 +538,6 @@ class OrganizerCrudService {
         created_at: new Date().toISOString()
       };
 
-      // In a real implementation, you would create a marketing_campaigns table
-      // For now, we'll just return success
       return { success: true, campaign: mockCampaign };
     } catch (error) {
       return { success: false, error: 'Failed to create campaign' };
@@ -484,7 +546,7 @@ class OrganizerCrudService {
 
   async getMarketingCampaigns(eventId: string): Promise<{ success: boolean; campaigns?: MarketingCampaign[]; error?: string }> {
     try {
-      // Mock campaigns data since we don't have the table
+      // Return mock campaigns since table doesn't exist
       const mockCampaigns: MarketingCampaign[] = [
         {
           id: '1',
@@ -510,7 +572,7 @@ class OrganizerCrudService {
 
   async updateMarketingCampaign(campaignId: string, updates: Partial<MarketingCampaign>): Promise<{ success: boolean; error?: string }> {
     try {
-      // Mock update since we don't have the table
+      // Mock update since table doesn't exist
       return { success: true };
     } catch (error) {
       return { success: false, error: 'Failed to update campaign' };
@@ -519,82 +581,11 @@ class OrganizerCrudService {
 
   async deleteMarketingCampaign(campaignId: string): Promise<{ success: boolean; error?: string }> {
     try {
-      // Mock delete since we don't have the table
+      // Mock delete since table doesn't exist
       return { success: true };
     } catch (error) {
       return { success: false, error: 'Failed to delete campaign' };
     }
-  }
-
-  // ==================== UTILITY FUNCTIONS ====================
-
-  async incrementEventViews(eventId: string): Promise<{ success: boolean; error?: string }> {
-    try {
-      const { error } = await supabase
-        .from('organizer_event_analytics')
-        .update({ 
-          views: supabase.sql`views + 1`,
-          updated_at: new Date().toISOString()
-        })
-        .eq('event_id', eventId);
-
-      if (error) {
-        return { success: false, error: error.message };
-      }
-
-      return { success: true };
-    } catch (error) {
-      return { success: false, error: 'Failed to increment views' };
-    }
-  }
-
-  // Real-time subscriptions
-  subscribeToEventUpdates(organizerId: string, callback: (payload: any) => void) {
-    return supabase
-      .channel('organizer-events-changes')
-      .on(
-        'postgres_changes',
-        {
-          event: '*',
-          schema: 'public',
-          table: 'organizer_events',
-          filter: `organizer_id=eq.${organizerId}`
-        },
-        callback
-      )
-      .subscribe();
-  }
-
-  subscribeToAttendeeUpdates(eventId: string, callback: (payload: any) => void) {
-    return supabase
-      .channel('organizer-attendees-changes')
-      .on(
-        'postgres_changes',
-        {
-          event: '*',
-          schema: 'public',
-          table: 'organizer_attendees',
-          filter: `event_id=eq.${eventId}`
-        },
-        callback
-      )
-      .subscribe();
-  }
-
-  subscribeToAnalyticsUpdates(eventId: string, callback: (payload: any) => void) {
-    return supabase
-      .channel('organizer-analytics-changes')
-      .on(
-        'postgres_changes',
-        {
-          event: '*',
-          schema: 'public',
-          table: 'organizer_event_analytics',
-          filter: `event_id=eq.${eventId}`
-        },
-        callback
-      )
-      .subscribe();
   }
 }
 

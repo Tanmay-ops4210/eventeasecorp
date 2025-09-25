@@ -26,7 +26,10 @@ const RealTicketingPage: React.FC = () => {
   const [errors, setErrors] = useState<Record<string, string>>({});
 
   const fetchEvents = async () => {
-    if (!user) return;
+    if (!user?.id) {
+      setIsLoading(prev => ({ ...prev, events: false }));
+      return;
+    }
     setIsLoading(prev => ({ ...prev, events: true }));
     try {
       const result = await organizerCrudService.getMyEvents(user.id);

@@ -79,6 +79,8 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       setProfile(userProfile);
     } catch (error) {
       console.error('Failed to load user profile:', error);
+      // Don't throw error, just set profile to null to prevent auth loops
+      setProfile(null);
     }
   };
 

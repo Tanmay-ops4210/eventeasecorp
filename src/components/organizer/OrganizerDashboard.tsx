@@ -7,24 +7,31 @@ import {
   Loader2, ArrowUp, ArrowDown, Ticket, Mail, Settings,
   Edit, Check, ExternalLink
 } from 'lucide-react';
-import { supabase } from '../../lib/supabase';
+import { organizerCrudService } from '../../services/organizerCrudService';
 
 const OrganizerDashboard: React.FC = () => {
   const { setBreadcrumbs, setCurrentView } = useApp();
   const { user, profile } = useAuth();
   const [events, setEvents] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   React.useEffect(() => {
     setBreadcrumbs(['Organizer Dashboard']);
-    loadEvents();
+    if (user?.id) {
+      loadEvents();
+    }
   }, [setBreadcrumbs, user]);
 
   const loadEvents = async () => {
-    if (!user) return;
+    if (!user?.id) {
+      setIsLoading(false);
+      return;
+    }
 
     try {
       setIsLoading(true);
+      setError(null);
       console.log('Loading events for user:', user.id);
       
       const result = await organizerCrudService.getMyEvents(user.id);
@@ -34,10 +41,12 @@ const OrganizerDashboard: React.FC = () => {
         setEvents(result.events);
       } else {
         console.error('Failed to fetch events:', result.error);
+        setError(result.error || 'Failed to load events');
         setEvents([]);
       }
     } catch (error) {
       console.error('Failed to fetch events:', error);
+      setError('Failed to load events');
       setEvents([]);
     } finally {
       setIsLoading(false);
@@ -118,6 +127,50 @@ const OrganizerDashboard: React.FC = () => {
             <div className="text-center">
               <Loader2 className="w-8 h-8 animate-spin text-indigo-600 mx-auto mb-4" />
               <p className="text-gray-600">Loading dashboard...</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="min-h-screen bg-gray-50 pt-20">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+          <div className="flex items-center justify-center py-20">
+            <div className="text-center">
+              <AlertCircle className="w-12 h-12 text-red-500 mx-auto mb-4" />
+              <h3 className="text-lg font-semibold text-gray-900 mb-2">Error Loading Dashboard</h3>
+              <p className="text-gray-600 mb-4">{error}</p>
+              <button
+                onClick={loadEvents}
+                className="bg-indigo-600 text-white px-6 py-3 rounded-lg hover:bg-indigo-700 transition-colors duration-200"
+              >
+                Try Again
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (!user?.id) {
+    return (
+      <div className="min-h-screen bg-gray-50 pt-20">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+          <div className="flex items-center justify-center py-20">
+            <div className="text-center">
+              <AlertCircle className="w-12 h-12 text-orange-500 mx-auto mb-4" />
+              <h3 className="text-lg font-semibold text-gray-900 mb-2">Authentication Required</h3>
+              <p className="text-gray-600 mb-4">Please log in to access the organizer dashboard</p>
+              <button
+                onClick={() => setCurrentView('home')}
+                className="bg-indigo-600 text-white px-6 py-3 rounded-lg hover:bg-indigo-700 transition-colors duration-200"
+              >
+                Go to Home
+              </button>
             </div>
           </div>
         </div>

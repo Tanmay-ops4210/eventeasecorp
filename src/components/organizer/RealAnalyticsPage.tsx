@@ -23,7 +23,10 @@ const RealAnalyticsPage: React.FC = () => {
   }, [setBreadcrumbs, user]);
 
   const loadEvents = async () => {
-    if (!user) return;
+    if (!user?.id) {
+      setIsLoading(false);
+      return;
+    }
 
     try {
       setIsLoading(true);

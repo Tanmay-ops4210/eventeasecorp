@@ -98,7 +98,10 @@ const EventBuilderPage: React.FC = () => {
   };
 
   const handleSave = async (markComplete: boolean = false) => {
-    if (!user) return;
+    if (!user?.id) {
+      alert('Please log in to save events');
+      return;
+    }
 
     // For incomplete save, only require title
     if (!markComplete && !eventData.title.trim()) {
@@ -115,23 +118,11 @@ const EventBuilderPage: React.FC = () => {
     try {
       const eventDataWithPrice = {
         ...eventData,
-        price: price
       };
       
       const result = await organizerCrudService.createEvent(eventDataWithPrice, user.id);
 
       if (result.success) {
-        if (markComplete) {
-          // If marking complete, also publish the event
-          const publishResult = await organizerCrudService.publishEvent(result.event!.id);
-          if (publishResult.success) {
-            alert('Event created and published successfully!');
-          } else {
-            alert('Event created but failed to publish: ' + publishResult.error);
-          }
-        } else {
-          alert('Event saved as draft successfully!');
-        }
         alert(`Event ${markComplete ? 'created and marked complete' : 'saved as draft'} successfully!`);
         setCurrentView('organizer-dashboard');
       } else {
@@ -146,13 +137,17 @@ const EventBuilderPage: React.FC = () => {
   };
 
   const handlePublish = async () => {
-    if (!validateForm() || !user) return;
+    if (!validateForm() || !user?.id) {
+      if (!user?.id) {
+        alert('Please log in to publish events');
+      }
+      return;
+    }
 
     setIsLoading(true);
     try {
       const eventDataWithPrice = {
         ...eventData,
-        price: price
       };
       
       const result = await organizerCrudService.createEvent(eventDataWithPrice, user.id);
@@ -166,8 +161,6 @@ const EventBuilderPage: React.FC = () => {
           alert(publishResult.error || 'Failed to publish event');
         }
       } else {
-        alert('Event created and published successfully!');
-        setCurrentView('my-events');
         alert(result.error || 'Failed to create event');
       }
     } catch (error) {

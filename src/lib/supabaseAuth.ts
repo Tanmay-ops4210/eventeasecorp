@@ -180,14 +180,15 @@ class SupabaseAuthService {
         .single();
 
       if (error) {
-        console.error('Profile fetch error:', error);
+        console.warn('Profile fetch error:', error);
+        // Don't throw error for missing profile, return null instead
         return null;
       }
       
       console.log('Profile fetched successfully:', data);
       return data;
     } catch (error) {
-      console.error('Failed to fetch profile:', error);
+      console.warn('Failed to fetch profile:', error);
       return null;
     }
   }
