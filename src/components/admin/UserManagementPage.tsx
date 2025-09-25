@@ -1,20 +1,5 @@
 import React, { useState, useMemo } from 'react';
-import { 
-  Users, 
-  Search, 
-  Filter, 
-  Eye,
-  Edit,
-  Trash2,
-  UserPlus,
-  AlertTriangle,
-  X,
-  CheckCircle,
-  XCircle,
-  MoreVertical,
-  ChevronDown,
-  User
-} from 'lucide-react';
+import { Users, Search, Filter, Eye, CreditCard as Edit, Trash2, UserPlus, AlertTriangle, X, CheckCircle, XCircle, MoreVertical, ChevronDown, User } from 'lucide-react';
 import { dbService } from '../../lib/supabase';
 import { DummyUser } from '../../lib/dummyAuth';
 import { DummyEvent } from '../../lib/dummyDatabase';
