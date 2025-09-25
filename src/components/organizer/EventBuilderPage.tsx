@@ -5,7 +5,7 @@ import {
   Save, Calendar, MapPin, Users, DollarSign, Image as ImageIcon, Type,
   ArrowLeft, Check, AlertTriangle, Loader2, Upload, IndianRupee
 } from 'lucide-react';
-import { supabase } from '../../lib/supabase';
+import { organizerCrudService } from '../../services/organizerCrudService';
 
 interface EventFormData {
   title: string;
@@ -113,24 +113,32 @@ const EventBuilderPage: React.FC = () => {
 
     setIsLoading(true);
     try {
-      const { data, error } = await supabase
-        .from('organizer_events')
-        .insert([{
-          ...eventData,
-          organizer_id: user.id,
-          price: price,
-          status: markComplete ? 'published' : 'draft'
-        }])
-        .select()
-        .single();
+      const eventDataWithPrice = {
+        ...eventData,
+        price: price
+      };
+      
+      const result = await organizerCrudService.createEvent(eventDataWithPrice, user.id);
 
-      if (!error) {
+      if (result.success) {
+        if (markComplete) {
+          // If marking complete, also publish the event
+          const publishResult = await organizerCrudService.publishEvent(result.event!.id);
+          if (publishResult.success) {
+            alert('Event created and published successfully!');
+          } else {
+            alert('Event created but failed to publish: ' + publishResult.error);
+          }
+        } else {
+          alert('Event saved as draft successfully!');
+        }
         alert(`Event ${markComplete ? 'created and marked complete' : 'saved as draft'} successfully!`);
         setCurrentView('organizer-dashboard');
       } else {
-        alert('Failed to create event');
+        alert(result.error || 'Failed to create event');
       }
     } catch (error) {
+      console.error('Event creation error:', error);
       alert('Failed to create event');
     } finally {
       setIsLoading(false);
@@ -142,24 +150,28 @@ const EventBuilderPage: React.FC = () => {
 
     setIsLoading(true);
     try {
-      const { data, error } = await supabase
-        .from('organizer_events')
-        .insert([{
-          ...eventData,
-          organizer_id: user.id,
-          price: price,
-          status: 'published'
-        }])
-        .select()
-        .single();
+      const eventDataWithPrice = {
+        ...eventData,
+        price: price
+      };
+      
+      const result = await organizerCrudService.createEvent(eventDataWithPrice, user.id);
 
-      if (!error) {
+      if (result.success && result.event) {
+        const publishResult = await organizerCrudService.publishEvent(result.event.id);
+        if (publishResult.success) {
+          alert('Event created and published successfully!');
+          setCurrentView('my-events');
+        } else {
+          alert(publishResult.error || 'Failed to publish event');
+        }
+      } else {
         alert('Event created and published successfully!');
         setCurrentView('my-events');
-      } else {
-        alert('Failed to create event');
+        alert(result.error || 'Failed to create event');
       }
     } catch (error) {
+      console.error('Event publish error:', error);
       alert('Failed to create and publish event');
     } finally {
       setIsLoading(false);

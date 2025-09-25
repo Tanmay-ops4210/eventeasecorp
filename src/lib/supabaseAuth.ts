@@ -53,6 +53,8 @@ class SupabaseAuthService {
     company?: string;
   }): Promise<AuthResult> {
     try {
+      console.log('Supabase signUp called with:', { email, userData });
+      
       const { data, error } = await supabase.auth.signUp({
         email,
         password,
@@ -69,18 +71,23 @@ class SupabaseAuthService {
 
       if (error) throw error;
 
+      console.log('Supabase signUp response:', data);
+
       // If signup is successful, sign in immediately (no email confirmation)
       if (data.user && !data.session) {
+        console.log('No session from signup, attempting sign in');
         const signInResult = await this.signIn(email, password);
         return signInResult;
       }
 
+      console.log('Signup successful with session');
       return { 
         success: true, 
         user: data.user,
-        profile: await this.getUserProfile(data.user?.id)
+        profile: data.user ? await this.getUserProfile(data.user.id) : null
       };
     } catch (error) {
+      console.error('Supabase signUp error:', error);
       return { 
         success: false, 
         error: error instanceof Error ? error.message : 'Registration failed' 
@@ -91,6 +98,8 @@ class SupabaseAuthService {
   // Sign in
   async signIn(email: string, password: string): Promise<AuthResult> {
     try {
+      console.log('Supabase signIn called with:', email);
+      
       const { data, error } = await supabase.auth.signInWithPassword({
         email,
         password
@@ -98,7 +107,10 @@ class SupabaseAuthService {
 
       if (error) throw error;
 
+      console.log('Supabase signIn response:', data);
+
       const profile = await this.getUserProfile(data.user?.id);
+      console.log('User profile loaded:', profile);
 
       return { 
         success: true, 
@@ -106,6 +118,7 @@ class SupabaseAuthService {
         profile
       };
     } catch (error) {
+      console.error('Supabase signIn error:', error);
       return { 
         success: false, 
         error: error instanceof Error ? error.message : 'Login failed' 
@@ -116,10 +129,15 @@ class SupabaseAuthService {
   // Sign out
   async signOut(): Promise<AuthResult> {
     try {
+      console.log('Supabase signOut called');
+      
       const { error } = await supabase.auth.signOut();
       if (error) throw error;
+      
+      console.log('Supabase signOut successful');
       return { success: true };
     } catch (error) {
+      console.error('Supabase signOut error:', error);
       return { 
         success: false, 
         error: error instanceof Error ? error.message : 'Logout failed' 
@@ -145,10 +163,15 @@ class SupabaseAuthService {
   // Get user profile
   async getUserProfile(userId?: string): Promise<UserProfile | null> {
     try {
+      console.log('Getting user profile for:', userId);
+      
       const { data: { user } } = await supabase.auth.getUser();
       const targetUserId = userId || user?.id;
 
-      if (!targetUserId) return null;
+      if (!targetUserId) {
+        console.log('No user ID available');
+        return null;
+      }
 
       const { data, error } = await supabase
         .from('profiles')
@@ -156,7 +179,12 @@ class SupabaseAuthService {
         .eq('id', targetUserId)
         .single();
 
-      if (error) throw error;
+      if (error) {
+        console.error('Profile fetch error:', error);
+        return null;
+      }
+      
+      console.log('Profile fetched successfully:', data);
       return data;
     } catch (error) {
       console.error('Failed to fetch profile:', error);

@@ -25,19 +25,20 @@ const OrganizerDashboard: React.FC = () => {
 
     try {
       setIsLoading(true);
-      const { data, error } = await supabase
-        .from('organizer_events')
-        .select('*')
-        .eq('organizer_id', user.id)
-        .order('created_at', { ascending: false });
-
-      if (error) {
-        console.error('Failed to fetch events:', error);
+      console.log('Loading events for user:', user.id);
+      
+      const result = await organizerCrudService.getMyEvents(user.id);
+      
+      if (result.success && result.events) {
+        console.log('Events loaded successfully:', result.events);
+        setEvents(result.events);
       } else {
-        setEvents(data || []);
+        console.error('Failed to fetch events:', result.error);
+        setEvents([]);
       }
     } catch (error) {
       console.error('Failed to fetch events:', error);
+      setEvents([]);
     } finally {
       setIsLoading(false);
     }
@@ -45,18 +46,18 @@ const OrganizerDashboard: React.FC = () => {
 
   const handlePublishEvent = async (eventId: string) => {
     try {
-      const { error } = await supabase
-        .from('organizer_events')
-        .update({ status: 'published' })
-        .eq('id', eventId);
-
-      if (!error) {
+      console.log('Publishing event from dashboard:', eventId);
+      
+      const result = await organizerCrudService.publishEvent(eventId);
+      
+      if (result.success) {
         await loadEvents();
         alert('Event published successfully!');
       } else {
-        alert('Failed to publish event');
+        alert(result.error || 'Failed to publish event');
       }
     } catch (error) {
+      console.error('Publish event error:', error);
       alert('Failed to publish event');
     }
   };

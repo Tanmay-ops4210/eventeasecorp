@@ -147,25 +147,27 @@ class OrganizerCrudService {
   }
   async createEvent(eventData: EventFormData, organizerId: string): Promise<{ success: boolean; event?: OrganizerEvent; error?: string }> {
     try {
-      if (!(await this.ensureAuth())) {
-        return { success: false, error: 'Authentication required' };
-      }
+      console.log('Creating event with data:', eventData, 'for organizer:', organizerId);
 
       const { data, error } = await supabase
         .from('organizer_events')
         .insert([{
           ...eventData,
-          organizer_id: organizerId
+          organizer_id: organizerId,
+          status: 'draft' // Always start as draft
         }])
         .select('*')
         .single();
 
       if (error) {
+        console.error('Supabase error:', error);
         return { success: false, error: error.message };
       }
 
+      console.log('Event created successfully:', data);
+
       // Create analytics record for the new event
-      await supabase
+      const analyticsResult = await supabase
         .from('organizer_event_analytics')
         .insert([{
           event_id: data.id,
@@ -175,8 +177,14 @@ class OrganizerCrudService {
           revenue: 0,
           top_referrers: []
         }]);
+      
+      if (analyticsResult.error) {
+        console.warn('Failed to create analytics record:', analyticsResult.error);
+      }
+
       return { success: true, event: data };
     } catch (error) {
+      console.error('Create event error:', error);
       const message = error instanceof Error ? error.message : 'An unexpected error occurred';
       return { success: false, error: `Failed to create event: ${message}` };
     }
@@ -184,9 +192,7 @@ class OrganizerCrudService {
 
   async getMyEvents(organizerId: string): Promise<{ success: boolean; events?: OrganizerEvent[]; error?: string }> {
     try {
-      if (!(await this.ensureAuth())) {
-        return { success: false, error: 'Authentication required' };
-      }
+      console.log('Fetching events for organizer:', organizerId);
 
       const { data, error } = await supabase
         .from('organizer_events')
@@ -195,11 +201,14 @@ class OrganizerCrudService {
         .order('created_at', { ascending: false });
 
       if (error) {
+        console.error('Supabase error:', error);
         return { success: false, error: error.message };
       }
 
+      console.log('Events fetched successfully:', data);
       return { success: true, events: data || [] };
     } catch (error) {
+      console.error('Get events error:', error);
       const message = error instanceof Error ? error.message : 'An unexpected error occurred';
       return { success: false, error: `Failed to fetch events: ${message}` };
     }
@@ -263,76 +272,28 @@ class OrganizerCrudService {
 
   async publishEvent(eventId: string): Promise<{ success: boolean; error?: string }> {
     try {
+      console.log('Publishing event:', eventId);
+      
       const { error } = await supabase
         .from('organizer_events')
         .update({ status: 'published' })
         .eq('id', eventId);
 
       if (error) {
+        console.error('Publish error:', error);
         return { success: false, error: error.message };
       }
 
+      console.log('Event published successfully');
       return { success: true };
     } catch (error) {
+      console.error('Publish event error:', error);
       return { success: false, error: 'Failed to publish event' };
     }
   }
 
   // ==================== DASHBOARD STATS ====================
 
-  async getDashboardStats(organizerId: string): Promise<{ success: boolean; stats?: DashboardStats; error?: string }> {
-    try {
-      if (!(await this.ensureAuth())) {
-        return { success: false, error: 'Authentication required' };
-      }
-
-      const { data: events, error: eventsError } = await supabase
-        .from('organizer_events')
-        .select('id, status, event_date, capacity')
-        .eq('organizer_id', organizerId);
-
-      if (eventsError) {
-        return { success: false, error: eventsError.message };
-      }
-
-      const { data: analytics, error: analyticsError } = await supabase
-        .from('organizer_event_analytics')
-        .select('registrations, revenue')
-        .in('event_id', events?.map(e => e.id) || []);
-
-      if (analyticsError) {
-        return { success: false, error: analyticsError.message };
-      }
-
-      const totalEvents = events?.length || 0;
-      const publishedEvents = events?.filter(e => e.status === 'published').length || 0;
-      const draftEvents = events?.filter(e => e.status === 'draft').length || 0;
-      const upcomingEvents = events?.filter(e => 
-        e.status === 'published' && new Date(e.event_date) > new Date()
-      ).length || 0;
-      const completedEvents = events?.filter(e => e.status === 'completed').length || 0;
-      
-      const totalTicketsSold = analytics?.reduce((sum, a) => sum + (a.registrations || 0), 0) || 0;
-      const totalRevenue = analytics?.reduce((sum, a) => sum + (a.revenue || 0), 0) || 0;
-      const averageAttendance = totalEvents > 0 ? totalTicketsSold / totalEvents : 0;
-
-      const stats: DashboardStats = {
-        totalEvents,
-        publishedEvents,
-        draftEvents,
-        totalTicketsSold,
-        totalRevenue,
-        upcomingEvents,
-        completedEvents,
-        averageAttendance
-      };
-
-      return { success: true, stats };
-    } catch (error) {
-      const message = error instanceof Error ? error.message : 'An unexpected error occurred';
-      return { success: false, error: `Failed to fetch dashboard stats: ${message}` };
-    }
-  }
 
   // ==================== ANALYTICS ====================
 

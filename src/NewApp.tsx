@@ -87,6 +87,11 @@ const AppContent: React.FC = () => {
 
   console.log('AppContent render:', { user, profile, isAuthenticated, currentView });
 
+  // Add loading state while auth is being determined
+  if (user === undefined || profile === undefined) {
+    return <LoadingFallback />;
+  }
+
   const renderNavigation = () => {
     if (isAuthenticated && user && profile) {
       switch (profile.role) {
@@ -103,6 +108,7 @@ const AppContent: React.FC = () => {
     const hasRole = (roles: string[]) => isAuthenticated && user && profile && roles.includes(profile.role || 'attendee');
 
     console.log('Rendering page for view:', currentView);
+    console.log('User role check:', { isAuthenticated, hasUser: !!user, hasProfile: !!profile, role: profile?.role });
 
     switch (currentView) {
       // --- Public Views ---
@@ -137,17 +143,32 @@ const AppContent: React.FC = () => {
       
       // Organizer
       case 'organizer-dashboard': 
-        return hasRole(['organizer']) ? <OrganizerDashboard /> : 
-               isAuthenticated ? <NewHomePage /> : <NewHomePage />;
+        console.log('Checking organizer dashboard access:', { hasRole: hasRole(['organizer']), isAuthenticated, role: profile?.role });
+        if (!isAuthenticated) {
+          console.log('Not authenticated, redirecting to home');
+          return <NewHomePage />;
+        }
+        if (!hasRole(['organizer'])) {
+          console.log('Not organizer role, redirecting to home');
+          return <NewHomePage />;
+        }
+        console.log('Rendering organizer dashboard');
+        return <OrganizerDashboard />;
       case 'event-builder': 
-        return hasRole(['organizer']) ? <EventBuilderPage /> : 
-               isAuthenticated ? <NewHomePage /> : <NewHomePage />;
+        if (!isAuthenticated || !hasRole(['organizer'])) {
+          return <NewHomePage />;
+        }
+        return <EventBuilderPage />;
       case 'analytics': 
-        return hasRole(['organizer']) ? <AnalyticsPage /> : 
-               isAuthenticated ? <NewHomePage /> : <NewHomePage />;
+        if (!isAuthenticated || !hasRole(['organizer'])) {
+          return <NewHomePage />;
+        }
+        return <AnalyticsPage />;
       case 'organizer-settings': 
-        return hasRole(['organizer']) ? <OrganizerSettingsPage /> : 
-               isAuthenticated ? <NewHomePage /> : <NewHomePage />;
+        if (!isAuthenticated || !hasRole(['organizer'])) {
+          return <NewHomePage />;
+        }
+        return <OrganizerSettingsPage />;
       case 'event-settings': 
         return hasRole(['organizer']) ? <EventSettingsPage /> : 
                isAuthenticated ? <NewHomePage /> : <NewHomePage />;

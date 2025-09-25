@@ -13,10 +13,23 @@ export const supabase = createClient(finalSupabaseUrl, finalSupabaseAnonKey, {
   auth: {
     autoRefreshToken: true,
     persistSession: true,
-    detectSessionInUrl: true
+    detectSessionInUrl: false, // Disable to prevent auth loops
+    flowType: 'pkce'
+  },
+  global: {
+    headers: {
+      'X-Client-Info': 'eventease-web'
+    }
   }
 });
 
+// Add connection test
+console.log('Supabase client initialized with URL:', finalSupabaseUrl);
+console.log('Environment check:', {
+  hasUrl: !!supabaseUrl,
+  hasKey: !!supabaseAnonKey,
+  isDev: import.meta.env.DEV
+});
 // Database types
 export interface Database {
   public: {

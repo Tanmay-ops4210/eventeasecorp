@@ -83,13 +83,23 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   };
 
   const login = async (email: string, password: string, role?: 'attendee' | 'organizer' | 'admin') => {
-    const result = await supabaseAuth.signIn(email, password);
-    if (!result.success) {
-      throw new Error(result.error || 'Login failed');
+    try {
+      console.log('Attempting login for:', email, 'with role:', role);
+      
+      const result = await supabaseAuth.signIn(email, password);
+      if (!result.success) {
+        console.error('Login failed:', result.error);
+        throw new Error(result.error || 'Login failed');
+      }
+      
+      console.log('Login successful:', result.user);
+      
+      // The auth state change listener will handle setting user and profile
+      // No need to manually set them here
+    } catch (error) {
+      console.error('Login error:', error);
+      throw error;
     }
-    
-    // Navigation will be handled by the component that initiated the login
-    // This allows for context-aware redirection
   };
 
   const register = async (
@@ -99,34 +109,61 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     role: 'attendee' | 'organizer' | 'admin', 
     company?: string
   ) => {
-    const result = await supabaseAuth.signUp(email, password, {
-      username: name.toLowerCase().replace(/\s+/g, '_'),
-      full_name: name,
-      role,
-      company
-    });
-    
-    if (!result.success) {
-      throw new Error(result.error || 'Registration failed');
-    }
-    
-    // After successful registration, automatically sign in
-    if (result.user) {
-      await login(email, password, role);
+    try {
+      console.log('Attempting registration for:', email, 'with role:', role);
+      
+      const result = await supabaseAuth.signUp(email, password, {
+        username: name.toLowerCase().replace(/\s+/g, '_'),
+        full_name: name,
+        role,
+        company
+      });
+      
+      if (!result.success) {
+        console.error('Registration failed:', result.error);
+        throw new Error(result.error || 'Registration failed');
+      }
+      
+      console.log('Registration successful:', result.user);
+      
+      // The auth state change listener will handle setting user and profile
+    } catch (error) {
+      console.error('Registration error:', error);
+      throw error;
     }
   };
 
   const logout = async () => {
-    const result = await supabaseAuth.signOut();
-    if (!result.success) {
-      throw new Error(result.error || 'Logout failed');
+    try {
+      console.log('Attempting logout');
+      
+      const result = await supabaseAuth.signOut();
+      if (!result.success) {
+        console.error('Logout failed:', result.error);
+        throw new Error(result.error || 'Logout failed');
+      }
+      
+      console.log('Logout successful');
+    } catch (error) {
+      console.error('Logout error:', error);
+      throw error;
     }
   };
 
   const resetPassword = async (email: string) => {
-    const result = await supabaseAuth.resetPassword(email);
-    if (!result.success) {
-      throw new Error(result.error || 'Password reset failed');
+    try {
+      console.log('Attempting password reset for:', email);
+      
+      const result = await supabaseAuth.resetPassword(email);
+      if (!result.success) {
+        console.error('Password reset failed:', result.error);
+        throw new Error(result.error || 'Password reset failed');
+      }
+      
+      console.log('Password reset successful');
+    } catch (error) {
+      console.error('Password reset error:', error);
+      throw error;
     }
   };
 
