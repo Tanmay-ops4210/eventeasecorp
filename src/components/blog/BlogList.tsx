@@ -229,6 +229,7 @@ const BlogList: React.FC<BlogListProps> = ({ onArticleClick }) => {
                 <img
                   src={featuredArticle.image}
                   alt={featuredArticle.title}
+                 autoComplete="off"
                   className="w-full h-64 lg:h-80 object-cover"
                 />
               </div>

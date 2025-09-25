@@ -98,6 +98,7 @@ const EventOversightPage: React.FC = () => {
                     placeholder="Search events..."
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}
+                   autoComplete="off"
                     className="w-full pl-10 pr-4 py-2 border rounded-lg"
                 />
             </div>

@@ -103,6 +103,7 @@ const MemberManagement: React.FC<MemberManagementProps> = ({ users, events, onRe
                     placeholder="Search by name or email..."
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}
+                   autoComplete="off"
                     className="admin-search-input"
                 />
                 </div>

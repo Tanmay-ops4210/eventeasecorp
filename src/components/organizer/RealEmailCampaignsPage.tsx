@@ -337,6 +337,7 @@ const RealEmailCampaignsPage: React.FC = () => {
                     type="text"
                     value={campaignFormData.name}
                     onChange={(e) => setCampaignFormData(prev => ({ ...prev, name: e.target.value }))}
+                    autoComplete="off"
                     className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
                     placeholder="e.g., Pre-Event Announcement"
                   />
@@ -379,6 +380,7 @@ const RealEmailCampaignsPage: React.FC = () => {
                       type="text"
                       value={campaignFormData.subject}
                       onChange={(e) => setCampaignFormData(prev => ({ ...prev, subject: e.target.value }))}
+                      autoComplete="off"
                       className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
                       placeholder="Enter email subject line"
                     />
