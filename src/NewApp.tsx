@@ -233,7 +233,9 @@ function NewApp() {
   return (
     <AppProvider>
       <AuthProvider>
-        <AppContent />
+        <React.Suspense fallback={<LoadingFallback />}>
+          <AppContent />
+        </React.Suspense>
       </AuthProvider>
     </AppProvider>
   );
