@@ -1,10 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { useApp } from '../../contexts/AppContext';
 import { useAuth } from '../../contexts/NewAuthContext';
-import { Calendar, Users, DollarSign, TrendingUp, Eye, Plus, BarChart3, Clock, CheckCircle, AlertCircle, Activity, Loader2, ArrowUp, ArrowDown, Ticket, Mail, Settings, CreditCard as Edit, Check, ExternalLink, RefreshCw } from 'lucide-react';
+import { Calendar, Users, DollarSign, TrendingUp, Eye, Plus, BarChart3, Clock, CheckCircle, AlertCircle, Activity, Loader2, ArrowUp, ArrowDown, Ticket, Settings, CreditCard as Edit, Check, ExternalLink, RefreshCw, MapPin } from 'lucide-react';
 import { organizerCrudService } from '../../services/organizerCrudService';
 
-const OrganizerDashboard: React.FC = () => {
+const RealOrganizerDashboard: React.FC = () => {
   const { setBreadcrumbs, setCurrentView } = useApp();
   const { user, profile, isOrganizer } = useAuth();
   const [events, setEvents] = useState<any[]>([]);
@@ -256,6 +256,10 @@ const OrganizerDashboard: React.FC = () => {
                 <Calendar className="w-6 h-6 text-blue-600" />
               </div>
             </div>
+            <div className="mt-4 flex items-center text-sm">
+              <TrendingUp className="w-4 h-4 text-green-600 mr-1" />
+              <span className="text-green-600 font-medium">All time</span>
+            </div>
           </div>
 
           <div className="bg-white rounded-2xl shadow-lg p-6 transform hover:scale-105 transition-all duration-200">
@@ -267,6 +271,9 @@ const OrganizerDashboard: React.FC = () => {
               <div className="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center">
                 <CheckCircle className="w-6 h-6 text-green-600" />
               </div>
+            </div>
+            <div className="mt-4 flex items-center text-sm">
+              <span className="text-green-600 font-medium">Live events</span>
             </div>
           </div>
 
@@ -280,6 +287,9 @@ const OrganizerDashboard: React.FC = () => {
                 <Edit className="w-6 h-6 text-orange-600" />
               </div>
             </div>
+            <div className="mt-4 flex items-center text-sm">
+              <span className="text-orange-600 font-medium">In progress</span>
+            </div>
           </div>
 
           <div className="bg-white rounded-2xl shadow-lg p-6 transform hover:scale-105 transition-all duration-200">
@@ -291,6 +301,9 @@ const OrganizerDashboard: React.FC = () => {
               <div className="w-12 h-12 bg-purple-100 rounded-lg flex items-center justify-center">
                 <Users className="w-6 h-6 text-purple-600" />
               </div>
+            </div>
+            <div className="mt-4 flex items-center text-sm">
+              <span className="text-purple-600 font-medium">Max attendees</span>
             </div>
           </div>
         </div>
@@ -391,6 +404,10 @@ const OrganizerDashboard: React.FC = () => {
                       <Users className="w-4 h-4" />
                       <span>Up to {event.capacity} attendees</span>
                     </div>
+                    <div className="flex items-center space-x-2">
+                      <MapPin className="w-4 h-4" />
+                      <span className="line-clamp-1">{event.venue}</span>
+                    </div>
                   </div>
 
                   {/* Action Buttons */}
@@ -462,4 +479,4 @@ const OrganizerDashboard: React.FC = () => {
   );
 };
 
-export default OrganizerDashboard;
+export default RealOrganizerDashboard;
