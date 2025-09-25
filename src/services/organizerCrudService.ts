@@ -124,11 +124,14 @@ class OrganizerCrudService {
   // Check if user is authenticated and has organizer role
   private async checkOrganizerAccess(): Promise<{ success: boolean; error?: string }> {
     try {
-      const { data: { user } } = await supabase.auth.getUser();
+      const { data: { user }, error: userError } = await supabase.auth.getUser();
       
-      if (!user) {
+      if (userError || !user) {
+        console.error('User authentication error:', userError);
         return { success: false, error: 'Authentication required' };
       }
+
+      console.log('Checking organizer access for user:', user.id);
 
       const { data: profile, error } = await supabase
         .from('profiles')
@@ -137,8 +140,11 @@ class OrganizerCrudService {
         .single();
 
       if (error) {
+        console.error('Profile fetch error:', error);
         return { success: false, error: 'Failed to verify user permissions' };
       }
+
+      console.log('User profile role:', profile.role);
 
       if (profile.role !== 'organizer' && profile.role !== 'admin') {
         return { success: false, error: 'Organizer permissions required' };
@@ -146,6 +152,7 @@ class OrganizerCrudService {
 
       return { success: true };
     } catch (error) {
+      console.error('Access check error:', error);
       return { success: false, error: 'Authentication check failed' };
     }
   }
@@ -157,7 +164,13 @@ class OrganizerCrudService {
       // Check organizer access
       const accessCheck = await this.checkOrganizerAccess();
       if (!accessCheck.success) {
+        console.error('Access check failed:', accessCheck.error);
         return { success: false, error: accessCheck.error };
+      }
+
+      // Validate required fields
+      if (!eventData.title || !eventData.venue || !eventData.event_date || !eventData.time) {
+        return { success: false, error: 'Missing required fields: title, venue, date, and time are required' };
       }
 
       const { data, error } = await supabase
@@ -182,7 +195,13 @@ class OrganizerCrudService {
         .single();
 
       if (error) {
-        console.error('Supabase error:', error);
+        console.error('Supabase insert error:', error);
+        
+        // Handle specific RLS errors
+        if (error.message.includes('permission denied') || error.message.includes('row-level security')) {
+          return { success: false, error: 'Permission denied. Please ensure you have organizer permissions and try again.' };
+        }
+        
         return { success: false, error: error.message };
       }
 
@@ -202,6 +221,7 @@ class OrganizerCrudService {
       // Check organizer access
       const accessCheck = await this.checkOrganizerAccess();
       if (!accessCheck.success) {
+        console.error('Access check failed for getMyEvents:', accessCheck.error);
         return { success: false, error: accessCheck.error };
       }
 
@@ -212,7 +232,13 @@ class OrganizerCrudService {
         .order('created_at', { ascending: false });
 
       if (error) {
-        console.error('Supabase error:', error);
+        console.error('Supabase select error:', error);
+        
+        // Handle specific RLS errors
+        if (error.message.includes('permission denied') || error.message.includes('row-level security')) {
+          return { success: false, error: 'Permission denied. Please check your organizer permissions.' };
+        }
+        
         return { success: false, error: error.message };
       }
 

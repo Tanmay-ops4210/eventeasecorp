@@ -98,17 +98,32 @@ const CreateEventPage: React.FC = () => {
     }
 
     setIsLoading(true);
+    setErrors({});
+    
     try {
+      console.log('Saving event for user:', user.id);
+      console.log('Event data:', eventData);
+      
       const result = await organizerCrudService.createEvent(eventData, user.id);
 
       if (result.success) {
         alert(`Event ${markComplete ? 'created and marked complete' : 'saved as draft'} successfully!`);
         navigate('/organizer/dashboard');
       } else {
-        alert(result.error || 'Failed to create event');
+        console.error('Create event failed:', result.error);
+        
+        // Handle specific errors
+        if (result.error?.includes('permission denied') || result.error?.includes('Organizer permissions required')) {
+          setErrors({ general: 'You need organizer permissions to create events. Please contact support if you believe this is an error.' });
+        } else if (result.error?.includes('Authentication required')) {
+          setErrors({ general: 'Please log in again to create events.' });
+        } else {
+          setErrors({ general: result.error || 'Failed to create event. Please try again.' });
+        }
       }
     } catch (error) {
-      alert('Failed to create event');
+      console.error('Unexpected error:', error);
+      setErrors({ general: 'An unexpected error occurred. Please try again.' });
     } finally {
       setIsLoading(false);
     }
@@ -372,6 +387,13 @@ const CreateEventPage: React.FC = () => {
 
           {/* Action Buttons */}
           <div className="mt-8 flex items-center justify-between pt-6 border-t border-gray-200">
+            {/* Error Display */}
+            {errors.general && (
+              <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg">
+                <p className="text-red-700 text-sm">{errors.general}</p>
+              </div>
+            )}
+            
             <div className="text-sm text-gray-500">
               {eventData.title.trim() ? (
                 <span className="flex items-center space-x-2 text-green-600">

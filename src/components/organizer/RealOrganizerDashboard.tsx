@@ -61,13 +61,20 @@ const RealOrganizerDashboard: React.FC = () => {
         });
       } else {
         console.error('Failed to fetch events:', result.error);
-        // Don't set error for empty events list
-        setEvents([]);
+        
+        // Handle specific permission errors
+        if (result.error?.includes('permission denied') || result.error?.includes('Organizer permissions required')) {
+          setError('Access denied. Organizer permissions required.');
+        } else if (result.error?.includes('Authentication required')) {
+          setError('Please log in to access the organizer dashboard.');
+        } else {
+          // For other errors, just show empty state
+          setEvents([]);
+        }
       }
     } catch (error) {
       console.error('Failed to fetch events:', error);
-      // Don't set error for network issues, just show empty state
-      setEvents([]);
+      setError('Failed to load dashboard data. Please try again.');
     } finally {
       setIsLoading(false);
     }
