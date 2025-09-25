@@ -88,7 +88,7 @@ const AppContent: React.FC = () => {
   console.log('AppContent render:', { user, profile, isAuthenticated, currentView });
 
   // Add loading state while auth is being determined
-  if (user === undefined) {
+  if (user === undefined || (isAuthenticated && user && !profile)) {
     return <LoadingFallback />;
   }
 

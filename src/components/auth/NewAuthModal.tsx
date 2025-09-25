@@ -93,7 +93,9 @@ const NewAuthModal: React.FC<NewAuthModalProps> = ({
         console.log('Registration successful, handling redirection');
       }
       
-      // Handle role-based redirection
+      // Handle role-based redirection with longer delay for registration
+      const redirectDelay = isLoginMode ? 500 : 2000; // Longer delay for registration
+      
       setTimeout(() => {
         if (redirectTo) {
           console.log('Redirecting to:', redirectTo);
@@ -115,7 +117,7 @@ const NewAuthModal: React.FC<NewAuthModalProps> = ({
         
         onLoginSuccess();
         onClose();
-      }, 500);
+      }, redirectDelay);
       
     } catch (error) {
       console.error('Auth modal error:', error);

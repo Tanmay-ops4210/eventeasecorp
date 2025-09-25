@@ -146,6 +146,12 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         throw new Error(result.error || 'Registration failed');
       }
       
+      // Wait for profile creation and set the profile immediately
+      if (result.user && result.profile) {
+        setUser(result.user);
+        setProfile(result.profile);
+      }
+      
       console.log('Registration successful');
     } catch (error) {
       console.error('Registration error:', error);

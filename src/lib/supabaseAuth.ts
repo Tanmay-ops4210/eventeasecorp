@@ -71,10 +71,39 @@ class SupabaseAuthService {
 
       console.log('Supabase signUp response:', data);
 
-      // Wait for profile creation trigger to complete
+      // Wait longer for profile creation trigger to complete and retry if needed
       if (data.user) {
-        await new Promise(resolve => setTimeout(resolve, 1000));
-        const profile = await this.getUserProfile(data.user.id);
+        let profile = null;
+        let attempts = 0;
+        const maxAttempts = 5;
+        
+        while (!profile && attempts < maxAttempts) {
+          await new Promise(resolve => setTimeout(resolve, 1000 + (attempts * 500)));
+          profile = await this.getUserProfile(data.user.id);
+          attempts++;
+          console.log(`Profile fetch attempt ${attempts}:`, !!profile);
+        }
+        
+        if (!profile) {
+          console.warn('Profile not found after signup, creating manually');
+          // Manually create profile if trigger failed
+          const { error: profileError } = await supabase
+            .from('profiles')
+            .insert([{
+              id: data.user.id,
+              email: data.user.email!,
+              username: userData.username,
+              full_name: userData.full_name,
+              role: userData.role,
+              company: userData.company,
+              plan: 'free'
+            }]);
+          
+          if (!profileError) {
+            profile = await this.getUserProfile(data.user.id);
+          }
+        }
+        
         return { 
           success: true, 
           user: data.user,

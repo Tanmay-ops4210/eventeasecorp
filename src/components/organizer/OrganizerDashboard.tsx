@@ -20,14 +20,37 @@ const OrganizerDashboard: React.FC = () => {
   React.useEffect(() => {
     setBreadcrumbs(['Organizer Dashboard']);
     
-    if (isAuthenticated && user?.id && profile?.role === 'organizer') {
+    if (isAuthenticated && user?.id && (profile?.role === 'organizer' || profile?.role === 'admin')) {
       loadDashboardData();
     } else if (!isAuthenticated) {
       setError('Authentication required');
       setIsLoading(false);
-    } else if (profile?.role !== 'organizer') {
+    } else if (profile && profile.role !== 'organizer' && profile.role !== 'admin') {
       setError('Organizer permissions required');
       setIsLoading(false);
+    } else if (isAuthenticated && user?.id && !profile) {
+      // User is authenticated but profile is still loading
+      console.log('User authenticated but profile still loading, waiting...');
+      const checkProfile = setInterval(() => {
+        if (profile) {
+          clearInterval(checkProfile);
+          if (profile.role === 'organizer' || profile.role === 'admin') {
+            loadDashboardData();
+          } else {
+            setError('Organizer permissions required');
+            setIsLoading(false);
+          }
+        }
+      }, 500);
+      
+      // Clear interval after 10 seconds to prevent infinite waiting
+      setTimeout(() => {
+        clearInterval(checkProfile);
+        if (!profile) {
+          setError('Failed to load user profile');
+          setIsLoading(false);
+        }
+      }, 10000);
     }
   }, [setBreadcrumbs, user, profile, isAuthenticated]);
 
