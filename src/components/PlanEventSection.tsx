@@ -155,6 +155,9 @@ const PlanEventSection: React.FC<PlanEventSectionProps> = ({ onEventSubmitted })
                       name="eventName"
                       value={formData.eventName}
                       onChange={handleInputChange}
+                     autoComplete="off"
+                     autoComplete="off"
+                     autoComplete="off"
                       className="w-full px-4 py-3 sm:py-4 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-colors duration-200 text-base"
                       placeholder="Enter your event name"
                       required

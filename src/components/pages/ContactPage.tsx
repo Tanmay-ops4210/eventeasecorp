@@ -179,6 +179,7 @@ const ContactPage: React.FC = () => {
                       name="name"
                       value={formData.name}
                       onChange={handleInputChange}
+                     autoComplete="name"
                       className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-colors duration-200"
                       placeholder="Your full name"
                       required
@@ -191,6 +192,7 @@ const ContactPage: React.FC = () => {
                       name="email"
                       value={formData.email}
                       onChange={handleInputChange}
+                     autoComplete="email"
                       className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-colors duration-200"
                       placeholder="your@email.com"
                       required
@@ -206,6 +208,7 @@ const ContactPage: React.FC = () => {
                       name="company"
                       value={formData.company}
                       onChange={handleInputChange}
+                     autoComplete="organization"
                       className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-colors duration-200"
                       placeholder="Your company name"
                     />
@@ -217,6 +220,7 @@ const ContactPage: React.FC = () => {
                       name="phone"
                       value={formData.phone}
                       onChange={handleInputChange}
+                     autoComplete="tel"
                       className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-colors duration-200"
                       placeholder="+1 (555) 123-4567"
                     />
@@ -231,6 +235,7 @@ const ContactPage: React.FC = () => {
                       name="subject"
                       value={formData.subject}
                       onChange={handleInputChange}
+                     autoComplete="off"
                       className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-colors duration-200"
                       placeholder="What's this about?"
                       required

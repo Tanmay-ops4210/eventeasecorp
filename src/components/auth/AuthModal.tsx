@@ -224,6 +224,7 @@ const AuthModal: React.FC<AuthModalProps> = ({
                       placeholder="Full Name"
                       value={formData.name}
                       onChange={handleInputChange}
+                     autoComplete="name"
                       className={`w-full pl-10 pr-4 py-3 border rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-colors duration-200 ${
                         errors.name ? 'border-red-500' : 'border-gray-300'
                       }`}
@@ -282,6 +283,7 @@ const AuthModal: React.FC<AuthModalProps> = ({
                   placeholder="Email Address"
                   value={formData.email}
                   onChange={handleInputChange}
+                 autoComplete="email"
                   className={`w-full pl-10 pr-4 py-3 border rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-colors duration-200 ${
                     errors.email ? 'border-red-500' : 'border-gray-300'
                   }`}
@@ -299,6 +301,7 @@ const AuthModal: React.FC<AuthModalProps> = ({
                   placeholder="Password"
                   value={formData.password}
                   onChange={handleInputChange}
+                 autoComplete={isLoginMode ? "current-password" : "new-password"}
                   className={`w-full pl-10 pr-12 py-3 border rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-colors duration-200 ${
                     errors.password ? 'border-red-500' : 'border-gray-300'
                   }`}
@@ -324,6 +327,7 @@ const AuthModal: React.FC<AuthModalProps> = ({
                     placeholder="Confirm Password"
                     value={formData.confirmPassword}
                     onChange={handleInputChange}
+                   autoComplete="new-password"
                     className={`w-full pl-10 pr-4 py-3 border rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-colors duration-200 ${
                       errors.confirmPassword ? 'border-red-500' : 'border-gray-300'
                     }`}

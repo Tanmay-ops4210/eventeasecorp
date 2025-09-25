@@ -171,6 +171,7 @@ const PaymentPage: React.FC<PaymentPageProps> = ({ eventData, locationData, onBa
                         }}
                         placeholder="1234 5678 9012 3456"
                         maxLength={19}
+                        autoComplete="cc-number"
                         className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
                         required
                       />
@@ -185,6 +186,7 @@ const PaymentPage: React.FC<PaymentPageProps> = ({ eventData, locationData, onBa
                           onChange={handleInputChange}
                           placeholder="MM/YY"
                           maxLength={5}
+                          autoComplete="cc-exp"
                           className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
                           required
                         />
@@ -198,6 +200,7 @@ const PaymentPage: React.FC<PaymentPageProps> = ({ eventData, locationData, onBa
                           onChange={handleInputChange}
                           placeholder="123"
                           maxLength={4}
+                          autoComplete="cc-csc"
                           className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
                           required
                         />
@@ -211,6 +214,7 @@ const PaymentPage: React.FC<PaymentPageProps> = ({ eventData, locationData, onBa
                         value={formData.cardholderName}
                         onChange={handleInputChange}
                         placeholder="John Doe"
+                        autoComplete="cc-name"
                         className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
                         required
                       />
@@ -227,6 +231,7 @@ const PaymentPage: React.FC<PaymentPageProps> = ({ eventData, locationData, onBa
                       value={formData.upiId}
                       onChange={handleInputChange}
                       placeholder="yourname@upi"
+                      autoComplete="off"
                       className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
                       required
                     />

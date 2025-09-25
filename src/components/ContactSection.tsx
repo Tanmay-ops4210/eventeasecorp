@@ -186,6 +186,7 @@ const ContactSection: React.FC = () => {
                         name="name"
                         value={formData.name}
                         onChange={handleInputChange}
+                       autoComplete="name"
                         className="w-full px-4 py-3 sm:py-4 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-colors duration-200 text-base"
                         placeholder="Your full name"
                         required
@@ -198,6 +199,7 @@ const ContactSection: React.FC = () => {
                         name="email"
                         value={formData.email}
                         onChange={handleInputChange}
+                       autoComplete="email"
                         className="w-full px-4 py-3 sm:py-4 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-colors duration-200 text-base"
                         placeholder="your@email.com"
                         required
@@ -213,6 +215,7 @@ const ContactSection: React.FC = () => {
                         name="company"
                         value={formData.company}
                         onChange={handleInputChange}
+                       autoComplete="organization"
                         className="w-full px-4 py-3 sm:py-4 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-colors duration-200 text-base"
                         placeholder="Your company name"
                       />
@@ -224,6 +227,7 @@ const ContactSection: React.FC = () => {
                         name="phone"
                         value={formData.phone}
                         onChange={handleInputChange}
+                       autoComplete="tel"
                         className="w-full px-4 py-3 sm:py-4 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-colors duration-200 text-base"
                         placeholder="+1 (555) 123-4567"
                       />
@@ -238,6 +242,7 @@ const ContactSection: React.FC = () => {
                         name="subject"
                         value={formData.subject}
                         onChange={handleInputChange}
+                       autoComplete="off"
                         className="w-full px-4 py-3 sm:py-4 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-colors duration-200 text-base"
                         placeholder="What's this about?"
                         required

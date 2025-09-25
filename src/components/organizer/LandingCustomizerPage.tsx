@@ -18,12 +18,12 @@ const LandingCustomizerPage: React.FC = () => {
             <div>
               <h3 className="text-lg font-semibold flex items-center mb-4"><Palette className="mr-2"/> Branding</h3>
               <label className="block text-sm font-medium">Primary Color</label>
-              <input type="color" defaultValue="#4f46e5" className="w-full h-10 p-1 border border-gray-300 rounded-lg"/>
+              <input type="color" defaultValue="#4f46e5" autoComplete="off" className="w-full h-10 p-1 border border-gray-300 rounded-lg"/>
             </div>
             <div>
               <h3 className="text-lg font-semibold flex items-center mb-4"><Image className="mr-2"/> Banner</h3>
               <label className="block text-sm font-medium">Banner Image URL</label>
-              <input type="text" placeholder="https://example.com/banner.jpg" className="w-full p-2 border rounded-lg"/>
+              <input type="text" placeholder="https://example.com/banner.jpg" autoComplete="url" className="w-full p-2 border rounded-lg"/>
             </div>
              <div>
               <h3 className="text-lg font-semibold flex items-center mb-4"><Type className="mr-2"/> Sections</h3>
