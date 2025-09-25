@@ -333,7 +333,6 @@ VITE_SUPABASE_ANON_KEY=your-supabase-anon-key
 
 ## Security Considerations
 
-- **Supabase Email Verification**: All users must verify their email before accessing the platform
 - **Role-Based Access**: Users can only access features appropriate to their role
 - **Supabase Password Reset**: Secure password reset flow with Supabase
 - **Session Security**: Supabase handles secure session management
