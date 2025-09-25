@@ -284,6 +284,7 @@ const AuthDropdown: React.FC<AuthDropdownProps> = ({
                 name="fullName"
                 value={formData.fullName}
                 onChange={handleInputChange}
+                autoComplete="name"
                 className={`w-full pl-10 pr-4 py-2 border rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-colors duration-200 ${
                   errors.fullName ? 'border-red-500' : 'border-gray-300'
                 }`}
@@ -303,6 +304,7 @@ const AuthDropdown: React.FC<AuthDropdownProps> = ({
               name="company"
               value={formData.company}
               onChange={handleInputChange}
+              autoComplete="organization"
               className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-colors duration-200"
               placeholder="Your company name"
             />
@@ -319,6 +321,7 @@ const AuthDropdown: React.FC<AuthDropdownProps> = ({
               name="email"
               value={formData.email}
               onChange={handleInputChange}
+              autoComplete="email"
               className={`w-full pl-10 pr-4 py-2 border rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-colors duration-200 ${
                 errors.email ? 'border-red-500' : 'border-gray-300'
               }`}
@@ -338,6 +341,7 @@ const AuthDropdown: React.FC<AuthDropdownProps> = ({
               name="password"
               value={formData.password}
               onChange={handleInputChange}
+              autoComplete={authMode === 'signin' ? "current-password" : "new-password"}
               className={`w-full pl-10 pr-12 py-2 border rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-colors duration-200 ${
                 errors.password ? 'border-red-500' : 'border-gray-300'
               }`}
@@ -365,6 +369,7 @@ const AuthDropdown: React.FC<AuthDropdownProps> = ({
                 name="confirmPassword"
                 value={formData.confirmPassword}
                 onChange={handleInputChange}
+                autoComplete="new-password"
                 className={`w-full pl-10 pr-4 py-2 border rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-colors duration-200 ${
                   errors.confirmPassword ? 'border-red-500' : 'border-gray-300'
                 }`}

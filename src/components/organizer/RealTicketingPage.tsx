@@ -264,7 +264,7 @@ const RealTicketingPage: React.FC = () => {
                   <div className="space-y-4">
                     <div>
                       <label className="block text-sm font-medium text-gray-700">Name *</label>
-                      <input type="text" value={currentTicket.name} onChange={e => setCurrentTicket({...currentTicket, name: e.target.value})} className={`w-full mt-1 p-2 border ${errors.name ? 'border-red-500' : 'border-gray-300'} rounded-md`}/>
+                      <input type="text" value={currentTicket.name} onChange={e => setCurrentTicket({...currentTicket, name: e.target.value})} autoComplete="off" className={`w-full mt-1 p-2 border ${errors.name ? 'border-red-500' : 'border-gray-300'} rounded-md`}/>
                       {errors.name && <p className="text-red-500 text-sm mt-1">{errors.name}</p>}
                     </div>
                      <div>
@@ -274,22 +274,22 @@ const RealTicketingPage: React.FC = () => {
                     <div className="grid grid-cols-2 gap-4">
                       <div>
                         <label className="block text-sm font-medium text-gray-700">Price *</label>
-                        <input type="number" value={currentTicket.price} onChange={e => setCurrentTicket({...currentTicket, price: parseFloat(e.target.value)})} min="0" className={`w-full mt-1 p-2 border ${errors.price ? 'border-red-500' : 'border-gray-300'} rounded-md`}/>
+                        <input type="number" value={currentTicket.price} onChange={e => setCurrentTicket({...currentTicket, price: parseFloat(e.target.value)})} min="0" autoComplete="off" className={`w-full mt-1 p-2 border ${errors.price ? 'border-red-500' : 'border-gray-300'} rounded-md`}/>
                         {errors.price && <p className="text-red-500 text-sm mt-1">{errors.price}</p>}
                       </div>
                       <div>
                         <label className="block text-sm font-medium text-gray-700">Quantity *</label>
-                        <input type="number" value={currentTicket.quantity} onChange={e => setCurrentTicket({...currentTicket, quantity: parseInt(e.target.value)})} min="1" className={`w-full mt-1 p-2 border ${errors.quantity ? 'border-red-500' : 'border-gray-300'} rounded-md`}/>
+                        <input type="number" value={currentTicket.quantity} onChange={e => setCurrentTicket({...currentTicket, quantity: parseInt(e.target.value)})} min="1" autoComplete="off" className={`w-full mt-1 p-2 border ${errors.quantity ? 'border-red-500' : 'border-gray-300'} rounded-md`}/>
                         {errors.quantity && <p className="text-red-500 text-sm mt-1">{errors.quantity}</p>}
                       </div>
                     </div>
                     <div>
                       <label className="block text-sm font-medium text-gray-700">Sale Starts *</label>
-                      <input type="datetime-local" value={currentTicket.sale_start} onChange={e => setCurrentTicket({...currentTicket, sale_start: e.target.value})} className="w-full mt-1 p-2 border border-gray-300 rounded-md"/>
+                      <input type="datetime-local" value={currentTicket.sale_start} onChange={e => setCurrentTicket({...currentTicket, sale_start: e.target.value})} autoComplete="off" className="w-full mt-1 p-2 border border-gray-300 rounded-md"/>
                     </div>
                     <div>
                       <label className="block text-sm font-medium text-gray-700">Sale Ends *</label>
-                      <input type="datetime-local" value={currentTicket.sale_end} onChange={e => setCurrentTicket({...currentTicket, sale_end: e.target.value})} className={`w-full mt-1 p-2 border ${errors.sale_end ? 'border-red-500' : 'border-gray-300'} rounded-md`}/>
+                      <input type="datetime-local" value={currentTicket.sale_end} onChange={e => setCurrentTicket({...currentTicket, sale_end: e.target.value})} autoComplete="off" className={`w-full mt-1 p-2 border ${errors.sale_end ? 'border-red-500' : 'border-gray-300'} rounded-md`}/>
                       {errors.sale_end && <p className="text-red-500 text-sm mt-1">{errors.sale_end}</p>}
                     </div>
                     <div className="flex items-center justify-between">

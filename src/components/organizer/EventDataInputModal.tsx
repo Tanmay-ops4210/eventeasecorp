@@ -408,6 +408,7 @@ const EventDataInputModal: React.FC<EventDataInputModalProps> = ({
                   <input
                     type="text"
                     placeholder="Add a tag"
+                   autoComplete="off"
                     className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
                     onKeyPress={(e) => {
                       if (e.key === 'Enter') {
@@ -731,6 +732,7 @@ const EventDataInputModal: React.FC<EventDataInputModalProps> = ({
                   <input
                     type="text"
                     placeholder="Add what attendees can expect"
+                   autoComplete="off"
                     className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
                     onKeyPress={(e) => {
                       if (e.key === 'Enter') {
@@ -778,6 +780,7 @@ const EventDataInputModal: React.FC<EventDataInputModalProps> = ({
                   <input
                     type="text"
                     placeholder="Add a requirement"
+                   autoComplete="off"
                     className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
                     onKeyPress={(e) => {
                       if (e.key === 'Enter') {

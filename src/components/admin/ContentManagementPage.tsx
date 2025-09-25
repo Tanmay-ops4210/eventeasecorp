@@ -87,11 +87,11 @@ const ContentManagementPage: React.FC = () => {
                 <div className="admin-modal-body space-y-4">
                     <div className="admin-form-group">
                         <label className="admin-form-label">Page</label>
-                        <input type="text" value={newContentData.page} onChange={(e) => setNewContentData({...newContentData, page: e.target.value})} className="admin-form-input" required placeholder="e.g., Home, About" />
+                        <input type="text" value={newContentData.page} onChange={(e) => setNewContentData({...newContentData, page: e.target.value})} autoComplete="off" className="admin-form-input" required placeholder="e.g., Home, About" />
                     </div>
                     <div className="admin-form-group">
                         <label className="admin-form-label">Section</label>
-                        <input type="text" value={newContentData.section} onChange={(e) => setNewContentData({...newContentData, section: e.target.value})} className="admin-form-input" required placeholder="e.g., Hero Title, Main Banner"/>
+                        <input type="text" value={newContentData.section} onChange={(e) => setNewContentData({...newContentData, section: e.target.value})} autoComplete="off" className="admin-form-input" required placeholder="e.g., Hero Title, Main Banner"/>
                     </div>
                     <div className="admin-form-group">
                         <label className="admin-form-label">Type</label>
