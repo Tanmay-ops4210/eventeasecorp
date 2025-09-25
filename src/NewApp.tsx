@@ -88,7 +88,7 @@ const AppContent: React.FC = () => {
   console.log('AppContent render:', { user, profile, isAuthenticated, currentView });
 
   // Add loading state while auth is being determined
-  if (user === undefined || profile === undefined) {
+  if (user === undefined) {
     return <LoadingFallback />;
   }
 
@@ -105,7 +105,11 @@ const AppContent: React.FC = () => {
   };
 
   const renderPage = () => {
-    const hasRole = (roles: string[]) => isAuthenticated && user && profile && roles.includes(profile.role || 'attendee');
+    const hasRole = (roles: string[]) => {
+      if (!isAuthenticated || !user) return false;
+      const userRole = profile?.role || 'attendee';
+      return roles.includes(userRole);
+    };
 
     console.log('Rendering page for view:', currentView);
     console.log('User role check:', { isAuthenticated, hasUser: !!user, hasProfile: !!profile, role: profile?.role });
@@ -155,64 +159,41 @@ const AppContent: React.FC = () => {
         console.log('Rendering organizer dashboard');
         return <OrganizerDashboard />;
       case 'event-builder': 
-        if (!isAuthenticated || !hasRole(['organizer'])) {
-          return <NewHomePage />;
-        }
-        return <EventBuilderPage />;
+        return hasRole(['organizer']) ? <EventBuilderPage /> : <NewHomePage />;
       case 'analytics': 
-        if (!isAuthenticated || !hasRole(['organizer'])) {
-          return <NewHomePage />;
-        }
-        return <AnalyticsPage />;
+        return hasRole(['organizer']) ? <AnalyticsPage /> : <NewHomePage />;
       case 'organizer-settings': 
-        if (!isAuthenticated || !hasRole(['organizer'])) {
-          return <NewHomePage />;
-        }
-        return <OrganizerSettingsPage />;
+        return hasRole(['organizer']) ? <OrganizerSettingsPage /> : <NewHomePage />;
       case 'event-settings': 
-        return hasRole(['organizer']) ? <EventSettingsPage /> : 
-               isAuthenticated ? <NewHomePage /> : <NewHomePage />;
+        return hasRole(['organizer']) ? <EventSettingsPage /> : <NewHomePage />;
       case 'landing-customizer': 
-        return hasRole(['organizer']) ? <LandingCustomizerPage /> : 
-               isAuthenticated ? <NewHomePage /> : <NewHomePage />;
+        return hasRole(['organizer']) ? <LandingCustomizerPage /> : <NewHomePage />;
       case 'agenda-manager': 
-        return hasRole(['organizer']) ? <AgendaManagerPage /> : 
-               isAuthenticated ? <NewHomePage /> : <NewHomePage />;
+        return hasRole(['organizer']) ? <AgendaManagerPage /> : <NewHomePage />;
       case 'venue-manager': 
-        return hasRole(['organizer']) ? <VenueManagerPage /> : 
-               isAuthenticated ? <NewHomePage /> : <NewHomePage />;
+        return hasRole(['organizer']) ? <VenueManagerPage /> : <NewHomePage />;
       case 'ticketing': 
-        return hasRole(['organizer']) ? <TicketingPage /> : 
-               isAuthenticated ? <NewHomePage /> : <NewHomePage />;
+        return hasRole(['organizer']) ? <TicketingPage /> : <NewHomePage />;
       case 'discount-codes': 
-        return hasRole(['organizer']) ? <DiscountCodesPage /> : 
-               isAuthenticated ? <NewHomePage /> : <NewHomePage />;
+        return hasRole(['organizer']) ? <DiscountCodesPage /> : <NewHomePage />;
       case 'email-campaigns': 
-        return hasRole(['organizer']) ? <EmailCampaignsPage /> : 
-               isAuthenticated ? <NewHomePage /> : <NewHomePage />;
+        return hasRole(['organizer']) ? <EmailCampaignsPage /> : <NewHomePage />;
       case 'attendee-management': 
-        return hasRole(['organizer']) ? <AttendeeManagementPage /> : 
-               isAuthenticated ? <NewHomePage /> : <NewHomePage />;
+        return hasRole(['organizer']) ? <AttendeeManagementPage /> : <NewHomePage />;
       case 'speaker-portal': 
-        return hasRole(['organizer']) ? <SpeakerPortalPage /> : 
-               isAuthenticated ? <NewHomePage /> : <NewHomePage />;
+        return hasRole(['organizer']) ? <SpeakerPortalPage /> : <NewHomePage />;
       case 'staff-roles': 
-        return hasRole(['organizer']) ? <StaffRolesPage /> : 
-               isAuthenticated ? <NewHomePage /> : <NewHomePage />;
+        return hasRole(['organizer']) ? <StaffRolesPage /> : <NewHomePage />;
 
       // Admin
       case 'admin-dashboard': 
-        return hasRole(['admin']) ? <AdminDashboard /> : 
-               isAuthenticated ? <NewHomePage /> : <NewHomePage />;
+        return hasRole(['admin']) ? <AdminDashboard /> : <NewHomePage />;
       case 'user-management': 
-        return hasRole(['admin']) ? <AdminDashboard /> : 
-               isAuthenticated ? <NewHomePage /> : <NewHomePage />;
+        return hasRole(['admin']) ? <AdminDashboard /> : <NewHomePage />;
       case 'event-oversight': 
-        return hasRole(['admin']) ? <EventOversightPage /> : 
-               isAuthenticated ? <NewHomePage /> : <NewHomePage />;
+        return hasRole(['admin']) ? <EventOversightPage /> : <NewHomePage />;
       case 'content-management': 
-        return hasRole(['admin']) ? <ContentManagementPage /> : 
-               isAuthenticated ? <NewHomePage /> : <NewHomePage />;
+        return hasRole(['admin']) ? <ContentManagementPage /> : <NewHomePage />;
 
       // Shared (Multi-Role)
       case 'my-events': 
@@ -220,8 +201,7 @@ const AppContent: React.FC = () => {
         if (hasRole(['organizer'])) return <OrganizerMyEventsPage />;
         return <NewHomePage />;
       case 'notifications': 
-        return hasRole(['attendee', 'organizer']) ? <NotificationsPage /> : 
-               isAuthenticated ? <NewHomePage /> : <NewHomePage />;
+        return hasRole(['attendee', 'organizer']) ? <NotificationsPage /> : <NewHomePage />;
 
       // Default fallback
       default:

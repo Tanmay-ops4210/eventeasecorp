@@ -90,46 +90,52 @@ const NewAuthModal: React.FC<NewAuthModalProps> = ({
         
         console.log('Login successful, handling redirection');
         
-        // Handle role-based redirection
-        if (redirectTo) {
-          console.log('Redirecting to:', redirectTo);
-          setCurrentView(redirectTo as any);
-        } else {
-          // Default redirection based on role
-          console.log('Default redirection for role:', selectedRole);
-          switch (selectedRole) {
-            case 'organizer':
-              setCurrentView('organizer-dashboard');
-              break;
-            case 'admin':
-              setCurrentView('admin-dashboard');
-              break;
-            default:
-              setCurrentView('attendee-dashboard');
+        // Wait for auth state to settle before redirecting
+        setTimeout(() => {
+          // Handle role-based redirection
+          if (redirectTo) {
+            console.log('Redirecting to:', redirectTo);
+            setCurrentView(redirectTo as any);
+          } else {
+            // Default redirection based on role
+            console.log('Default redirection for role:', selectedRole);
+            switch (selectedRole) {
+              case 'organizer':
+                setCurrentView('organizer-dashboard');
+                break;
+              case 'admin':
+                setCurrentView('admin-dashboard');
+                break;
+              default:
+                setCurrentView('attendee-dashboard');
+            }
           }
-        }
+        }, 1000);
       } else {
         await register(formData.email, formData.password, formData.name, selectedRole, formData.company);
         
         console.log('Registration successful, handling redirection');
         
-        // After registration, redirect to appropriate dashboard
-        if (redirectTo) {
-          console.log('Redirecting to:', redirectTo);
-          setCurrentView(redirectTo as any);
-        } else {
-          console.log('Default redirection for role:', selectedRole);
-          switch (selectedRole) {
-            case 'organizer':
-              setCurrentView('organizer-dashboard');
-              break;
-            case 'admin':
-              setCurrentView('admin-dashboard');
-              break;
-            default:
-              setCurrentView('attendee-dashboard');
+        // Wait for auth state to settle before redirecting
+        setTimeout(() => {
+          // After registration, redirect to appropriate dashboard
+          if (redirectTo) {
+            console.log('Redirecting to:', redirectTo);
+            setCurrentView(redirectTo as any);
+          } else {
+            console.log('Default redirection for role:', selectedRole);
+            switch (selectedRole) {
+              case 'organizer':
+                setCurrentView('organizer-dashboard');
+                break;
+              case 'admin':
+                setCurrentView('admin-dashboard');
+                break;
+              default:
+                setCurrentView('attendee-dashboard');
+            }
           }
-        }
+        }, 1000);
       }
       
       console.log('Calling onLoginSuccess');

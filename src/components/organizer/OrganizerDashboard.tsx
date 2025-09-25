@@ -6,7 +6,7 @@ import { organizerCrudService } from '../../services/organizerCrudService';
 
 const OrganizerDashboard: React.FC = () => {
   const { setBreadcrumbs, setCurrentView } = useApp();
-  const { user, profile, isOrganizer } = useAuth();
+  const { user, profile } = useAuth();
   const [events, setEvents] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -20,17 +20,12 @@ const OrganizerDashboard: React.FC = () => {
   React.useEffect(() => {
     setBreadcrumbs(['Organizer Dashboard']);
     
-    // Check if user has organizer permissions
-    if (!isOrganizer()) {
-      setError('Access denied. Organizer permissions required.');
-      setIsLoading(false);
-      return;
-    }
-
     if (user?.id) {
       loadDashboardData();
+    } else {
+      setIsLoading(false);
     }
-  }, [setBreadcrumbs, user, isOrganizer]);
+  }, [setBreadcrumbs, user]);
 
   const loadDashboardData = async () => {
     if (!user?.id) {

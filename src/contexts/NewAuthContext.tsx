@@ -77,6 +77,26 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       const userProfile = await supabaseAuth.getUserProfile(userId);
       console.log('User profile loaded:', userProfile);
       setProfile(userProfile);
+      
+      // If we have a user but no profile, create a default one
+      if (!userProfile && userId) {
+        console.log('No profile found, user may need to complete setup');
+        // For now, create a minimal profile object to prevent auth loops
+        const defaultProfile = {
+          id: userId,
+          email: '',
+          username: '',
+          full_name: '',
+          role: 'attendee' as const,
+          plan: 'free',
+          company: null,
+          title: null,
+          avatar_url: null,
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString()
+        };
+        setProfile(defaultProfile);
+      }
     } catch (error) {
       console.error('Failed to load user profile:', error);
       // Don't throw error, just set profile to null to prevent auth loops
@@ -96,8 +116,13 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       
       console.log('Login successful:', result.user);
       
-      // The auth state change listener will handle setting user and profile
-      // No need to manually set them here
+      // Wait a moment for the auth state to update
+      await new Promise(resolve => setTimeout(resolve, 500));
+      
+      // Manually trigger profile load if needed
+      if (result.user && !profile) {
+        await loadUserProfile(result.user.id);
+      }
     } catch (error) {
       console.error('Login error:', error);
       throw error;

@@ -181,7 +181,25 @@ class SupabaseAuthService {
 
       if (error) {
         console.warn('Profile fetch error:', error);
-        // Don't throw error for missing profile, return null instead
+        
+        // If profile doesn't exist, create a default one
+        if (error.code === 'PGRST116') {
+          console.log('Profile not found, creating default profile');
+          const defaultProfile: UserProfile = {
+            id: targetUserId,
+            email: user?.email || '',
+            username: user?.email?.split('@')[0] || 'user',
+            full_name: user?.user_metadata?.full_name || '',
+            role: 'attendee',
+            plan: 'free',
+            company: null,
+            title: null,
+            avatar_url: null,
+            created_at: new Date().toISOString(),
+            updated_at: new Date().toISOString()
+          };
+          return defaultProfile;
+        }
         return null;
       }
       
