@@ -13,7 +13,7 @@ export const supabase = createClient(finalSupabaseUrl, finalSupabaseAnonKey, {
   auth: {
     autoRefreshToken: true,
     persistSession: true,
-    detectSessionInUrl: false, // Disable to prevent auth loops
+    detectSessionInUrl: false,
     flowType: 'pkce'
   },
   global: {
@@ -30,6 +30,7 @@ console.log('Environment check:', {
   hasKey: !!supabaseAnonKey,
   isDev: import.meta.env.DEV
 });
+
 // Database types
 export interface Database {
   public: {
@@ -131,193 +132,6 @@ export interface Database {
   };
 }
 
-// Authentication service using Supabase Auth
-export class SupabaseAuthService {
-  private static instance: SupabaseAuthService;
-
-  static getInstance(): SupabaseAuthService {
-    if (!SupabaseAuthService.instance) {
-      SupabaseAuthService.instance = new SupabaseAuthService();
-    }
-    return SupabaseAuthService.instance;
-  }
-
-  // Sign up with email and password
-  async signUp(email: string, password: string, userData: {
-    username: string;
-    full_name: string;
-    role: 'attendee' | 'organizer';
-    company?: string;
-  }) {
-    try {
-      const { data, error } = await supabase.auth.signUp({
-        email,
-        password,
-        options: {
-          data: {
-            username: userData.username,
-            full_name: userData.full_name,
-            role: userData.role,
-            company: userData.company
-          }
-        }
-      });
-
-      if (error) throw error;
-
-      return { success: true, user: data.user, session: data.session };
-    } catch (error) {
-      return { 
-        success: false, 
-        error: error instanceof Error ? error.message : 'Registration failed' 
-      };
-    }
-  }
-
-  // Sign in with email and password
-  async signIn(email: string, password: string) {
-    try {
-      const { data, error } = await supabase.auth.signInWithPassword({
-        email,
-        password
-      });
-
-      if (error) throw error;
-
-      return { success: true, user: data.user, session: data.session };
-    } catch (error) {
-      return { 
-        success: false, 
-        error: error instanceof Error ? error.message : 'Login failed' 
-      };
-    }
-  }
-
-  // Sign out
-  async signOut() {
-    try {
-      const { error } = await supabase.auth.signOut();
-      if (error) throw error;
-      return { success: true };
-    } catch (error) {
-      return { 
-        success: false, 
-        error: error instanceof Error ? error.message : 'Logout failed' 
-      };
-    }
-  }
-
-  // Reset password
-  async resetPassword(email: string) {
-    try {
-      const { error } = await supabase.auth.resetPasswordForEmail(email, {
-        redirectTo: `${window.location.origin}/auth/reset-password`
-      });
-
-      if (error) throw error;
-      return { success: true };
-    } catch (error) {
-      return { 
-        success: false, 
-        error: error instanceof Error ? error.message : 'Password reset failed' 
-      };
-    }
-  }
-
-  // Update password
-  async updatePassword(newPassword: string) {
-    try {
-      const { error } = await supabase.auth.updateUser({
-        password: newPassword
-      });
-
-      if (error) throw error;
-      return { success: true };
-    } catch (error) {
-      return { 
-        success: false, 
-        error: error instanceof Error ? error.message : 'Password update failed' 
-      };
-    }
-  }
-
-  // Get current user
-  getCurrentUser() {
-    return supabase.auth.getUser();
-  }
-
-  // Get current session
-  getCurrentSession() {
-    return supabase.auth.getSession();
-  }
-
-  // Listen to auth state changes
-  onAuthStateChange(callback: (event: string, session: any) => void) {
-    return supabase.auth.onAuthStateChange(callback);
-  }
-
-  // Get user profile from database
-  async getUserProfile(userId?: string) {
-    try {
-      const { data: { user } } = await supabase.auth.getUser();
-      const targetUserId = userId || user?.id;
-
-      if (!targetUserId) {
-        return { success: false, error: 'No user ID provided' };
-      }
-
-      const { data, error } = await supabase
-        .from('profiles')
-        .select('*')
-        .eq('id', targetUserId)
-        .single();
-
-      if (error) throw error;
-
-      return { success: true, profile: data };
-    } catch (error) {
-      return { 
-        success: false, 
-        error: error instanceof Error ? error.message : 'Failed to fetch profile' 
-      };
-    }
-  }
-
-  // Update user profile
-  async updateUserProfile(updates: {
-    username?: string;
-    full_name?: string;
-    company?: string;
-    title?: string;
-    avatar_url?: string;
-  }) {
-    try {
-      const { data: { user } } = await supabase.auth.getUser();
-      
-      if (!user) {
-        return { success: false, error: 'No authenticated user' };
-      }
-
-      const { error } = await supabase
-        .from('profiles')
-        .update({
-          ...updates,
-          updated_at: new Date().toISOString()
-        })
-        .eq('id', user.id);
-
-      if (error) throw error;
-
-      return { success: true };
-    } catch (error) {
-      return { 
-        success: false, 
-        error: error instanceof Error ? error.message : 'Failed to update profile' 
-      };
-    }
-  }
-}
-
 // Database service for CRUD operations
 export class SupabaseDatabaseService {
   private static instance: SupabaseDatabaseService;
@@ -397,15 +211,7 @@ export class SupabaseDatabaseService {
         .from('events')
         .select(`
           *,
-          organizer:profiles!organizer_id(username, full_name, avatar_url, email),
-          event_speakers(
-            speaker:speakers(*)
-          ),
-          event_sponsors(
-            sponsor:sponsors(*)
-          ),
-          ticket_types(*),
-          event_analytics(*)
+          organizer:profiles!organizer_id(username, full_name, avatar_url, email)
         `)
         .eq('id', eventId)
         .single();
@@ -477,6 +283,21 @@ export class SupabaseDatabaseService {
     }
   }
 
+  async deleteUser(userId: string) {
+    try {
+      // Delete the auth user, which will cascade to profile
+      const { error } = await supabase.auth.admin.deleteUser(userId);
+
+      if (error) throw error;
+      return { success: true };
+    } catch (error) {
+      return { 
+        success: false, 
+        error: error instanceof Error ? error.message : 'Failed to delete user' 
+      };
+    }
+  }
+
   // Real-time subscriptions
   subscribeToEvents(callback: (payload: any) => void) {
     return supabase
@@ -503,7 +324,6 @@ export class SupabaseDatabaseService {
 }
 
 // Export service instances
-export const authService = SupabaseAuthService.getInstance();
 export const dbService = SupabaseDatabaseService.getInstance();
 
 // Export Supabase client for direct use

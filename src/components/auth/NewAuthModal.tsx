@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { X, User, Mail, Lock, Eye, EyeOff, Building, Calendar } from 'lucide-react';
+import { X, User, Mail, Lock, Eye, EyeOff, Building, Calendar, Loader2, AlertCircle } from 'lucide-react';
 import { useAuth } from '../../contexts/NewAuthContext';
 import { useApp } from '../../contexts/AppContext';
 
@@ -87,60 +87,36 @@ const NewAuthModal: React.FC<NewAuthModalProps> = ({
       
       if (isLoginMode) {
         await login(formData.email, formData.password, selectedRole);
-        
         console.log('Login successful, handling redirection');
-        
-        // Wait for auth state to settle before redirecting
-        setTimeout(() => {
-          // Handle role-based redirection
-          if (redirectTo) {
-            console.log('Redirecting to:', redirectTo);
-            setCurrentView(redirectTo as any);
-          } else {
-            // Default redirection based on role
-            console.log('Default redirection for role:', selectedRole);
-            switch (selectedRole) {
-              case 'organizer':
-                setCurrentView('organizer-dashboard');
-                break;
-              case 'admin':
-                setCurrentView('admin-dashboard');
-                break;
-              default:
-                setCurrentView('attendee-dashboard');
-            }
-          }
-        }, 1000);
       } else {
         await register(formData.email, formData.password, formData.name, selectedRole, formData.company);
-        
         console.log('Registration successful, handling redirection');
-        
-        // Wait for auth state to settle before redirecting
-        setTimeout(() => {
-          // After registration, redirect to appropriate dashboard
-          if (redirectTo) {
-            console.log('Redirecting to:', redirectTo);
-            setCurrentView(redirectTo as any);
-          } else {
-            console.log('Default redirection for role:', selectedRole);
-            switch (selectedRole) {
-              case 'organizer':
-                setCurrentView('organizer-dashboard');
-                break;
-              case 'admin':
-                setCurrentView('admin-dashboard');
-                break;
-              default:
-                setCurrentView('attendee-dashboard');
-            }
-          }
-        }, 1000);
       }
       
-      console.log('Calling onLoginSuccess');
-      onLoginSuccess();
-      onClose();
+      // Handle role-based redirection
+      setTimeout(() => {
+        if (redirectTo) {
+          console.log('Redirecting to:', redirectTo);
+          setCurrentView(redirectTo as any);
+        } else {
+          // Default redirection based on role
+          console.log('Default redirection for role:', selectedRole);
+          switch (selectedRole) {
+            case 'organizer':
+              setCurrentView('organizer-dashboard');
+              break;
+            case 'admin':
+              setCurrentView('admin-dashboard');
+              break;
+            default:
+              setCurrentView('attendee-dashboard');
+          }
+        }
+        
+        onLoginSuccess();
+        onClose();
+      }, 500);
+      
     } catch (error) {
       console.error('Auth modal error:', error);
       const errorMessage = error instanceof Error ? error.message : 'Authentication failed. Please try again.';
@@ -229,7 +205,10 @@ const NewAuthModal: React.FC<NewAuthModalProps> = ({
           {/* Error Message */}
           {errors.general && (
             <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg">
-              <p className="text-red-700 text-sm">{errors.general}</p>
+              <div className="flex items-center space-x-2">
+                <AlertCircle className="w-5 h-5 text-red-600" />
+                <p className="text-red-700 text-sm">{errors.general}</p>
+              </div>
             </div>
           )}
 
@@ -246,7 +225,7 @@ const NewAuthModal: React.FC<NewAuthModalProps> = ({
                       placeholder="Full Name"
                       value={formData.name}
                       onChange={handleInputChange}
-                     autoComplete="name"
+                      autoComplete="name"
                       className={`w-full pl-10 pr-4 py-3 border rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-colors duration-200 ${
                         errors.name ? 'border-red-500' : 'border-gray-300'
                       }`}
@@ -264,7 +243,7 @@ const NewAuthModal: React.FC<NewAuthModalProps> = ({
                       placeholder="Company (Optional)"
                       value={formData.company}
                       onChange={handleInputChange}
-                     autoComplete="organization"
+                      autoComplete="organization"
                       className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-colors duration-200"
                     />
                   </div>
@@ -281,7 +260,7 @@ const NewAuthModal: React.FC<NewAuthModalProps> = ({
                   placeholder="Email Address"
                   value={formData.email}
                   onChange={handleInputChange}
-                 autoComplete="email"
+                  autoComplete="email"
                   className={`w-full pl-10 pr-4 py-3 border rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-colors duration-200 ${
                     errors.email ? 'border-red-500' : 'border-gray-300'
                   }`}
@@ -299,7 +278,7 @@ const NewAuthModal: React.FC<NewAuthModalProps> = ({
                   placeholder="Password"
                   value={formData.password}
                   onChange={handleInputChange}
-                 autoComplete={isLoginMode ? "current-password" : "new-password"}
+                  autoComplete={isLoginMode ? "current-password" : "new-password"}
                   className={`w-full pl-10 pr-12 py-3 border rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-colors duration-200 ${
                     errors.password ? 'border-red-500' : 'border-gray-300'
                   }`}
@@ -325,7 +304,7 @@ const NewAuthModal: React.FC<NewAuthModalProps> = ({
                     placeholder="Confirm Password"
                     value={formData.confirmPassword}
                     onChange={handleInputChange}
-                   autoComplete="new-password"
+                    autoComplete="new-password"
                     className={`w-full pl-10 pr-4 py-3 border rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-colors duration-200 ${
                       errors.confirmPassword ? 'border-red-500' : 'border-gray-300'
                     }`}
@@ -342,7 +321,7 @@ const NewAuthModal: React.FC<NewAuthModalProps> = ({
             >
               {isLoading ? (
                 <div className="flex items-center justify-center space-x-2">
-                  <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                  <Loader2 className="w-5 h-5 animate-spin" />
                   <span>{isLoginMode ? 'Signing In...' : 'Creating Account...'}</span>
                 </div>
               ) : (
@@ -362,6 +341,20 @@ const NewAuthModal: React.FC<NewAuthModalProps> = ({
                 {isLoginMode ? 'Sign Up' : 'Sign In'}
               </button>
             </p>
+            {isLoginMode && (
+              <div className="mt-3">
+                <button
+                  type="button"
+                  onClick={() => {
+                    onClose();
+                    setCurrentView('password-reset');
+                  }}
+                  className="text-sm text-indigo-600 hover:text-indigo-700 transition-colors duration-200"
+                >
+                  Forgot your password?
+                </button>
+              </div>
+            )}
           </div>
         </div>
       </div>

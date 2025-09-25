@@ -1,12 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import { useApp } from '../../contexts/AppContext';
 import { useAuth } from '../../contexts/NewAuthContext';
-import { Calendar, Users, DollarSign, TrendingUp, Eye, Plus, BarChart3, Clock, CheckCircle, AlertCircle, Activity, Loader2, ArrowUp, ArrowDown, Ticket, Mail, Settings, CreditCard as Edit, Check, ExternalLink, RefreshCw } from 'lucide-react';
+import { Calendar, Users, DollarSign, TrendingUp, Eye, Plus, BarChart3, Clock, CheckCircle, AlertCircle, Activity, Loader2, ArrowUp, ArrowDown, Ticket, Settings, CreditCard as Edit, Check, ExternalLink, RefreshCw, MapPin } from 'lucide-react';
 import { organizerCrudService } from '../../services/organizerCrudService';
 
 const OrganizerDashboard: React.FC = () => {
   const { setBreadcrumbs, setCurrentView } = useApp();
-  const { user, profile } = useAuth();
+  const { user, profile, isAuthenticated } = useAuth();
   const [events, setEvents] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -20,12 +20,16 @@ const OrganizerDashboard: React.FC = () => {
   React.useEffect(() => {
     setBreadcrumbs(['Organizer Dashboard']);
     
-    if (user?.id) {
+    if (isAuthenticated && user?.id && profile?.role === 'organizer') {
       loadDashboardData();
-    } else {
+    } else if (!isAuthenticated) {
+      setError('Authentication required');
+      setIsLoading(false);
+    } else if (profile?.role !== 'organizer') {
+      setError('Organizer permissions required');
       setIsLoading(false);
     }
-  }, [setBreadcrumbs, user]);
+  }, [setBreadcrumbs, user, profile, isAuthenticated]);
 
   const loadDashboardData = async () => {
     if (!user?.id) {
@@ -138,7 +142,29 @@ const OrganizerDashboard: React.FC = () => {
   };
 
   // Access denied view
-  if (error === 'Access denied. Organizer permissions required.') {
+  if (!isAuthenticated) {
+    return (
+      <div className="min-h-screen bg-gray-50 pt-20">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+          <div className="flex items-center justify-center py-20">
+            <div className="text-center">
+              <AlertCircle className="w-16 h-16 text-red-500 mx-auto mb-4" />
+              <h3 className="text-2xl font-bold text-gray-900 mb-2">Authentication Required</h3>
+              <p className="text-gray-600 mb-6">Please log in to access the organizer dashboard.</p>
+              <button
+                onClick={() => setCurrentView('home')}
+                className="bg-indigo-600 text-white px-6 py-3 rounded-lg hover:bg-indigo-700 transition-colors duration-200"
+              >
+                Go to Home
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (profile?.role !== 'organizer' && profile?.role !== 'admin') {
     return (
       <div className="min-h-screen bg-gray-50 pt-20">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
@@ -183,7 +209,7 @@ const OrganizerDashboard: React.FC = () => {
     );
   }
 
-  if (error && error !== 'Access denied. Organizer permissions required.') {
+  if (error) {
     return (
       <div className="min-h-screen bg-gray-50 pt-20">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
@@ -198,28 +224,6 @@ const OrganizerDashboard: React.FC = () => {
               >
                 <RefreshCw className="w-4 h-4" />
                 <span>Try Again</span>
-              </button>
-            </div>
-          </div>
-        </div>
-      </div>
-    );
-  }
-
-  if (!user?.id) {
-    return (
-      <div className="min-h-screen bg-gray-50 pt-20">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-          <div className="flex items-center justify-center py-20">
-            <div className="text-center">
-              <AlertCircle className="w-12 h-12 text-orange-500 mx-auto mb-4" />
-              <h3 className="text-lg font-semibold text-gray-900 mb-2">Authentication Required</h3>
-              <p className="text-gray-600 mb-4">Please log in to access the organizer dashboard</p>
-              <button
-                onClick={() => setCurrentView('home')}
-                className="bg-indigo-600 text-white px-6 py-3 rounded-lg hover:bg-indigo-700 transition-colors duration-200"
-              >
-                Go to Home
               </button>
             </div>
           </div>
@@ -251,6 +255,10 @@ const OrganizerDashboard: React.FC = () => {
                 <Calendar className="w-6 h-6 text-blue-600" />
               </div>
             </div>
+            <div className="mt-4 flex items-center text-sm">
+              <TrendingUp className="w-4 h-4 text-green-600 mr-1" />
+              <span className="text-green-600 font-medium">All time</span>
+            </div>
           </div>
 
           <div className="bg-white rounded-2xl shadow-lg p-6 transform hover:scale-105 transition-all duration-200">
@@ -262,6 +270,9 @@ const OrganizerDashboard: React.FC = () => {
               <div className="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center">
                 <CheckCircle className="w-6 h-6 text-green-600" />
               </div>
+            </div>
+            <div className="mt-4 flex items-center text-sm">
+              <span className="text-green-600 font-medium">Live events</span>
             </div>
           </div>
 
@@ -275,6 +286,9 @@ const OrganizerDashboard: React.FC = () => {
                 <Edit className="w-6 h-6 text-orange-600" />
               </div>
             </div>
+            <div className="mt-4 flex items-center text-sm">
+              <span className="text-orange-600 font-medium">In progress</span>
+            </div>
           </div>
 
           <div className="bg-white rounded-2xl shadow-lg p-6 transform hover:scale-105 transition-all duration-200">
@@ -286,6 +300,9 @@ const OrganizerDashboard: React.FC = () => {
               <div className="w-12 h-12 bg-purple-100 rounded-lg flex items-center justify-center">
                 <Users className="w-6 h-6 text-purple-600" />
               </div>
+            </div>
+            <div className="mt-4 flex items-center text-sm">
+              <span className="text-purple-600 font-medium">Max attendees</span>
             </div>
           </div>
         </div>
@@ -385,6 +402,10 @@ const OrganizerDashboard: React.FC = () => {
                     <div className="flex items-center space-x-2">
                       <Users className="w-4 h-4" />
                       <span>Up to {event.capacity} attendees</span>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <MapPin className="w-4 h-4" />
+                      <span className="line-clamp-1">{event.venue}</span>
                     </div>
                   </div>
 

@@ -7,7 +7,7 @@ export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
   auth: {
     autoRefreshToken: true,
     persistSession: true,
-    detectSessionInUrl: false, // Disable email confirmation detection
+    detectSessionInUrl: false,
     flowType: 'pkce'
   }
 });
@@ -45,7 +45,6 @@ class SupabaseAuthService {
     return SupabaseAuthService.instance;
   }
 
-  // Sign up without email confirmation
   async signUp(email: string, password: string, userData: {
     username: string;
     full_name: string;
@@ -64,8 +63,7 @@ class SupabaseAuthService {
             full_name: userData.full_name,
             role: userData.role,
             company: userData.company
-          },
-          emailRedirectTo: undefined // Disable email confirmation
+          }
         }
       });
 
@@ -73,19 +71,18 @@ class SupabaseAuthService {
 
       console.log('Supabase signUp response:', data);
 
-      // If signup is successful, sign in immediately (no email confirmation)
-      if (data.user && !data.session) {
-        console.log('No session from signup, attempting sign in');
-        const signInResult = await this.signIn(email, password);
-        return signInResult;
+      // Wait for profile creation trigger to complete
+      if (data.user) {
+        await new Promise(resolve => setTimeout(resolve, 1000));
+        const profile = await this.getUserProfile(data.user.id);
+        return { 
+          success: true, 
+          user: data.user,
+          profile
+        };
       }
 
-      console.log('Signup successful with session');
-      return { 
-        success: true, 
-        user: data.user,
-        profile: data.user ? await this.getUserProfile(data.user.id) : null
-      };
+      return { success: true, user: data.user };
     } catch (error) {
       console.error('Supabase signUp error:', error);
       return { 
@@ -95,7 +92,6 @@ class SupabaseAuthService {
     }
   }
 
-  // Sign in
   async signIn(email: string, password: string): Promise<AuthResult> {
     try {
       console.log('Supabase signIn called with:', email);
@@ -126,7 +122,6 @@ class SupabaseAuthService {
     }
   }
 
-  // Sign out
   async signOut(): Promise<AuthResult> {
     try {
       console.log('Supabase signOut called');
@@ -145,22 +140,18 @@ class SupabaseAuthService {
     }
   }
 
-  // Get current user
-  async getCurrentUser() {
+  getCurrentUser() {
     return supabase.auth.getUser();
   }
 
-  // Get current session
   getCurrentSession() {
     return supabase.auth.getSession();
   }
 
-  // Listen to auth state changes
   onAuthStateChange(callback: (event: string, session: any) => void) {
     return supabase.auth.onAuthStateChange(callback);
   }
 
-  // Get user profile
   async getUserProfile(userId?: string): Promise<UserProfile | null> {
     try {
       console.log('Getting user profile for:', userId);
@@ -181,25 +172,6 @@ class SupabaseAuthService {
 
       if (error) {
         console.warn('Profile fetch error:', error);
-        
-        // If profile doesn't exist, create a default one
-        if (error.code === 'PGRST116') {
-          console.log('Profile not found, creating default profile');
-          const defaultProfile: UserProfile = {
-            id: targetUserId,
-            email: user?.email || '',
-            username: user?.email?.split('@')[0] || 'user',
-            full_name: user?.user_metadata?.full_name || '',
-            role: 'attendee',
-            plan: 'free',
-            company: null,
-            title: null,
-            avatar_url: null,
-            created_at: new Date().toISOString(),
-            updated_at: new Date().toISOString()
-          };
-          return defaultProfile;
-        }
         return null;
       }
       
@@ -211,7 +183,6 @@ class SupabaseAuthService {
     }
   }
 
-  // Update user profile
   async updateUserProfile(updates: Partial<UserProfile>): Promise<AuthResult> {
     try {
       const { data: { user } } = await supabase.auth.getUser();
@@ -239,7 +210,6 @@ class SupabaseAuthService {
     }
   }
 
-  // Reset password
   async resetPassword(email: string): Promise<AuthResult> {
     try {
       const { error } = await supabase.auth.resetPasswordForEmail(email, {
@@ -256,7 +226,6 @@ class SupabaseAuthService {
     }
   }
 
-  // Update password
   async updatePassword(newPassword: string): Promise<AuthResult> {
     try {
       const { error } = await supabase.auth.updateUser({

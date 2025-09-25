@@ -4,7 +4,7 @@ import { useAuth } from '../../contexts/NewAuthContext';
 import { 
   Users, Calendar, FileText, BarChart3, TrendingUp, 
   Activity, AlertTriangle, CheckCircle, Clock, Eye,
-  UserPlus, Plus, Settings, Shield, Bell, Lock
+  UserPlus, Plus, Settings, Shield, Bell, Lock, Loader2
 } from 'lucide-react';
 import { dbService } from '../../lib/supabase';
 import type { AppUser, Event } from '../../types/database';
@@ -13,7 +13,7 @@ import AdminSecurityDashboard from './AdminSecurityDashboard';
 
 const AdminDashboard: React.FC = () => {
   const { setBreadcrumbs } = useApp();
-  const { user, profile } = useAuth();
+  const { user, profile, isAuthenticated } = useAuth();
   const [stats, setStats] = useState({
     totalUsers: 0,
     totalEvents: 0,
@@ -29,8 +29,13 @@ const AdminDashboard: React.FC = () => {
 
   React.useEffect(() => {
     setBreadcrumbs(['Admin Dashboard']);
-    loadDashboardData();
-  }, [setBreadcrumbs]);
+    
+    if (isAuthenticated && profile?.role === 'admin') {
+      loadDashboardData();
+    } else {
+      setIsLoading(false);
+    }
+  }, [setBreadcrumbs, isAuthenticated, profile]);
 
   const loadDashboardData = async () => {
     try {
@@ -49,7 +54,11 @@ const AdminDashboard: React.FC = () => {
           created_at: user.created_at,
           updated_at: user.updated_at,
           role: user.role,
-          status: 'active'
+          status: 'active',
+          full_name: user.full_name,
+          company: user.company,
+          avatar_url: user.avatar_url,
+          plan: user.plan
         })));
         
         // Calculate user stats
@@ -75,7 +84,11 @@ const AdminDashboard: React.FC = () => {
           event_date: event.event_date,
           user_id: event.organizer_id,
           expected_attendees: event.max_attendees,
-          current_attendees: 0
+          current_attendees: 0,
+          title: event.title,
+          category: event.category,
+          status: event.status,
+          created_at: event.created_at
         })));
         
         // Calculate event stats
@@ -109,6 +122,28 @@ const AdminDashboard: React.FC = () => {
     loadDashboardData();
   };
 
+  if (!isAuthenticated || profile?.role !== 'admin') {
+    return (
+      <div className="min-h-screen bg-gray-50 pt-20">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+          <div className="flex items-center justify-center py-20">
+            <div className="text-center">
+              <AlertTriangle className="w-16 h-16 text-red-500 mx-auto mb-4" />
+              <h3 className="text-2xl font-bold text-gray-900 mb-2">Access Denied</h3>
+              <p className="text-gray-600 mb-6">You need admin permissions to access this dashboard.</p>
+              <button
+                onClick={() => window.location.href = '/'}
+                className="bg-indigo-600 text-white px-6 py-3 rounded-lg hover:bg-indigo-700 transition-colors duration-200"
+              >
+                Go to Home
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   if (currentPage === 'users') {
     return <UserManagementPage users={users} events={events} onRefresh={refreshData} />;
   }
@@ -123,7 +158,7 @@ const AdminDashboard: React.FC = () => {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
           <div className="flex items-center justify-center py-20">
             <div className="text-center">
-              <div className="w-8 h-8 border-4 border-indigo-600 border-t-transparent rounded-full animate-spin mx-auto mb-4" />
+              <Loader2 className="w-8 h-8 animate-spin text-indigo-600 mx-auto mb-4" />
               <p className="text-gray-600">Loading admin dashboard...</p>
             </div>
           </div>
@@ -250,7 +285,7 @@ const AdminDashboard: React.FC = () => {
                     <Users className="w-5 h-5 text-indigo-600" />
                   </div>
                   <div className="flex-1">
-                    <p className="font-medium text-gray-900">{user.full_name}</p>
+                    <p className="font-medium text-gray-900">{user.full_name || user.username}</p>
                     <p className="text-sm text-gray-500 capitalize">{user.role}</p>
                   </div>
                   <span className="text-xs text-gray-400">
