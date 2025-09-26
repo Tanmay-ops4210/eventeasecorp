@@ -85,7 +85,7 @@ const UnifiedAuthModal: React.FC<UnifiedAuthModalProps> = ({
     
     try {
       // Determine role based on user type
-      const role = userType === 'admin' ? 'admin' : 'attendee';
+      const role = userType === 'admin' ? 'admin' : 'organizer';
       
       if (authMode === 'signin') {
         await login(formData.email, formData.password, role);
@@ -168,7 +168,7 @@ const UnifiedAuthModal: React.FC<UnifiedAuthModalProps> = ({
               >
                 <User className="w-5 h-5 mx-auto mb-1" />
                 <div className="text-xs font-medium">User</div>
-                <div className="text-xs text-gray-500">Attend & Organize</div>
+                <div className="text-xs text-gray-500">Events & Organize</div>
               </button>
               <button
                 type="button"

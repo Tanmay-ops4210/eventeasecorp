@@ -20,7 +20,7 @@ const UnifiedNavigation: React.FC = () => {
   ];
 
   const organizerNavItems = [
-    { label: 'Dashboard', path: '/organizer/dashboard', icon: Home },
+    { label: 'Dashboard', path: '/dashboard', icon: Home },
     { label: 'Create Event', path: '/organizer/create-event', icon: Plus },
     { label: 'My Events', path: '/my-events', icon: Calendar },
     { label: 'Attendees', path: '/organizer/attendee-management', icon: Users },
@@ -43,7 +43,7 @@ const UnifiedNavigation: React.FC = () => {
     
     // Navigate to appropriate dashboard
     if (newMode === 'organizer') {
-      navigate('/organizer/dashboard');
+      navigate('/dashboard');
     } else {
       navigate('/dashboard');
     }
@@ -66,7 +66,7 @@ const UnifiedNavigation: React.FC = () => {
           {/* Logo */}
           <div 
             className="flex-shrink-0 cursor-pointer"
-            onClick={() => handleNavigation(viewMode === 'attendee' ? '/dashboard' : '/organizer/dashboard')}
+            onClick={() => handleNavigation('/dashboard')}
           >
             <div className="flex items-center space-x-3">
               <div className="w-8 h-8 bg-gradient-to-r from-indigo-600 to-purple-600 rounded-full flex items-center justify-center">

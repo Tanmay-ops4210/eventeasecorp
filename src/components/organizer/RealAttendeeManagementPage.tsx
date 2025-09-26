@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useApp } from '../../contexts/AppContext';
 import { useAuth } from '../../contexts/NewAuthContext';
 import {
@@ -11,6 +12,7 @@ import { organizerCrudService, OrganizerEvent, OrganizerAttendee } from '../../s
 
 const RealAttendeeManagementPage: React.FC = () => {
   const { setBreadcrumbs } = useApp();
+  const navigate = useNavigate();
   const { user } = useAuth();
   const [events, setEvents] = useState<OrganizerEvent[]>([]);
   const [selectedEvent, setSelectedEvent] = useState<string>('');
@@ -432,7 +434,7 @@ const RealAttendeeManagementPage: React.FC = () => {
               <h3 className="text-xl font-semibold text-gray-900 mb-2">No published events found</h3>
               <p className="text-gray-600 mb-6">Publish an event to start managing attendees</p>
               <button
-                onClick={() => setBreadcrumbs(['Create Event'])}
+                onClick={() => navigate('/organizer/create-event')}
                 className="bg-indigo-600 text-white px-6 py-3 rounded-lg hover:bg-indigo-700 transition-colors duration-200"
               >
                 Create Event

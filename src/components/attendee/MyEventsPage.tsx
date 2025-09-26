@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../contexts/NewAuthContext';
 import { useApp } from '../../contexts/AppContext';
 import { 
@@ -7,6 +8,7 @@ import {
   Clock, Globe, Loader2, ArrowLeft, ArrowRight, MapPin
 } from 'lucide-react';
 import { realEventService, RealEvent } from '../../services/realEventService';
+import { organizerCrudService } from '../../services/organizerCrudService';
 
 interface EventPageNavigationProps {
   currentPage: number;
@@ -59,8 +61,9 @@ const EventPageNavigation: React.FC<EventPageNavigationProps> = ({
 };
 
 const MyEventsPage: React.FC = () => {
-  const { setBreadcrumbs, setCurrentView } = useApp();
-  const { user } = useAuth();
+  const { setBreadcrumbs } = useApp();
+  const navigate = useNavigate();
+  const { user, profile } = useAuth();
   const [events, setEvents] = useState<RealEvent[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
@@ -73,11 +76,15 @@ const MyEventsPage: React.FC = () => {
   const [eventsPerPage] = useState(6);
 
   const fetchEvents = async () => {
-    if (!user) return;
+    if (!user || !profile) return;
     
     setIsLoading(true);
     try {
-      const result = await realEventService.getMyEvents(user.id);
+      // Use appropriate service based on user role
+      const result = profile.role === 'organizer' 
+        ? await organizerCrudService.getMyEvents(user.id)
+        : await realEventService.getMyEvents(user.id);
+        
       if (result.success && result.events) {
         setEvents(result.events);
       } else {
@@ -92,7 +99,7 @@ const MyEventsPage: React.FC = () => {
   useEffect(() => {
     setBreadcrumbs(['My Events']);
     fetchEvents();
-  }, [setBreadcrumbs, user]);
+  }, [setBreadcrumbs, user, profile]);
 
   const filteredEvents = events.filter(event => {
     const matchesSearch = event.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -137,7 +144,11 @@ const MyEventsPage: React.FC = () => {
 
   const handleDeleteEvent = async (eventId: string) => {
     try {
-      const result = await realEventService.deleteEvent(eventId);
+      // Use appropriate service based on user role
+      const result = profile?.role === 'organizer'
+        ? await organizerCrudService.deleteEvent(eventId)
+        : await realEventService.deleteEvent(eventId);
+        
       if (result.success) {
         await fetchEvents();
         setShowDeleteModal(false);
@@ -153,7 +164,11 @@ const MyEventsPage: React.FC = () => {
 
   const handlePublishEvent = async (eventId: string) => {
     try {
-      const result = await realEventService.publishEvent(eventId);
+      // Use appropriate service based on user role  
+      const result = profile?.role === 'organizer'
+        ? await organizerCrudService.publishEvent(eventId)
+        : await realEventService.publishEvent(eventId);
+        
       if (result.success) {
         await fetchEvents();
         alert('Event published successfully!');
@@ -191,13 +206,15 @@ const MyEventsPage: React.FC = () => {
         {/* Header */}
         <div className="flex items-center justify-between mb-8">
           <h1 className="text-3xl font-bold text-gray-900">My Events</h1>
-          <button
-            onClick={() => setCurrentView('event-builder')}
-            className="flex items-center space-x-2 px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700"
-          >
-            <Plus className="w-4 h-4" />
-            <span>Create Event</span>
-          </button>
+          {profile?.role === 'organizer' && (
+            <button
+              onClick={() => navigate('/organizer/create-event')}
+              className="flex items-center space-x-2 px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700"
+            >
+              <Plus className="w-4 h-4" />
+              <span>Create Event</span>
+            </button>
+          )}
         </div>
 
         {/* Search and Filters */}
@@ -308,19 +325,21 @@ const MyEventsPage: React.FC = () => {
                   <div className="flex items-center justify-between">
                     <div className="flex space-x-2">
                       <button
-                        onClick={() => {/* Navigate to event edit */}}
+                        onClick={() => navigate(`/event/${event.id}/edit`)}
                         className="p-2 text-gray-600 hover:text-indigo-600 hover:bg-indigo-50 rounded-lg transition-colors duration-200"
                         title="Edit Event"
                       >
                         <Edit className="w-4 h-4" />
                       </button>
-                      <button
-                        onClick={() => setCurrentView('ticketing')}
-                        className="p-2 text-gray-600 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors duration-200"
-                        title="Manage Tickets"
-                      >
-                        <DollarSign className="w-4 h-4" />
-                      </button>
+                      {profile?.role === 'organizer' && (
+                        <button
+                          onClick={() => navigate('/organizer/ticketing')}
+                          className="p-2 text-gray-600 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors duration-200"
+                          title="Manage Tickets"
+                        >
+                          <DollarSign className="w-4 h-4" />
+                        </button>
+                      )}
                       <button
                         onClick={() => {
                           setEventToDelete(event.id);
@@ -343,7 +362,7 @@ const MyEventsPage: React.FC = () => {
                         </button>
                       )}
                       <button
-                        onClick={() => {/* Navigate to event details */}}
+                        onClick={() => navigate(`/event/${event.id}`)}
                         className="flex items-center space-x-1 text-indigo-600 hover:text-indigo-700 font-medium text-sm"
                       >
                         <Eye className="w-4 h-4" />
@@ -368,12 +387,14 @@ const MyEventsPage: React.FC = () => {
                   : 'Create your first event to get started'
                 }
               </p>
-              <button
-                onClick={() => setCurrentView('event-builder')}
-                className="bg-indigo-600 text-white px-6 py-3 rounded-lg hover:bg-indigo-700 transition-colors duration-200"
-              >
-                Create Your First Event
-              </button>
+              {profile?.role === 'organizer' && (
+                <button
+                  onClick={() => navigate('/organizer/create-event')}
+                  className="bg-indigo-600 text-white px-6 py-3 rounded-lg hover:bg-indigo-700 transition-colors duration-200"
+                >
+                  Create Your First Event
+                </button>
+              )}
             </div>
           </div>
         ) : (
@@ -386,6 +407,14 @@ const MyEventsPage: React.FC = () => {
               <p className="text-gray-600 mb-6">
                 Try navigating to a different page or adjusting your filters
               </p>
+              {profile?.role === 'organizer' && (
+                <button
+                  onClick={() => navigate('/organizer/create-event')}
+                  className="bg-indigo-600 text-white px-6 py-3 rounded-lg hover:bg-indigo-700 transition-colors duration-200"
+                >
+                  Create Event
+                </button>
+              )}
             </div>
           </div>
         )}

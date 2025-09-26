@@ -45,7 +45,6 @@ const LiveEventPage = lazy(() => import('./components/attendee/LiveEventPage'));
 const ExpoHallPage = lazy(() => import('./components/attendee/ExpoHallPage'));
 
 // Organizer Components (using Real versions)
-const RealOrganizerDashboard = lazy(() => import('./components/organizer/RealOrganizerDashboard'));
 const CreateEventPage = lazy(() => import('./components/organizer/CreateEventPage'));
 const EventSettingsPage = lazy(() => import('./components/organizer/EventSettingsPage'));
 const LandingCustomizerPage = lazy(() => import('./components/organizer/LandingCustomizerPage'));
@@ -59,7 +58,6 @@ const SpeakerPortalPage = lazy(() => import('./components/organizer/SpeakerPorta
 const StaffRolesPage = lazy(() => import('./components/organizer/StaffRolesPage'));
 const RealAnalyticsPage = lazy(() => import('./components/organizer/RealAnalyticsPage'));
 const OrganizerSettingsPage = lazy(() => import('./components/organizer/OrganizerSettingsPage'));
-const OrganizerMyEventsPage = lazy(() => import('./components/organizer/MyEventsPage'));
 
 // Admin Components
 const AdminDashboard = lazy(() => import('./components/admin/AdminDashboard'));
@@ -150,7 +148,7 @@ const AppContent: React.FC = () => {
               path="/my-events" 
               element={
                 <ProtectedRoute allowedRoles={['attendee', 'organizer']}>
-                  {profile?.role === 'attendee' ? <AttendeeMyEventsPage /> : <OrganizerMyEventsPage />}
+                  <AttendeeMyEventsPage />
                 </ProtectedRoute>
               } 
             />

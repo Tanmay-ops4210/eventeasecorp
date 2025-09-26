@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useApp } from '../../contexts/AppContext';
 import { useAuth } from '../../contexts/NewAuthContext';
 import { 
@@ -10,6 +11,7 @@ import { organizerCrudService, OrganizerEvent, OrganizerEventAnalytics } from '.
 
 const RealAnalyticsPage: React.FC = () => {
   const { setBreadcrumbs } = useApp();
+  const navigate = useNavigate();
   const { user } = useAuth();
   const [events, setEvents] = useState<OrganizerEvent[]>([]);
   const [selectedEvent, setSelectedEvent] = useState<string>('');
@@ -349,7 +351,7 @@ const RealAnalyticsPage: React.FC = () => {
               </p>
               {events.length === 0 && (
                 <button
-                  onClick={() => setCurrentView('event-builder')}
+                  onClick={() => navigate('/organizer/create-event')}
                   className="bg-indigo-600 text-white px-6 py-3 rounded-lg hover:bg-indigo-700 transition-colors duration-200"
                 >
                   Create Event
