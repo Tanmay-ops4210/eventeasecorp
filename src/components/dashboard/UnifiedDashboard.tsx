@@ -1,12 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useApp } from '../../contexts/AppContext';
 import { useAuth } from '../../contexts/NewAuthContext';
-import { 
-  Calendar, Users, BarChart3, TrendingUp, Eye, Plus, 
-  Settings, Ticket, Mail, Switch, Home, BookOpen,
-  CheckCircle, Clock, AlertTriangle, Loader2, ArrowRight,
-  Star, MapPin, DollarSign
-} from 'lucide-react';
+import { Calendar, Users, BarChart3, TrendingUp, Eye, Plus, Settings, Ticket, Mail, Twitch as Switch, Home, BookOpen, CheckCircle, Clock, AlertTriangle, Loader2, ArrowRight, Star, MapPin, DollarSign } from 'lucide-react';
 
 type ViewMode = 'attendee' | 'organizer';
 

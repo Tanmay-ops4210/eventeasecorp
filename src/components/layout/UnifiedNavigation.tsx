@@ -1,10 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { 
-  Home, Calendar, Users, Bell, User, Settings, Menu, X,
-  Ticket, BookOpen, LogOut, ChevronDown, Plus, BarChart3, Mail,
-  ShoppingCart, Switch
-} from 'lucide-react';
+import { Home, Calendar, Users, Bell, User, Settings, Menu, X, Ticket, BookOpen, LogOut, ChevronDown, Plus, BarChart3, Mail, ShoppingCart, Twitch as Switch } from 'lucide-react';
 import { useAuth } from '../../contexts/NewAuthContext';
 
 type ViewMode = 'attendee' | 'organizer';
