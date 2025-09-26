@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { Calendar, Users, MapPin, Clock, Star, CheckCircle } from 'lucide-react';
 import { useAuth } from '../contexts/NewAuthContext';
 import { useApp } from '../contexts/AppContext';
-import NewAuthModal from './auth/NewAuthModal';
+import UnifiedAuthModal from './auth/UnifiedAuthModal';
 
 interface PlanEventSectionProps {
   onEventSubmitted?: (eventData: any) => void;
@@ -61,16 +61,16 @@ const PlanEventSection: React.FC<PlanEventSectionProps> = ({ onEventSubmitted })
     // Simulate API call
     await new Promise(resolve => setTimeout(resolve, 1000));
     
-    // Redirect to organizer dashboard to start creating the event
-    setCurrentView('organizer-dashboard');
+    // Redirect to unified dashboard to start creating the event
+    setCurrentView('dashboard');
     
     setIsSubmitting(false);
   };
 
   const handleAuthSuccess = () => {
     setShowAuthModal(false);
-    // After successful auth, redirect to organizer dashboard
-    setCurrentView('organizer-dashboard');
+    // After successful auth, redirect to unified dashboard
+    setCurrentView('dashboard');
   };
   return (
     <section id="plan-event" className="py-12 sm:py-16 lg:py-20 bg-gradient-to-br from-slate-50 to-indigo-50">
@@ -256,12 +256,12 @@ const PlanEventSection: React.FC<PlanEventSectionProps> = ({ onEventSubmitted })
       </div>
 
       {/* Auth Modal for Organizer Signup */}
-      <NewAuthModal
+      <UnifiedAuthModal
         isOpen={showAuthModal}
         onClose={() => setShowAuthModal(false)}
         onLoginSuccess={handleAuthSuccess}
-        defaultRole="organizer"
-        redirectTo="organizer-dashboard"
+        defaultRole="user"
+        redirectTo="/dashboard"
       />
     </section>
   );

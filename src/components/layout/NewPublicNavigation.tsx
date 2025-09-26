@@ -3,7 +3,7 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import { Menu, X, Calendar, Users, Building, BookOpen, Info, Phone, User, LogOut, Award } from 'lucide-react';
 import { useApp } from '../../contexts/AppContext';
 import { useAuth } from '../../contexts/NewAuthContext';
-import NewAuthModal from '../auth/NewAuthModal';
+import UnifiedAuthModal from '../auth/UnifiedAuthModal';
 
 const NewPublicNavigation: React.FC = () => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
@@ -30,18 +30,10 @@ const NewPublicNavigation: React.FC = () => {
   const handleAuthAction = () => {
     if (isAuthenticated && user && profile) {
       // Route to appropriate dashboard based on role
-      switch (profile.role) {
-        case 'attendee':
-          navigate('/dashboard');
-          break;
-        case 'organizer':
-          navigate('/organizer/dashboard');
-          break;
-        case 'admin':
-          navigate('/admin/dashboard');
-          break;
-        default:
-          navigate('/dashboard');
+      if (profile.role === 'admin') {
+        navigate('/admin/dashboard');
+      } else {
+        navigate('/dashboard');
       }
     } else {
       setIsAuthModalOpen(true);
@@ -226,7 +218,7 @@ const NewPublicNavigation: React.FC = () => {
         </div>
       </nav>
 
-      <NewAuthModal
+      <UnifiedAuthModal
         isOpen={isAuthModalOpen}
         onClose={() => setIsAuthModalOpen(false)}
         onLoginSuccess={handleLoginSuccess}

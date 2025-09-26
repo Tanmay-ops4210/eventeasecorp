@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { useApp } from '../../contexts/AppContext';
 import { useAuth } from '../../contexts/NewAuthContext';
 import { Check, Star, Zap, Crown, Users, Calendar, BarChart3, Headphones } from 'lucide-react';
-import NewAuthModal from '../auth/NewAuthModal';
+import UnifiedAuthModal from '../auth/UnifiedAuthModal';
 
 interface PricingPlan {
   id: string;
@@ -155,8 +155,8 @@ const PricingPage: React.FC = () => {
 
   const handleAuthSuccess = () => {
     setShowAuthModal(false);
-    // After successful auth, redirect to organizer dashboard
-    setCurrentView('organizer-dashboard');
+    // After successful auth, redirect to unified dashboard
+    setCurrentView('dashboard');
   };
   return (
     <div className="min-h-screen bg-gray-50 pt-20">
@@ -352,12 +352,12 @@ const PricingPage: React.FC = () => {
       </div>
 
       {/* Auth Modal for Plan Selection */}
-      <NewAuthModal
+      <UnifiedAuthModal
         isOpen={showAuthModal}
         onClose={() => setShowAuthModal(false)}
         onLoginSuccess={handleAuthSuccess}
-        defaultRole="organizer"
-        redirectTo="organizer-dashboard"
+        defaultRole="user"
+        redirectTo="/dashboard"
       />
     </div>
   );

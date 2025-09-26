@@ -1,30 +1,31 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { X, User, Mail, Lock, Eye, EyeOff, Building, Calendar, Loader2, AlertCircle } from 'lucide-react';
+import { X, User, Mail, Lock, Eye, EyeOff, Building, Calendar, Loader2, AlertCircle, Shield } from 'lucide-react';
 import { useAuth } from '../../contexts/NewAuthContext';
 
-interface NewAuthModalProps {
+interface UnifiedAuthModalProps {
   isOpen: boolean;
   onClose: () => void;
   onLoginSuccess: () => void;
-  defaultRole?: 'attendee' | 'organizer' | 'admin';
+  defaultRole?: 'user' | 'admin';
   redirectTo?: string;
 }
 
-type UserRole = 'attendee' | 'organizer' | 'admin';
+type AuthMode = 'signin' | 'signup';
+type UserType = 'user' | 'admin';
 
-const NewAuthModal: React.FC<NewAuthModalProps> = ({ 
+const UnifiedAuthModal: React.FC<UnifiedAuthModalProps> = ({ 
   isOpen, 
   onClose, 
   onLoginSuccess, 
-  defaultRole = 'attendee',
+  defaultRole = 'user',
   redirectTo 
 }) => {
   const { login, register } = useAuth();
   const navigate = useNavigate();
-  const [isLoginMode, setIsLoginMode] = useState(true);
+  const [authMode, setAuthMode] = useState<AuthMode>('signin');
+  const [userType, setUserType] = useState<UserType>(defaultRole);
   const [showPassword, setShowPassword] = useState(false);
-  const [selectedRole, setSelectedRole] = useState<UserRole>(defaultRole);
   const [formData, setFormData] = useState({
     name: '',
     email: '',
@@ -60,7 +61,7 @@ const NewAuthModal: React.FC<NewAuthModalProps> = ({
       newErrors.password = 'Password must be at least 6 characters';
     }
 
-    if (!isLoginMode) {
+    if (authMode === 'signup') {
       if (!formData.name) {
         newErrors.name = 'Name is required';
       }
@@ -83,30 +84,22 @@ const NewAuthModal: React.FC<NewAuthModalProps> = ({
     setErrors({});
     
     try {
-      console.log('Auth modal submit:', { isLoginMode, email: formData.email, role: selectedRole });
+      // Determine role based on user type
+      const role = userType === 'admin' ? 'admin' : 'attendee';
       
-      if (isLoginMode) {
-        await login(formData.email, formData.password, selectedRole);
-        console.log('Login successful, handling redirection');
+      if (authMode === 'signin') {
+        await login(formData.email, formData.password, role);
       } else {
-        await register(formData.email, formData.password, formData.name, selectedRole, formData.company);
-        console.log('Registration successful, handling redirection');
+        await register(formData.email, formData.password, formData.name, role, formData.company);
       }
       
-      // Handle role-based redirection with longer delay for registration
-      const redirectDelay = isLoginMode ? 500 : 2000; // Longer delay for registration
-      
+      // Handle redirection
       setTimeout(() => {
         if (redirectTo) {
-          console.log('Redirecting to:', redirectTo);
           navigate(redirectTo);
         } else {
           // Default redirection based on role
-          console.log('Default redirection for role:', selectedRole);
-          switch (selectedRole) {
-            case 'organizer':
-              navigate('/organizer/dashboard');
-              break;
+          switch (role) {
             case 'admin':
               navigate('/admin/dashboard');
               break;
@@ -117,10 +110,9 @@ const NewAuthModal: React.FC<NewAuthModalProps> = ({
         
         onLoginSuccess();
         onClose();
-      }, redirectDelay);
+      }, 1000);
       
     } catch (error) {
-      console.error('Auth modal error:', error);
       const errorMessage = error instanceof Error ? error.message : 'Authentication failed. Please try again.';
       setErrors({ general: errorMessage });
     } finally {
@@ -129,32 +121,11 @@ const NewAuthModal: React.FC<NewAuthModalProps> = ({
   };
 
   const toggleMode = () => {
-    setIsLoginMode(!isLoginMode);
+    setAuthMode(authMode === 'signin' ? 'signup' : 'signin');
     setErrors({});
     setFormData({ name: '', email: '', password: '', confirmPassword: '', company: '' });
   };
 
-  const roleOptions = [
-    { 
-      value: 'attendee', 
-      label: 'Attendee', 
-      description: 'Join and attend events',
-      icon: User
-    },
-    { 
-      value: 'organizer', 
-      label: 'Event Organizer', 
-      description: 'Create and manage events',
-      icon: Calendar
-    },
-    { 
-      value: 'admin', 
-      label: 'Administrator', 
-      description: 'Platform administration',
-      icon: Building
-    }
-  ];
-  
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black bg-opacity-50 backdrop-blur-sm">
       <div className="relative w-full max-w-md bg-white rounded-2xl shadow-2xl transform transition-all duration-300 scale-100 max-h-screen overflow-y-auto">
@@ -170,37 +141,48 @@ const NewAuthModal: React.FC<NewAuthModalProps> = ({
         <div className="p-8 pb-4">
           <div className="text-center mb-6">
             <div className="w-16 h-16 bg-gradient-to-br from-indigo-600 to-purple-600 rounded-full flex items-center justify-center mx-auto mb-4">
-              <User className="w-8 h-8 text-white" />
+              {userType === 'admin' ? <Shield className="w-8 h-8 text-white" /> : <User className="w-8 h-8 text-white" />}
             </div>
             <h2 className="text-2xl font-bold text-gray-900">
-              {isLoginMode ? 'Welcome Back' : 'Join EventEase'}
+              {authMode === 'signin' ? 'Welcome Back' : 'Join EventEase'}
             </h2>
             <p className="text-gray-600 mt-2">
-              {isLoginMode ? 'Sign in to access your account' : 'Create your account to get started'}
+              {authMode === 'signin' ? 'Sign in to access your account' : 'Create your account to get started'}
             </p>
           </div>
 
-          {/* Role Selection */}
+          {/* User Type Selection */}
           <div className="mb-6">
             <label className="block text-sm font-medium text-gray-700 mb-2">
-              {isLoginMode ? 'Login as:' : 'I want to join as:'}
+              {authMode === 'signin' ? 'Login as:' : 'Account type:'}
             </label>
-            <div className="grid grid-cols-3 gap-2">
-              {roleOptions.map((role) => (
-                <button
-                  key={role.value}
-                  type="button"
-                  onClick={() => setSelectedRole(role.value as UserRole)}
-                  className={`p-3 rounded-lg border-2 transition-all duration-200 ${
-                    selectedRole === role.value
-                      ? 'border-indigo-500 bg-indigo-50 text-indigo-700'
-                      : 'border-gray-200 hover:border-gray-300'
-                  }`}
-                >
-                  <role.icon className="w-5 h-5 mx-auto mb-1" />
-                  <div className="text-xs font-medium">{role.label}</div>
-                </button>
-              ))}
+            <div className="grid grid-cols-2 gap-3">
+              <button
+                type="button"
+                onClick={() => setUserType('user')}
+                className={`p-3 rounded-lg border-2 transition-all duration-200 ${
+                  userType === 'user'
+                    ? 'border-indigo-500 bg-indigo-50 text-indigo-700'
+                    : 'border-gray-200 hover:border-gray-300'
+                }`}
+              >
+                <User className="w-5 h-5 mx-auto mb-1" />
+                <div className="text-xs font-medium">User</div>
+                <div className="text-xs text-gray-500">Attend & Organize</div>
+              </button>
+              <button
+                type="button"
+                onClick={() => setUserType('admin')}
+                className={`p-3 rounded-lg border-2 transition-all duration-200 ${
+                  userType === 'admin'
+                    ? 'border-purple-500 bg-purple-50 text-purple-700'
+                    : 'border-gray-200 hover:border-gray-300'
+                }`}
+              >
+                <Shield className="w-5 h-5 mx-auto mb-1" />
+                <div className="text-xs font-medium">Admin</div>
+                <div className="text-xs text-gray-500">Platform Admin</div>
+              </button>
             </div>
           </div>
 
@@ -216,7 +198,7 @@ const NewAuthModal: React.FC<NewAuthModalProps> = ({
 
           {/* Form */}
           <form onSubmit={handleSubmit} className="space-y-4">
-            {!isLoginMode && (
+            {authMode === 'signup' && (
               <>
                 <div>
                   <div className="relative">
@@ -280,7 +262,7 @@ const NewAuthModal: React.FC<NewAuthModalProps> = ({
                   placeholder="Password"
                   value={formData.password}
                   onChange={handleInputChange}
-                  autoComplete={isLoginMode ? "current-password" : "new-password"}
+                  autoComplete={authMode === 'signin' ? "current-password" : "new-password"}
                   className={`w-full pl-10 pr-12 py-3 border rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-colors duration-200 ${
                     errors.password ? 'border-red-500' : 'border-gray-300'
                   }`}
@@ -296,7 +278,7 @@ const NewAuthModal: React.FC<NewAuthModalProps> = ({
               {errors.password && <p className="text-red-500 text-sm mt-1">{errors.password}</p>}
             </div>
 
-            {!isLoginMode && (
+            {authMode === 'signup' && (
               <div>
                 <div className="relative">
                   <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
@@ -324,10 +306,10 @@ const NewAuthModal: React.FC<NewAuthModalProps> = ({
               {isLoading ? (
                 <div className="flex items-center justify-center space-x-2">
                   <Loader2 className="w-5 h-5 animate-spin" />
-                  <span>{isLoginMode ? 'Signing In...' : 'Creating Account...'}</span>
+                  <span>{authMode === 'signin' ? 'Signing In...' : 'Creating Account...'}</span>
                 </div>
               ) : (
-                isLoginMode ? 'Sign In' : 'Create Account'
+                authMode === 'signin' ? 'Sign In' : 'Create Account'
               )}
             </button>
           </form>
@@ -335,15 +317,15 @@ const NewAuthModal: React.FC<NewAuthModalProps> = ({
           {/* Toggle Mode */}
           <div className="text-center mt-6">
             <p className="text-gray-600">
-              {isLoginMode ? "Don't have an account?" : 'Already have an account?'}
+              {authMode === 'signin' ? "Don't have an account?" : 'Already have an account?'}
               <button
                 onClick={toggleMode}
                 className="ml-2 text-indigo-600 hover:text-indigo-700 font-medium transition-colors duration-200"
               >
-                {isLoginMode ? 'Sign Up' : 'Sign In'}
+                {authMode === 'signin' ? 'Sign Up' : 'Sign In'}
               </button>
             </p>
-            {isLoginMode && (
+            {authMode === 'signin' && (
               <div className="mt-3">
                 <button
                   type="button"
@@ -364,4 +346,4 @@ const NewAuthModal: React.FC<NewAuthModalProps> = ({
   );
 };
 
-export default NewAuthModal;
+export default UnifiedAuthModal;

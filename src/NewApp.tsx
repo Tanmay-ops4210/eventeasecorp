@@ -11,8 +11,7 @@ console.log('NewApp.tsx loaded');
 
 // --- Layout Components ---
 import NewPublicNavigation from './components/layout/NewPublicNavigation';
-import AttendeeNavigation from './components/layout/AttendeeNavigation';
-import OrganizerNavigation from './components/layout/OrganizerNavigation';
+import UnifiedNavigation from './components/layout/UnifiedNavigation';
 import AdminNavigation from './components/layout/AdminNavigation';
 import Breadcrumbs from './components/layout/Breadcrumbs';
 
@@ -34,8 +33,8 @@ const TermsPage = lazy(() => import('./components/pages/TermsPage'));
 const PrivacyPage = lazy(() => import('./components/pages/PrivacyPage'));
 const SimplePasswordReset = lazy(() => import('./components/auth/SimplePasswordReset'));
 
-// Attendee Components
-const AttendeeDashboard = lazy(() => import('./components/attendee/AttendeeDashboard'));
+// Unified Dashboard Component
+const UnifiedDashboard = lazy(() => import('./components/dashboard/UnifiedDashboard'));
 const AttendeeMyEventsPage = lazy(() => import('./components/attendee/MyEventsPage'));
 const MyNetworkPage = lazy(() => import('./components/attendee/MyNetworkPage'));
 const NotificationsPage = lazy(() => import('./components/attendee/NotificationsPage'));
@@ -103,11 +102,10 @@ const AppContent: React.FC = () => {
 
   const renderNavigation = () => {
     if (isAuthenticated && user && profile) {
-      switch (profile.role) {
-        case 'attendee': return <AttendeeNavigation />;
-        case 'organizer': return <OrganizerNavigation />;
-        case 'admin': return <AdminNavigation />;
-        default: return <NewPublicNavigation />;
+      if (profile.role === 'admin') {
+        return <AdminNavigation />;
+      } else {
+        return <UnifiedNavigation />;
       }
     }
     return <NewPublicNavigation />;
@@ -137,15 +135,17 @@ const AppContent: React.FC = () => {
             <Route path="/event-payment" element={<EventPaymentPage />} />
             <Route path="/event-payment-success" element={<EventPaymentSuccess />} />
 
-            {/* --- Attendee Routes --- */}
+            {/* --- Unified Dashboard Route --- */}
             <Route 
               path="/dashboard" 
               element={
-                <ProtectedRoute allowedRoles={['attendee']}>
-                  <AttendeeDashboard />
+                <ProtectedRoute allowedRoles={['attendee', 'organizer']}>
+                  <UnifiedDashboard />
                 </ProtectedRoute>
               } 
             />
+
+            {/* --- Shared Routes --- */}
             <Route 
               path="/my-events" 
               element={
@@ -154,6 +154,8 @@ const AppContent: React.FC = () => {
                 </ProtectedRoute>
               } 
             />
+
+            {/* --- Attendee-specific Routes --- */}
             <Route 
               path="/my-network" 
               element={
@@ -173,7 +175,7 @@ const AppContent: React.FC = () => {
             <Route 
               path="/profile" 
               element={
-                <ProtectedRoute allowedRoles={['attendee']}>
+                <ProtectedRoute allowedRoles={['attendee', 'organizer']}>
                   <AttendeeProfilePage />
                 </ProtectedRoute>
               } 
@@ -212,14 +214,6 @@ const AppContent: React.FC = () => {
             />
 
             {/* --- Organizer Routes --- */}
-            <Route 
-              path="/organizer/dashboard" 
-              element={
-                <ProtectedRoute allowedRoles={['organizer']}>
-                  <RealOrganizerDashboard />
-                </ProtectedRoute>
-              } 
-            />
             <Route 
               path="/organizer/create-event" 
               element={

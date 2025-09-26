@@ -4,7 +4,7 @@ import { Calendar, Users, Star, ArrowRight, Play, CheckCircle } from 'lucide-rea
 import { useAuth } from '../../contexts/NewAuthContext';
 import ParallaxSection from '../ParallaxSection';
 import LoginPromptOverlay from '../common/LoginPromptOverlay';
-import NewAuthModal from '../auth/NewAuthModal';
+import UnifiedAuthModal from '../auth/UnifiedAuthModal';
 import { useState } from 'react';
 import '../../styles/wave-animation.css';
 
@@ -14,10 +14,10 @@ const NewHomePage: React.FC = () => {
   const [showLoginPrompt, setShowLoginPrompt] = React.useState(false);
   const [showAuthModal, setShowAuthModal] = React.useState(false);
   const [authModalConfig, setAuthModalConfig] = React.useState<{
-    defaultRole: 'attendee' | 'organizer' | 'admin';
+    defaultRole: 'user' | 'admin';
     redirectTo?: string;
   }>({
-    defaultRole: 'attendee'
+    defaultRole: 'user'
   });
 
   console.log('NewHomePage rendering');
@@ -101,14 +101,14 @@ const NewHomePage: React.FC = () => {
 
   const handleLoginPromptLogin = () => {
     setShowLoginPrompt(false);
-    setAuthModalConfig({ defaultRole: 'attendee' });
+    setAuthModalConfig({ defaultRole: 'user' });
     setShowAuthModal(true);
   };
 
   const handleOrganizerSignUp = () => {
     setAuthModalConfig({ 
-      defaultRole: 'organizer',
-      redirectTo: '/organizer/dashboard'
+      defaultRole: 'user',
+      redirectTo: '/dashboard'
     });
     setShowAuthModal(true);
   };
@@ -370,7 +370,7 @@ const NewHomePage: React.FC = () => {
       />
 
       {/* Auth Modal */}
-      <NewAuthModal
+      <UnifiedAuthModal
         isOpen={showAuthModal}
         onClose={() => setShowAuthModal(false)}
         onLoginSuccess={() => setShowAuthModal(false)}
