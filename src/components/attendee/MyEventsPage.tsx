@@ -2,11 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../contexts/NewAuthContext';
 import { useApp } from '../../contexts/AppContext';
-import { 
-  Plus, Edit, Trash2, Eye, Copy, Filter, Search, Calendar,
-  Users, DollarSign, MoreVertical, AlertTriangle, CheckCircle,
-  Clock, Globe, Loader2, ArrowLeft, ArrowRight, MapPin
-} from 'lucide-react';
+import { Plus, CreditCard as Edit, Trash2, Eye, Copy, Filter, Search, Calendar, Users, DollarSign, MoreVertical, AlertTriangle, CheckCircle, Clock, Globe, Loader2, ArrowLeft, ArrowRight, MapPin } from 'lucide-react';
 import { realEventService, RealEvent } from '../../services/realEventService';
 import { organizerCrudService } from '../../services/organizerCrudService';
 
