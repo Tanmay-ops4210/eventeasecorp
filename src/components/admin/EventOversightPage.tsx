@@ -1,31 +1,49 @@
 import React, { useState, useEffect } from 'react';
 import { useApp } from '../../contexts/AppContext';
-import { dbService } from '../../lib/supabase';
-import { DummyEvent } from '../../lib/dummyDatabase';
 import { Search, Filter, CheckCircle, XCircle, AlertTriangle, Eye } from 'lucide-react';
 
-type Event = DummyEvent;
+interface Event {
+  id: string;
+  title: string;
+  category: string;
+  status: string;
+  created_at: string;
+}
+
 const EventOversightPage: React.FC = () => {
   const { setBreadcrumbs } = useApp();
-  const [events, setEvents] = useState<DummyEvent[]>([]);
+  const [events, setEvents] = useState<Event[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedStatus, setSelectedStatus] = useState('all');
-  const [selectedEvent, setSelectedEvent] = useState<DummyEvent | null>(null);
+  const [selectedEvent, setSelectedEvent] = useState<Event | null>(null);
   const [showApproveModal, setShowApproveModal] = useState(false);
   const [showRejectModal, setShowRejectModal] = useState(false);
 
   const fetchData = async () => {
     setIsLoading(true);
-    const eventsResponse = await dbService.getEvents();
-    if (eventsResponse.success && eventsResponse.events) {
-      // Add a status to each event for moderation purposes
-      const eventsWithStatus = eventsResponse.events.map(event => ({
-        ...event,
-        status: ['pending', 'approved', 'rejected'][Math.floor(Math.random() * 3)]
-      }));
-      setEvents(eventsWithStatus);
-    }
+    
+    // Mock data loading
+    await new Promise(resolve => setTimeout(resolve, 500));
+    
+    const mockEvents: Event[] = [
+      {
+        id: '1',
+        title: 'Tech Conference 2024',
+        category: 'Technology',
+        status: 'pending',
+        created_at: new Date().toISOString()
+      },
+      {
+        id: '2',
+        title: 'Marketing Workshop',
+        category: 'Marketing',
+        status: 'approved',
+        created_at: new Date().toISOString()
+      }
+    ];
+    
+    setEvents(mockEvents);
     setIsLoading(false);
   };
 
@@ -40,19 +58,18 @@ const EventOversightPage: React.FC = () => {
     return matchesSearch && matchesStatus;
   });
 
-  const handleApprove = (event: DummyEvent) => {
+  const handleApprove = (event: Event) => {
     setSelectedEvent(event);
     setShowApproveModal(true);
   };
 
-  const handleReject = (event: DummyEvent) => {
+  const handleReject = (event: Event) => {
     setSelectedEvent(event);
     setShowRejectModal(true);
   };
 
   const confirmApprove = () => {
     if (!selectedEvent) return;
-    // In a real app, you'd update the event status in the database
     alert(`Event "${selectedEvent.title}" approved.`);
     setShowApproveModal(false);
     onRefresh();
@@ -60,7 +77,6 @@ const EventOversightPage: React.FC = () => {
 
   const confirmReject = () => {
     if (!selectedEvent) return;
-    // In a real app, you'd update the event status in the database
     alert(`Event "${selectedEvent.title}" rejected.`);
     setShowRejectModal(false);
     onRefresh();
@@ -127,11 +143,11 @@ const EventOversightPage: React.FC = () => {
                                 <td className="px-6 py-4 whitespace-nowrap">Organizer</td>
                                 <td className="px-6 py-4 whitespace-nowrap">
                                     <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
-                                        (event as any).status === 'approved' ? 'bg-green-100 text-green-800' :
-                                        (event as any).status === 'rejected' ? 'bg-red-100 text-red-800' :
+                                        event.status === 'approved' ? 'bg-green-100 text-green-800' :
+                                        event.status === 'rejected' ? 'bg-red-100 text-red-800' :
                                         'bg-yellow-100 text-yellow-800'
                                     }`}>
-                                        {(event as any).status}
+                                        {event.status}
                                     </span>
                                 </td>
                                 <td className="px-6 py-4 whitespace-nowrap text-sm font-medium space-x-2">

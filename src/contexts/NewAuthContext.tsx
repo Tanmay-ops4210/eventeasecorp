@@ -1,5 +1,18 @@
 import React, { createContext, useContext, useEffect, useState, ReactNode } from 'react';
-import { dummyAuth, DummyUser } from '../lib/dummyAuth';
+
+// Mock User Interface
+export interface DummyUser {
+  id: string;
+  email: string;
+  name?: string;
+  full_name?: string;
+  role: 'attendee' | 'organizer' | 'admin';
+  company?: string;
+  avatar_url?: string;
+  plan: string;
+  created_at: string;
+  updated_at: string;
+}
 
 interface AuthContextType {
   user: DummyUser | null;
@@ -35,92 +48,27 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const [session, setSession] = useState<any | null>(null);
   const [loading, setLoading] = useState(true);
 
-  console.log('AuthProvider state:', { user: !!user, profile: !!profile, session: !!session, loading });
-
   useEffect(() => {
-    console.log('AuthProvider useEffect - getting initial dummy session');
-    
-    let mounted = true;
-
-    const initializeAuth = async () => {
-      try {
-        const { data: { session } } = await dummyAuth.getCurrentSession();
-        console.log('Initial dummy session:', !!session);
-        
-        if (mounted) {
-          setSession(session);
-          setUser(session?.user ?? null);
-          
-          if (session?.user) {
-            const userProfile = await dummyAuth.getUserProfile(session.user.id);
-            if (mounted) {
-              setProfile(userProfile);
-            }
-          }
-          
-          setLoading(false);
-        }
-      } catch (error) {
-        console.error('Failed to initialize auth:', error);
-        if (mounted) {
-          setLoading(false);
-        }
-      }
-    };
-
-    initializeAuth();
-
-    // Listen for auth changes (dummy implementation)
-    const { data: { subscription } } = dummyAuth.onAuthStateChange(
-      async (event, session) => {
-        console.log('Auth state change:', event, !!session);
-        
-        if (!mounted) return;
-        
-        setSession(session);
-        setUser(session?.user ?? null);
-        
-        if (session?.user) {
-          try {
-            const userProfile = await dummyAuth.getUserProfile(session.user.id);
-            if (mounted) {
-              setProfile(userProfile);
-            }
-          } catch (error) {
-            console.error('Failed to load profile after auth change:', error);
-            if (mounted) {
-              setProfile(null);
-            }
-          }
-        } else {
-          setProfile(null);
-        }
-        
-        setLoading(false);
-      }
-    );
-
-    return () => {
-      mounted = false;
-      subscription.unsubscribe();
-    };
+    // Mock initialization - no backend
+    setLoading(false);
   }, []);
 
   const login = async (email: string, password: string, role?: 'attendee' | 'organizer' | 'admin') => {
-    try {
-      console.log('Attempting login for:', email, 'with role:', role);
-      
-      const result = await dummyAuth.signIn(email, password);
-      if (!result.success) {
-        console.error('Login failed:', result.error);
-        throw new Error(result.error || 'Login failed');
-      }
-      
-      console.log('Login successful');
-    } catch (error) {
-      console.error('Login error:', error);
-      throw error;
-    }
+    // Mock login - always succeeds for demo
+    const mockUser: DummyUser = {
+      id: `user_${Date.now()}`,
+      email,
+      name: email.split('@')[0],
+      full_name: email.split('@')[0],
+      role: role || 'attendee',
+      plan: 'free',
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString()
+    };
+
+    setUser(mockUser);
+    setProfile(mockUser);
+    setSession({ user: mockUser });
   };
 
   const register = async (
@@ -130,85 +78,47 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     role: 'attendee' | 'organizer' | 'admin', 
     company?: string
   ) => {
-    try {
-      console.log('Attempting registration for:', email, 'with role:', role);
-      
-      const result = await dummyAuth.signUp(email, password, {
-        username: name.toLowerCase().replace(/\s+/g, '_'),
-        full_name: name,
-        role,
-        company
-      });
-      
-      if (!result.success) {
-        console.error('Registration failed:', result.error);
-        throw new Error(result.error || 'Registration failed');
-      }
-      
-      // Wait for profile creation and set the profile immediately
-      if (result.user && result.profile) {
-        setUser(result.user);
-        setProfile(result.profile);
-      }
-      
-      console.log('Registration successful');
-    } catch (error) {
-      console.error('Registration error:', error);
-      throw error;
-    }
+    // Mock registration - always succeeds for demo
+    const mockUser: DummyUser = {
+      id: `user_${Date.now()}`,
+      email,
+      name,
+      full_name: name,
+      role,
+      company,
+      plan: 'free',
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString()
+    };
+
+    setUser(mockUser);
+    setProfile(mockUser);
+    setSession({ user: mockUser });
   };
 
   const logout = async () => {
-    try {
-      console.log('Attempting logout');
-      
-      const result = await dummyAuth.signOut();
-      if (!result.success) {
-        console.error('Logout failed:', result.error);
-        throw new Error(result.error || 'Logout failed');
-      }
-      
-      console.log('Logout successful');
-    } catch (error) {
-      console.error('Logout error:', error);
-      throw error;
-    }
+    // Mock logout
+    setUser(null);
+    setProfile(null);
+    setSession(null);
   };
 
   const resetPassword = async (email: string) => {
-    try {
-      console.log('Attempting password reset for:', email);
-      
-      const result = await dummyAuth.resetPassword(email);
-      if (!result.success) {
-        console.error('Password reset failed:', result.error);
-        throw new Error(result.error || 'Password reset failed');
-      }
-      
-      console.log('Password reset successful');
-    } catch (error) {
-      console.error('Password reset error:', error);
-      throw error;
-    }
+    // Mock password reset - always succeeds for demo
+    console.log(`Password reset email would be sent to: ${email}`);
   };
 
   const updatePassword = async (newPassword: string) => {
-    const result = await dummyAuth.updatePassword(newPassword);
-    if (!result.success) {
-      throw new Error(result.error || 'Password update failed');
-    }
+    // Mock password update
+    console.log('Password would be updated');
   };
 
   const updateProfile = async (updates: Partial<DummyUser>) => {
-    const result = await dummyAuth.updateUserProfile(updates);
-    if (!result.success) {
-      throw new Error(result.error || 'Profile update failed');
-    }
-    
-    // Reload profile after update
-    if (user) {
-      const updatedProfile = await dummyAuth.getUserProfile(user.id);
+    // Mock profile update
+    if (user && profile) {
+      const updatedProfile = { ...profile, ...updates };
       setProfile(updatedProfile);
+      setUser(updatedProfile);
     }
   };
 
@@ -225,8 +135,6 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     updatePassword,
     updateProfile,
   };
-
-  console.log('AuthProvider rendering children, loading:', loading, 'isAuthenticated:', !!user && !!profile);
 
   return (
     <AuthContext.Provider value={value}>

@@ -6,14 +6,25 @@ import {
   Activity, AlertTriangle, CheckCircle, Clock, Eye,
   UserPlus, Plus, Settings, Shield, Bell, Lock, Loader2
 } from 'lucide-react';
-import { dbService } from '../../lib/supabase';
-import { DummyUser } from '../../lib/dummyAuth';
-import { DummyEvent } from '../../lib/dummyDatabase';
 import UserManagementPage from './UserManagementPage';
 import AdminSecurityDashboard from './AdminSecurityDashboard';
 
-type AppUser = DummyUser;
-type Event = DummyEvent;
+interface AppUser {
+  id: string;
+  email: string;
+  full_name?: string;
+  role: string;
+  created_at: string;
+}
+
+interface Event {
+  id: string;
+  title: string;
+  category: string;
+  status: string;
+  created_at: string;
+}
+
 const AdminDashboard: React.FC = () => {
   const { setBreadcrumbs } = useApp();
   const { user, profile, isAuthenticated } = useAuth();
@@ -44,52 +55,54 @@ const AdminDashboard: React.FC = () => {
     try {
       setIsLoading(true);
       
-      const [usersResponse, eventsResponse] = await Promise.all([
-        dbService.getAllUsers(),
-        dbService.getEvents()
+      // Mock data loading
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      
+      // Set mock stats
+      setStats({
+        totalUsers: 150,
+        totalEvents: 25,
+        activeEvents: 8,
+        totalRevenue: 45000,
+        newUsersThisWeek: 12,
+        eventsThisMonth: 5
+      });
+      
+      // Set mock users
+      setUsers([
+        {
+          id: '1',
+          email: 'user1@example.com',
+          full_name: 'John Doe',
+          role: 'attendee',
+          created_at: new Date().toISOString()
+        },
+        {
+          id: '2',
+          email: 'organizer@example.com',
+          full_name: 'Jane Smith',
+          role: 'organizer',
+          created_at: new Date().toISOString()
+        }
       ]);
-
-      if (usersResponse.success && usersResponse.users) {
-        setUsers(usersResponse.users);
-        
-        // Calculate user stats
-        const totalUsers = usersResponse.users.length;
-        const weekAgo = new Date();
-        weekAgo.setDate(weekAgo.getDate() - 7);
-        const newUsersThisWeek = usersResponse.users.filter(
-          user => new Date(user.created_at) > weekAgo
-        ).length;
-
-        setStats(prev => ({
-          ...prev,
-          totalUsers,
-          newUsersThisWeek
-        }));
-      }
-
-      if (eventsResponse.success && eventsResponse.events) {
-        setEvents(eventsResponse.events);
-        
-        // Calculate event stats
-        const totalEvents = eventsResponse.events.length;
-        const activeEvents = eventsResponse.events.filter(
-          event => event.status === 'published' || event.status === 'ongoing'
-        ).length;
-        
-        const monthAgo = new Date();
-        monthAgo.setMonth(monthAgo.getMonth() - 1);
-        const eventsThisMonth = eventsResponse.events.filter(
-          event => new Date(event.created_at) > monthAgo
-        ).length;
-
-        setStats(prev => ({
-          ...prev,
-          totalEvents,
-          activeEvents,
-          eventsThisMonth,
-          totalRevenue: Math.floor(Math.random() * 100000) // Mock revenue
-        }));
-      }
+      
+      // Set mock events
+      setEvents([
+        {
+          id: '1',
+          title: 'Tech Conference 2024',
+          category: 'Technology',
+          status: 'published',
+          created_at: new Date().toISOString()
+        },
+        {
+          id: '2',
+          title: 'Marketing Workshop',
+          category: 'Marketing',
+          status: 'draft',
+          created_at: new Date().toISOString()
+        }
+      ]);
     } catch (error) {
       console.error('Failed to load dashboard data:', error);
     } finally {

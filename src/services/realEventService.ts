@@ -1,5 +1,3 @@
-import { supabase, dbService } from '../lib/supabase';
-
 export interface RealEvent {
   id: string;
   organizer_id: string;
@@ -209,14 +207,28 @@ class RealEventService {
   // Event CRUD operations
   async createEvent(eventData: EventFormData, organizerId: string): Promise<{ success: boolean; event?: RealEvent; error?: string }> {
     try {
-      const dbData = this.mapEventFormToDb(eventData, organizerId);
-      const result = await dbService.createEvent(dbData);
+      // Mock event creation
+      await new Promise(resolve => setTimeout(resolve, 500));
       
-      if (!result.success) {
-        return { success: false, error: result.error };
-      }
+      const newEvent: RealEvent = {
+        id: `evt_${Date.now()}`,
+        organizer_id: organizerId,
+        title: eventData.title,
+        description: eventData.description,
+        event_date: eventData.event_date,
+        time: eventData.time,
+        end_time: eventData.end_time,
+        venue: eventData.venue,
+        capacity: eventData.capacity,
+        image_url: eventData.image_url,
+        category: eventData.category,
+        status: 'draft',
+        visibility: eventData.visibility,
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString()
+      };
 
-      return { success: true, event: this.mapDbEventToRealEvent(result.event) };
+      return { success: true, event: newEvent };
     } catch (error) {
       const message = error instanceof Error ? error.message : 'An unexpected error occurred';
       return { success: false, error: `Failed to create event: ${message}` };
@@ -225,16 +237,28 @@ class RealEventService {
 
   async getMyEvents(organizerId: string): Promise<{ success: boolean; events?: RealEvent[]; error?: string }> {
     try {
-      const result = await dbService.getEvents({
-        organizer_id: organizerId
-      });
+      // Mock events fetch
+      await new Promise(resolve => setTimeout(resolve, 300));
       
-      if (!result.success) {
-        return { success: false, error: result.error };
-      }
+      const mockEvents: RealEvent[] = [
+        {
+          id: '1',
+          organizer_id: organizerId,
+          title: 'Tech Innovation Summit 2024',
+          description: 'Annual technology conference',
+          event_date: '2024-03-15',
+          time: '09:00',
+          venue: 'Convention Center',
+          capacity: 500,
+          category: 'technology',
+          status: 'published',
+          visibility: 'public',
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString()
+        }
+      ];
 
-      const mappedEvents = (result.events || []).map(dbEvent => this.mapDbEventToRealEvent(dbEvent));
-      return { success: true, events: mappedEvents };
+      return { success: true, events: mockEvents };
     } catch (error) {
       const message = error instanceof Error ? error.message : 'An unexpected error occurred';
       return { success: false, error: `Failed to fetch events: ${message}` };
@@ -243,13 +267,26 @@ class RealEventService {
   
   async getEventById(eventId: string): Promise<{ success: boolean; event?: RealEvent; error?: string }> {
     try {
-      const result = await dbService.getEventById(eventId);
+      // Mock event fetch
+      await new Promise(resolve => setTimeout(resolve, 200));
       
-      if (!result.success) {
-        return { success: false, error: result.error };
-      }
+      const mockEvent: RealEvent = {
+        id: eventId,
+        organizer_id: 'org_1',
+        title: 'Sample Event',
+        description: 'Sample event description',
+        event_date: '2024-03-15',
+        time: '09:00',
+        venue: 'Sample Venue',
+        capacity: 100,
+        category: 'conference',
+        status: 'published',
+        visibility: 'public',
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString()
+      };
 
-      return { success: true, event: this.mapDbEventToRealEvent(result.event) };
+      return { success: true, event: mockEvent };
     } catch (error) {
       const message = error instanceof Error ? error.message : 'An unexpected error occurred';
       return { success: false, error: `Failed to fetch event: ${message}` };
@@ -258,14 +295,28 @@ class RealEventService {
 
   async updateEvent(eventId: string, updates: Partial<EventFormData>): Promise<{ success: boolean; event?: RealEvent; error?: string }> {
     try {
-      const dbUpdates = this.mapEventFormToDb(updates);
-      const result = await dbService.updateEvent(eventId, dbUpdates);
+      // Mock update
+      await new Promise(resolve => setTimeout(resolve, 400));
       
-      if (!result.success) {
-        return { success: false, error: result.error };
-      }
+      const updatedEvent: RealEvent = {
+        id: eventId,
+        organizer_id: 'org_1',
+        title: updates.title || 'Updated Event',
+        description: updates.description,
+        event_date: updates.event_date || '2024-03-15',
+        time: updates.time || '09:00',
+        end_time: updates.end_time,
+        venue: updates.venue || 'Updated Venue',
+        capacity: updates.capacity || 100,
+        image_url: updates.image_url,
+        category: updates.category || 'conference',
+        status: 'draft',
+        visibility: updates.visibility || 'public',
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString()
+      };
 
-      return { success: true, event: this.mapDbEventToRealEvent(result.event) };
+      return { success: true, event: updatedEvent };
     } catch (error) {
         const message = error instanceof Error ? error.message : 'An unexpected error occurred';
         return { success: false, error: `Failed to update event: ${message}` };
@@ -274,45 +325,18 @@ class RealEventService {
   
   async getDashboardStats(organizerId: string): Promise<{ success: boolean; stats?: DashboardStats; error?: string }> {
     try {
-      const { data: events, error: eventsError } = await supabase
-        .from('events')
-        .select('id, status, start_date, capacity') // Use start_date
-        .eq('organizer_id', organizerId);
-  
-      if (eventsError) {
-        return { success: false, error: eventsError.message };
-      }
-  
-      const { data: analytics, error: analyticsError } = await supabase
-        .from('event_analytics')
-        .select('registrations, revenue')
-        .in('event_id', events?.map(e => e.id) || []);
-  
-      if (analyticsError) {
-        return { success: false, error: analyticsError.message };
-      }
-  
-      const totalEvents = events?.length || 0;
-      const publishedEvents = events?.filter(e => e.status === 'published').length || 0;
-      const draftEvents = events?.filter(e => e.status === 'draft').length || 0;
-      const upcomingEvents = events?.filter(e => 
-        e.status === 'published' && new Date(e.start_date) > new Date() // Use start_date
-      ).length || 0;
-      const completedEvents = events?.filter(e => e.status === 'completed').length || 0;
+      // Mock dashboard stats
+      await new Promise(resolve => setTimeout(resolve, 300));
       
-      const totalTicketsSold = analytics?.reduce((sum, a) => sum + (a.registrations || 0), 0) || 0;
-      const totalRevenue = analytics?.reduce((sum, a) => sum + (a.revenue || 0), 0) || 0;
-      const averageAttendance = totalEvents > 0 ? totalTicketsSold / totalEvents : 0;
-  
       const stats: DashboardStats = {
-        totalEvents,
-        publishedEvents,
-        draftEvents,
-        totalTicketsSold,
-        totalRevenue,
-        upcomingEvents,
-        completedEvents,
-        averageAttendance
+        totalEvents: 5,
+        publishedEvents: 3,
+        draftEvents: 2,
+        totalTicketsSold: 150,
+        totalRevenue: 15000,
+        upcomingEvents: 2,
+        completedEvents: 1,
+        averageAttendance: 30
       };
   
       return { success: true, stats };
@@ -329,7 +353,9 @@ class RealEventService {
 
   async deleteEvent(eventId: string): Promise<{ success: boolean; error?: string }> {
     try {
-      return await dbService.deleteEvent(eventId);
+      // Mock delete
+      await new Promise(resolve => setTimeout(resolve, 300));
+      return { success: true };
     } catch (error) {
       return { success: false, error: 'Failed to delete event' };
     }
@@ -337,14 +363,8 @@ class RealEventService {
 
   async publishEvent(eventId: string): Promise<{ success: boolean; error?: string }> {
     try {
-      const { error } = await supabase
-        .from('events')
-        .update({ status: 'published' })
-        .eq('id', eventId);
-
-      if (error) {
-        return { success: false, error: error.message };
-      }
+      // Mock publish
+      await new Promise(resolve => setTimeout(resolve, 300));
 
       return { success: true };
     } catch (error) {
@@ -354,14 +374,8 @@ class RealEventService {
 
   async hideEvent(eventId: string): Promise<{ success: boolean; error?: string }> {
     try {
-      const { error } = await supabase
-        .from('events')
-        .update({ visibility: 'private' })
-        .eq('id', eventId);
-
-      if (error) {
-        return { success: false, error: error.message };
-      }
+      // Mock hide
+      await new Promise(resolve => setTimeout(resolve, 200));
 
       return { success: true };
     } catch (error) {
@@ -371,14 +385,8 @@ class RealEventService {
 
   async showEvent(eventId: string): Promise<{ success: boolean; error?: string }> {
     try {
-      const { error } = await supabase
-        .from('events')
-        .update({ visibility: 'public' })
-        .eq('id', eventId);
-
-      if (error) {
-        return { success: false, error: error.message };
-      }
+      // Mock show
+      await new Promise(resolve => setTimeout(resolve, 200));
 
       return { success: true };
     } catch (error) {
@@ -388,20 +396,18 @@ class RealEventService {
   
   async createTicketType(eventId: string, ticketData: TicketFormData): Promise<{ success: boolean; ticket?: RealTicketType; error?: string }> {
     try {
-      const { data, error } = await supabase
-        .from('ticket_types')
-        .insert([{
-          ...ticketData,
-          event_id: eventId
-        }])
-        .select()
-        .single();
+      // Mock ticket creation
+      await new Promise(resolve => setTimeout(resolve, 300));
+      
+      const newTicket: RealTicketType = {
+        id: `ticket_${Date.now()}`,
+        event_id: eventId,
+        ...ticketData,
+        sold: 0,
+        created_at: new Date().toISOString()
+      };
 
-      if (error) {
-        return { success: false, error: error.message };
-      }
-
-      return { success: true, ticket: data };
+      return { success: true, ticket: newTicket };
     } catch (error) {
       return { success: false, error: 'Failed to create ticket type' };
     }
@@ -409,17 +415,28 @@ class RealEventService {
 
   async getTicketTypes(eventId: string): Promise<{ success: boolean; tickets?: RealTicketType[]; error?: string }> {
     try {
-      const { data, error } = await supabase
-        .from('ticket_types')
-        .select('*')
-        .eq('event_id', eventId)
-        .order('created_at', { ascending: true });
+      // Mock ticket types
+      await new Promise(resolve => setTimeout(resolve, 200));
+      
+      const mockTickets: RealTicketType[] = [
+        {
+          id: 'ticket_1',
+          event_id: eventId,
+          name: 'General Admission',
+          price: 50,
+          currency: 'USD',
+          quantity: 100,
+          sold: 25,
+          sale_start: new Date().toISOString(),
+          sale_end: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
+          is_active: true,
+          benefits: [],
+          restrictions: [],
+          created_at: new Date().toISOString()
+        }
+      ];
 
-      if (error) {
-        return { success: false, error: error.message };
-      }
-
-      return { success: true, tickets: data || [] };
+      return { success: true, tickets: mockTickets };
     } catch (error) {
       return { success: false, error: 'Failed to fetch ticket types' };
     }
@@ -427,14 +444,8 @@ class RealEventService {
 
   async updateTicketType(ticketId: string, updates: Partial<TicketFormData>): Promise<{ success: boolean; error?: string }> {
     try {
-      const { error } = await supabase
-        .from('ticket_types')
-        .update(updates)
-        .eq('id', ticketId);
-
-      if (error) {
-        return { success: false, error: error.message };
-      }
+      // Mock update
+      await new Promise(resolve => setTimeout(resolve, 300));
 
       return { success: true };
     } catch (error) {
@@ -444,24 +455,8 @@ class RealEventService {
 
   async deleteTicketType(ticketId: string): Promise<{ success: boolean; error?: string }> {
     try {
-      const { data: soldTickets } = await supabase
-        .from('ticket_types')
-        .select('sold')
-        .eq('id', ticketId)
-        .single();
-
-      if (soldTickets && soldTickets.sold > 0) {
-        return { success: false, error: 'Cannot delete ticket type with existing sales' };
-      }
-
-      const { error } = await supabase
-        .from('ticket_types')
-        .delete()
-        .eq('id', ticketId);
-
-      if (error) {
-        return { success: false, error: error.message };
-      }
+      // Mock delete
+      await new Promise(resolve => setTimeout(resolve, 300));
 
       return { success: true };
     } catch (error) {
@@ -471,21 +466,31 @@ class RealEventService {
 
   async getEventAttendees(eventId: string): Promise<{ success: boolean; attendees?: RealAttendee[]; error?: string }> {
     try {
-      const { data, error } = await supabase
-        .from('event_attendees')
-        .select(`
-          *,
-          user:app_users!user_id(full_name, email),
-          ticket_type:ticket_types!ticket_type_id(name, price)
-        `)
-        .eq('event_id', eventId)
-        .order('registration_date', { ascending: false });
+      // Mock attendees
+      await new Promise(resolve => setTimeout(resolve, 200));
+      
+      const mockAttendees: RealAttendee[] = [
+        {
+          id: 'attendee_1',
+          event_id: eventId,
+          user_id: 'user_1',
+          ticket_type_id: 'ticket_1',
+          registration_date: new Date().toISOString(),
+          check_in_status: 'pending',
+          payment_status: 'completed',
+          additional_info: {},
+          user: {
+            full_name: 'John Doe',
+            email: 'john@example.com'
+          },
+          ticket_type: {
+            name: 'General Admission',
+            price: 50
+          }
+        }
+      ];
 
-      if (error) {
-        return { success: false, error: error.message };
-      }
-
-      return { success: true, attendees: data || [] };
+      return { success: true, attendees: mockAttendees };
     } catch (error) {
       return { success: false, error: 'Failed to fetch attendees' };
     }
@@ -493,14 +498,8 @@ class RealEventService {
 
   async updateAttendeeStatus(attendeeId: string, checkInStatus: 'pending' | 'checked-in' | 'no-show'): Promise<{ success: boolean; error?: string }> {
     try {
-      const { error } = await supabase
-        .from('event_attendees')
-        .update({ check_in_status: checkInStatus })
-        .eq('id', attendeeId);
-
-      if (error) {
-        return { success: false, error: error.message };
-      }
+      // Mock status update
+      await new Promise(resolve => setTimeout(resolve, 200));
 
       return { success: true };
     } catch (error) {
@@ -510,17 +509,21 @@ class RealEventService {
 
   async getEventAnalytics(eventId: string): Promise<{ success: boolean; analytics?: RealEventAnalytics; error?: string }> {
     try {
-      const { data, error } = await supabase
-        .from('event_analytics')
-        .select('*')
-        .eq('event_id', eventId)
-        .single();
+      // Mock analytics
+      await new Promise(resolve => setTimeout(resolve, 200));
+      
+      const mockAnalytics: RealEventAnalytics = {
+        id: 'analytics_1',
+        event_id: eventId,
+        views: 1250,
+        registrations: 85,
+        conversion_rate: 6.8,
+        revenue: 4250,
+        top_referrers: ['Direct', 'Social Media', 'Email'],
+        updated_at: new Date().toISOString()
+      };
 
-      if (error) {
-        return { success: false, error: error.message };
-      }
-
-      return { success: true, analytics: data };
+      return { success: true, analytics: mockAnalytics };
     } catch (error) {
       return { success: false, error: 'Failed to fetch analytics' };
     }
@@ -528,17 +531,8 @@ class RealEventService {
 
   async incrementEventViews(eventId: string): Promise<{ success: boolean; error?: string }> {
     try {
-      const { error } = await supabase
-        .from('event_analytics')
-        .update({ 
-          views: supabase.sql`views + 1`,
-          updated_at: new Date().toISOString()
-        })
-        .eq('event_id', eventId);
-
-      if (error) {
-        return { success: false, error: error.message };
-      }
+      // Mock view increment
+      console.log(`Views incremented for event: ${eventId}`);
 
       return { success: true };
     } catch (error) {
@@ -548,20 +542,19 @@ class RealEventService {
 
   async createMarketingCampaign(eventId: string, campaignData: Omit<RealMarketingCampaign, 'id' | 'event_id' | 'created_at' | 'open_rate' | 'click_rate'>): Promise<{ success: boolean; campaign?: RealMarketingCampaign; error?: string }> {
     try {
-      const { data, error } = await supabase
-        .from('marketing_campaigns')
-        .insert([{
-          ...campaignData,
-          event_id: eventId
-        }])
-        .select()
-        .single();
+      // Mock campaign creation
+      await new Promise(resolve => setTimeout(resolve, 400));
+      
+      const newCampaign: RealMarketingCampaign = {
+        id: `campaign_${Date.now()}`,
+        event_id: eventId,
+        ...campaignData,
+        open_rate: Math.random() * 30 + 10,
+        click_rate: Math.random() * 10 + 2,
+        created_at: new Date().toISOString()
+      };
 
-      if (error) {
-        return { success: false, error: error.message };
-      }
-
-      return { success: true, campaign: data };
+      return { success: true, campaign: newCampaign };
     } catch (error) {
       return { success: false, error: 'Failed to create campaign' };
     }
@@ -569,17 +562,24 @@ class RealEventService {
 
   async getMarketingCampaigns(eventId: string): Promise<{ success: boolean; campaigns?: RealMarketingCampaign[]; error?: string }> {
     try {
-      const { data, error } = await supabase
-        .from('marketing_campaigns')
-        .select('*')
-        .eq('event_id', eventId)
-        .order('created_at', { ascending: false });
+      // Mock campaigns
+      await new Promise(resolve => setTimeout(resolve, 200));
+      
+      const mockCampaigns: RealMarketingCampaign[] = [
+        {
+          id: 'campaign_1',
+          event_id: eventId,
+          name: 'Pre-Event Announcement',
+          type: 'email',
+          subject: 'Don\'t miss our event!',
+          status: 'sent',
+          open_rate: 24.5,
+          click_rate: 8.2,
+          created_at: new Date().toISOString()
+        }
+      ];
 
-      if (error) {
-        return { success: false, error: error.message };
-      }
-
-      return { success: true, campaigns: data || [] };
+      return { success: true, campaigns: mockCampaigns };
     } catch (error) {
       return { success: false, error: 'Failed to fetch campaigns' };
     }
@@ -587,14 +587,8 @@ class RealEventService {
 
   async updateMarketingCampaign(campaignId: string, updates: Partial<RealMarketingCampaign>): Promise<{ success: boolean; error?: string }> {
     try {
-      const { error } = await supabase
-        .from('marketing_campaigns')
-        .update(updates)
-        .eq('id', campaignId);
-
-      if (error) {
-        return { success: false, error: error.message };
-      }
+      // Mock update
+      await new Promise(resolve => setTimeout(resolve, 300));
 
       return { success: true };
     } catch (error) {
@@ -604,14 +598,8 @@ class RealEventService {
 
   async deleteMarketingCampaign(campaignId: string): Promise<{ success: boolean; error?: string }> {
     try {
-      const { error } = await supabase
-        .from('marketing_campaigns')
-        .delete()
-        .eq('id', campaignId);
-
-      if (error) {
-        return { success: false, error: error.message };
-      }
+      // Mock delete
+      await new Promise(resolve => setTimeout(resolve, 300));
 
       return { success: true };
     } catch (error) {
@@ -620,51 +608,24 @@ class RealEventService {
   }
 
   subscribeToEventUpdates(organizerId: string, callback: (payload: any) => void) {
-    return supabase
-      .channel('events-changes')
-      .on(
-        'postgres_changes',
-        {
-          event: '*',
-          schema: 'public',
-          table: 'events',
-          filter: `organizer_id=eq.${organizerId}`
-        },
-        callback
-      )
-      .subscribe();
+    // Mock subscription
+    return {
+      unsubscribe: () => {}
+    };
   }
 
   subscribeToAttendeeUpdates(eventId: string, callback: (payload: any) => void) {
-    return supabase
-      .channel('attendees-changes')
-      .on(
-        'postgres_changes',
-        {
-          event: '*',
-          schema: 'public',
-          table: 'event_attendees',
-          filter: `event_id=eq.${eventId}`
-        },
-        callback
-      )
-      .subscribe();
+    // Mock subscription
+    return {
+      unsubscribe: () => {}
+    };
   }
 
   subscribeToAnalyticsUpdates(eventId: string, callback: (payload: any) => void) {
-    return supabase
-      .channel('analytics-changes')
-      .on(
-        'postgres_changes',
-        {
-          event: '*',
-          schema: 'public',
-          table: 'event_analytics',
-          filter: `event_id=eq.${eventId}`
-        },
-        callback
-      )
-      .subscribe();
+    // Mock subscription
+    return {
+      unsubscribe: () => {}
+    };
   }
 }
 

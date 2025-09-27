@@ -1,15 +1,87 @@
-import { dummyDb, DummyEvent, DummyTicketType, DummyAttendee, DummyEventAnalytics, DummyMarketingCampaign } from '../lib/dummyDatabase';
-import { dummyAuth } from '../lib/dummyAuth';
+// Mock interfaces for organizer service
+export interface OrganizerEvent {
+  id: string;
+  organizer_id: string;
+  title: string;
+  description?: string;
+  category: string;
+  event_date: string;
+  time: string;
+  end_time?: string;
+  venue: string;
+  capacity: number;
+  image_url?: string;
+  status: 'draft' | 'published' | 'ongoing' | 'completed' | 'cancelled';
+  visibility: 'public' | 'private' | 'unlisted';
+  created_at: string;
+  updated_at: string;
+  price?: number;
+  currency?: string;
+}
 
-export type OrganizerEvent = DummyEvent;
+export interface OrganizerTicketType {
+  id: string;
+  event_id: string;
+  name: string;
+  description?: string;
+  price: number;
+  currency: string;
+  quantity: number;
+  sold: number;
+  sale_start: string;
+  sale_end?: string;
+  is_active: boolean;
+  benefits: string[];
+  restrictions: string[];
+  created_at: string;
+}
 
-export type OrganizerTicketType = DummyTicketType;
+export interface OrganizerEventAnalytics {
+  id: string;
+  event_id: string;
+  views: number;
+  registrations: number;
+  conversion_rate: number;
+  revenue: number;
+  top_referrers: string[];
+  created_at: string;
+  updated_at: string;
+}
 
-export type OrganizerEventAnalytics = DummyEventAnalytics;
+export interface OrganizerAttendee {
+  id: string;
+  event_id: string;
+  user_id: string;
+  ticket_type_id?: string;
+  registration_date: string;
+  check_in_status: 'pending' | 'checked-in' | 'no-show';
+  payment_status: 'pending' | 'completed' | 'refunded';
+  additional_info: any;
+  user?: {
+    full_name: string;
+    email: string;
+  };
+  ticket_type?: {
+    name: string;
+    price: number;
+  };
+}
 
-export type OrganizerAttendee = DummyAttendee;
+export interface MarketingCampaign {
+  id: string;
+  event_id: string;
+  name: string;
+  type: 'email' | 'social' | 'sms' | 'push';
+  subject?: string;
+  content?: string;
+  audience?: string;
+  status: 'draft' | 'scheduled' | 'sent' | 'cancelled';
+  sent_date?: string;
+  open_rate: number;
+  click_rate: number;
+  created_at: string;
+}
 
-export type MarketingCampaign = DummyMarketingCampaign;
 export interface EventFormData {
   title: string;
   description?: string;
@@ -65,44 +137,15 @@ class OrganizerCrudService {
 
   // Check if user is authenticated and has organizer role
   private async checkOrganizerAccess(): Promise<{ success: boolean; error?: string }> {
-    try {
-      const { data: { user }, error: userError } = await dummyAuth.getCurrentUser();
-      
-      if (userError || !user) {
-        console.error('User authentication error:', userError);
-        return { success: false, error: 'Authentication required' };
-      }
-
-      console.log('Checking organizer access for user:', user.id);
-
-      const profile = await dummyAuth.getUserProfile(user.id);
-
-      if (!profile) {
-        console.error('Profile not found');
-        return { success: false, error: 'Failed to verify user permissions' };
-      }
-
-      console.log('User profile role:', profile.role);
-
-      if (profile.role !== 'organizer' && profile.role !== 'admin') {
-        return { success: false, error: 'Organizer permissions required' };
-      }
-
-      return { success: true };
-    } catch (error) {
-      console.error('Access check error:', error);
-      return { success: false, error: 'Authentication check failed' };
-    }
+    // Mock access check - always allow for demo
+    return { success: true };
   }
 
   async createEvent(eventData: EventFormData, organizerId: string): Promise<{ success: boolean; event?: OrganizerEvent; error?: string }> {
     try {
-      console.log('Creating event with data:', eventData, 'for organizer:', organizerId);
-
       // Check organizer access
       const accessCheck = await this.checkOrganizerAccess();
       if (!accessCheck.success) {
-        console.error('Access check failed:', accessCheck.error);
         return { success: false, error: accessCheck.error };
       }
 
@@ -111,7 +154,11 @@ class OrganizerCrudService {
         return { success: false, error: 'Missing required fields: title, venue, date, and time are required' };
       }
 
-      const result = await dummyDb.createEvent({
+      // Mock event creation
+      await new Promise(resolve => setTimeout(resolve, 500));
+      
+      const newEvent: OrganizerEvent = {
+        id: `evt_${Date.now()}`,
         organizer_id: organizerId,
         title: eventData.title,
         description: eventData.description,
@@ -125,18 +172,13 @@ class OrganizerCrudService {
         status: 'draft',
         visibility: eventData.visibility || 'public',
         price: eventData.price || 0,
-        currency: eventData.currency || 'INR'
-      });
+        currency: eventData.currency || 'INR',
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString()
+      };
 
-      if (!result.success) {
-        console.error('Database insert error:', result.error);
-        return { success: false, error: result.error };
-      }
-
-      console.log('Event created successfully:', result.event);
-      return { success: true, event: result.event };
+      return { success: true, event: newEvent };
     } catch (error) {
-      console.error('Create event error:', error);
       const message = error instanceof Error ? error.message : 'An unexpected error occurred';
       return { success: false, error: `Failed to create event: ${message}` };
     }
@@ -144,28 +186,35 @@ class OrganizerCrudService {
 
   async getMyEvents(organizerId: string): Promise<{ success: boolean; events?: OrganizerEvent[]; error?: string }> {
     try {
-      console.log('Fetching events for organizer:', organizerId);
-
       // Check organizer access
       const accessCheck = await this.checkOrganizerAccess();
       if (!accessCheck.success) {
-        console.error('Access check failed for getMyEvents:', accessCheck.error);
         return { success: false, error: accessCheck.error };
       }
 
-      const result = await dummyDb.getEvents({
-        organizer_id: organizerId
-      });
+      // Mock events fetch
+      await new Promise(resolve => setTimeout(resolve, 300));
+      
+      const mockEvents: OrganizerEvent[] = [
+        {
+          id: '1',
+          organizer_id: organizerId,
+          title: 'Tech Conference 2024',
+          description: 'Annual technology conference',
+          category: 'technology',
+          event_date: '2024-03-15',
+          time: '09:00',
+          venue: 'Convention Center',
+          capacity: 500,
+          status: 'published',
+          visibility: 'public',
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString()
+        }
+      ];
 
-      if (!result.success) {
-        console.error('Database select error:', result.error);
-        return { success: false, error: result.error };
-      }
-
-      console.log('Events fetched successfully:', result.events?.length || 0, 'events');
-      return { success: true, events: result.events || [] };
+      return { success: true, events: mockEvents };
     } catch (error) {
-      console.error('Get events error:', error);
       const message = error instanceof Error ? error.message : 'An unexpected error occurred';
       return { success: false, error: `Failed to fetch events: ${message}` };
     }
@@ -173,25 +222,17 @@ class OrganizerCrudService {
 
   async publishEvent(eventId: string): Promise<{ success: boolean; error?: string }> {
     try {
-      console.log('Publishing event:', eventId);
-      
       // Check organizer access
       const accessCheck = await this.checkOrganizerAccess();
       if (!accessCheck.success) {
         return { success: false, error: accessCheck.error };
       }
       
-      const result = await dummyDb.updateEvent(eventId, { status: 'published' });
+      // Mock publish operation
+      await new Promise(resolve => setTimeout(resolve, 300));
 
-      if (!result.success) {
-        console.error('Publish error:', result.error);
-        return { success: false, error: result.error };
-      }
-
-      console.log('Event published successfully');
       return { success: true };
     } catch (error) {
-      console.error('Publish event error:', error);
       return { success: false, error: 'Failed to publish event' };
     }
   }
@@ -204,13 +245,22 @@ class OrganizerCrudService {
         return { success: false, error: accessCheck.error };
       }
 
-      const result = await dummyDb.getEventAnalytics(eventId);
+      // Mock analytics
+      await new Promise(resolve => setTimeout(resolve, 200));
+      
+      const mockAnalytics: OrganizerEventAnalytics = {
+        id: 'analytics_1',
+        event_id: eventId,
+        views: 1250,
+        registrations: 85,
+        conversion_rate: 6.8,
+        revenue: 12750,
+        top_referrers: ['Direct', 'Social Media', 'Email'],
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString()
+      };
 
-      if (!result.success) {
-        return { success: false, error: result.error };
-      }
-
-      return { success: true, analytics: result.analytics };
+      return { success: true, analytics: mockAnalytics };
     } catch (error) {
       return { success: false, error: 'Failed to fetch analytics' };
     }
@@ -224,17 +274,18 @@ class OrganizerCrudService {
         return { success: false, error: accessCheck.error };
       }
 
-      const result = await dummyDb.createTicketType({
-        ...ticketData,
+      // Mock ticket creation
+      await new Promise(resolve => setTimeout(resolve, 300));
+      
+      const newTicket: OrganizerTicketType = {
+        id: `ticket_${Date.now()}`,
         event_id: eventId,
-        sold: 0
-      });
+        ...ticketData,
+        sold: 0,
+        created_at: new Date().toISOString()
+      };
 
-      if (!result.success) {
-        return { success: false, error: result.error };
-      }
-
-      return { success: true, ticket: result.ticket };
+      return { success: true, ticket: newTicket };
     } catch (error) {
       return { success: false, error: 'Failed to create ticket type' };
     }
@@ -248,13 +299,28 @@ class OrganizerCrudService {
         return { success: false, error: accessCheck.error };
       }
 
-      const result = await dummyDb.getTicketTypesByEvent(eventId);
+      // Mock ticket types
+      await new Promise(resolve => setTimeout(resolve, 200));
+      
+      const mockTickets: OrganizerTicketType[] = [
+        {
+          id: 'ticket_1',
+          event_id: eventId,
+          name: 'Early Bird',
+          description: 'Limited time offer',
+          price: 99,
+          currency: 'USD',
+          quantity: 100,
+          sold: 25,
+          sale_start: new Date().toISOString(),
+          is_active: true,
+          benefits: ['Early access'],
+          restrictions: ['Non-refundable'],
+          created_at: new Date().toISOString()
+        }
+      ];
 
-      if (!result.success) {
-        return { success: false, error: result.error };
-      }
-
-      return { success: true, tickets: result.tickets || [] };
+      return { success: true, tickets: mockTickets };
     } catch (error) {
       return { success: false, error: 'Failed to fetch ticket types' };
     }
@@ -268,11 +334,8 @@ class OrganizerCrudService {
         return { success: false, error: accessCheck.error };
       }
 
-      const result = await dummyDb.updateTicketType(ticketId, updates);
-
-      if (!result.success) {
-        return { success: false, error: result.error };
-      }
+      // Mock update
+      await new Promise(resolve => setTimeout(resolve, 300));
 
       return { success: true };
     } catch (error) {
@@ -288,11 +351,8 @@ class OrganizerCrudService {
         return { success: false, error: accessCheck.error };
       }
 
-      const result = await dummyDb.deleteTicketType(ticketId);
-
-      if (!result.success) {
-        return { success: false, error: result.error };
-      }
+      // Mock delete
+      await new Promise(resolve => setTimeout(resolve, 300));
 
       return { success: true };
     } catch (error) {
@@ -308,13 +368,30 @@ class OrganizerCrudService {
         return { success: false, error: accessCheck.error };
       }
 
-      const result = await dummyDb.getEventAttendees(eventId);
+      // Mock attendees
+      await new Promise(resolve => setTimeout(resolve, 200));
+      
+      const mockAttendees: OrganizerAttendee[] = [
+        {
+          id: 'attendee_1',
+          event_id: eventId,
+          user_id: 'user_1',
+          registration_date: new Date().toISOString(),
+          check_in_status: 'pending',
+          payment_status: 'completed',
+          additional_info: {},
+          user: {
+            full_name: 'John Doe',
+            email: 'john@example.com'
+          },
+          ticket_type: {
+            name: 'Early Bird',
+            price: 99
+          }
+        }
+      ];
 
-      if (!result.success) {
-        return { success: false, error: result.error };
-      }
-
-      return { success: true, attendees: result.attendees || [] };
+      return { success: true, attendees: mockAttendees };
     } catch (error) {
       return { success: false, error: 'Failed to fetch attendees' };
     }
@@ -328,11 +405,8 @@ class OrganizerCrudService {
         return { success: false, error: accessCheck.error };
       }
 
-      const result = await dummyDb.updateAttendeeStatus(attendeeId, checkInStatus);
-
-      if (!result.success) {
-        return { success: false, error: result.error };
-      }
+      // Mock status update
+      await new Promise(resolve => setTimeout(resolve, 200));
 
       return { success: true };
     } catch (error) {
@@ -348,9 +422,19 @@ class OrganizerCrudService {
         return { success: false, error: accessCheck.error };
       }
 
-      const result = await dummyDb.createMarketingCampaign(eventId, campaignData);
+      // Mock campaign creation
+      await new Promise(resolve => setTimeout(resolve, 400));
+      
+      const newCampaign: MarketingCampaign = {
+        id: `campaign_${Date.now()}`,
+        event_id: eventId,
+        ...campaignData,
+        open_rate: Math.random() * 30 + 10,
+        click_rate: Math.random() * 10 + 2,
+        created_at: new Date().toISOString()
+      };
 
-      return result;
+      return { success: true, campaign: newCampaign };
     } catch (error) {
       return { success: false, error: 'Failed to create campaign' };
     }
@@ -364,9 +448,26 @@ class OrganizerCrudService {
         return { success: false, error: accessCheck.error };
       }
 
-      const result = await dummyDb.getMarketingCampaigns(eventId);
+      // Mock campaigns
+      await new Promise(resolve => setTimeout(resolve, 200));
+      
+      const mockCampaigns: MarketingCampaign[] = [
+        {
+          id: 'campaign_1',
+          event_id: eventId,
+          name: 'Pre-Event Announcement',
+          type: 'email',
+          subject: 'Don\'t miss our event!',
+          content: 'Join us for an amazing experience...',
+          audience: 'all_subscribers',
+          status: 'sent',
+          open_rate: 24.5,
+          click_rate: 8.2,
+          created_at: new Date().toISOString()
+        }
+      ];
 
-      return result;
+      return { success: true, campaigns: mockCampaigns };
     } catch (error) {
       return { success: false, error: 'Failed to fetch campaigns' };
     }
@@ -380,8 +481,9 @@ class OrganizerCrudService {
         return { success: false, error: accessCheck.error };
       }
 
-      const result = await dummyDb.updateMarketingCampaign(campaignId, updates);
-      return result;
+      // Mock update
+      await new Promise(resolve => setTimeout(resolve, 300));
+      return { success: true };
     } catch (error) {
       return { success: false, error: 'Failed to update campaign' };
     }
@@ -395,10 +497,27 @@ class OrganizerCrudService {
         return { success: false, error: accessCheck.error };
       }
 
-      const result = await dummyDb.deleteMarketingCampaign(campaignId);
-      return result;
+      // Mock delete
+      await new Promise(resolve => setTimeout(resolve, 300));
+      return { success: true };
     } catch (error) {
       return { success: false, error: 'Failed to delete campaign' };
+    }
+  }
+
+  async deleteEvent(eventId: string): Promise<{ success: boolean; error?: string }> {
+    try {
+      // Check organizer access
+      const accessCheck = await this.checkOrganizerAccess();
+      if (!accessCheck.success) {
+        return { success: false, error: accessCheck.error };
+      }
+
+      // Mock delete
+      await new Promise(resolve => setTimeout(resolve, 300));
+      return { success: true };
+    } catch (error) {
+      return { success: false, error: 'Failed to delete event' };
     }
   }
 }

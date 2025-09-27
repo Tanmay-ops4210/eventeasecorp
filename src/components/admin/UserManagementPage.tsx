@@ -1,15 +1,24 @@
 import React, { useState, useMemo } from 'react';
 import { Users, Search, Filter, Eye, CreditCard as Edit, Trash2, UserPlus, AlertTriangle, X, CheckCircle, XCircle, MoreVertical, ChevronDown, User } from 'lucide-react';
-import { dbService } from '../../lib/supabase';
-import { DummyUser } from '../../lib/dummyAuth';
-import { DummyEvent } from '../../lib/dummyDatabase';
 import '../../styles/admin-panel.css';
 
-type AppUser = DummyUser;
-type Event = DummyEvent;
+interface AppUser {
+  id: string;
+  email: string;
+  full_name?: string;
+  role: string;
+  created_at: string;
+}
+
+interface Event {
+  id: string;
+  title: string;
+  organizer_id?: string;
+}
+
 interface MemberManagementProps {
   users: AppUser[];
-  events: DummyEvent[];
+  events: Event[];
   onRefresh: () => void;
 }
 
@@ -52,8 +61,12 @@ const MemberManagement: React.FC<MemberManagementProps> = ({ users, events, onRe
   const confirmDelete = async () => {
     if (!selectedUser) return;
     setIsLoading(true);
-    await dbService.deleteUser(selectedUser.id);
-    await onRefresh();
+    
+    // Mock delete operation
+    await new Promise(resolve => setTimeout(resolve, 500));
+    alert('User would be deleted in a real implementation');
+    
+    onRefresh();
     setIsLoading(false);
     setShowDeleteModal(false);
     setSelectedUser(null);
@@ -133,7 +146,7 @@ const MemberManagement: React.FC<MemberManagementProps> = ({ users, events, onRe
                         <User className="w-5 h-5 text-purple-600" />
                       </div>
                       <div>
-                        <div className="font-medium text-gray-900">{user.name || user.full_name}</div>
+                        <div className="font-medium text-gray-900">{user.full_name || user.email}</div>
                         <div className="text-sm text-gray-500">{user.email}</div>
                       </div>
                     </div>

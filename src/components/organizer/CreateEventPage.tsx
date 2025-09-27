@@ -101,17 +101,12 @@ const CreateEventPage: React.FC = () => {
     setErrors({});
     
     try {
-      console.log('Saving event for user:', user.id);
-      console.log('Event data:', eventData);
-      
       const result = await organizerCrudService.createEvent(eventData, user.id);
 
       if (result.success) {
         alert(`Event ${markComplete ? 'created and marked complete' : 'saved as draft'} successfully!`);
         navigate('/organizer/dashboard');
       } else {
-        console.error('Create event failed:', result.error);
-        
         // Handle specific errors
         if (result.error?.includes('permission denied') || result.error?.includes('Organizer permissions required')) {
           setErrors({ general: 'You need organizer permissions to create events. Please contact support if you believe this is an error.' });
@@ -122,7 +117,6 @@ const CreateEventPage: React.FC = () => {
         }
       }
     } catch (error) {
-      console.error('Unexpected error:', error);
       setErrors({ general: 'An unexpected error occurred. Please try again.' });
     } finally {
       setIsLoading(false);
