@@ -85,9 +85,11 @@ const MyEventsPage: React.FC = () => {
         setEvents(result.events);
       } else {
         console.error('Failed to fetch events:', result.error);
+        setEvents([]); // Clear events on error
       }
     } catch (error) {
       console.error('Failed to fetch events:', error);
+      setEvents([]); // Clear events on error
     }
     setIsLoading(false);
   };
@@ -95,6 +97,19 @@ const MyEventsPage: React.FC = () => {
   useEffect(() => {
     setBreadcrumbs(['My Events']);
     fetchEvents();
+
+    // Set up event listener for real-time updates if organizer
+    if (profile?.role === 'organizer') {
+      const handleEventUpdate = (events: any[]) => {
+        setEvents(events.filter(e => e.organizer_id === user?.id));
+      };
+
+      organizerCrudService.addEventListener(handleEventUpdate);
+
+      return () => {
+        organizerCrudService.removeEventListener(handleEventUpdate);
+      };
+    }
   }, [setBreadcrumbs, user, profile]);
 
   const filteredEvents = events.filter(event => {

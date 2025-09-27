@@ -49,9 +49,20 @@ const UnifiedDashboard: React.FC = () => {
 
   React.useEffect(() => {
     setBreadcrumbs(['Dashboard']);
-    if (viewMode === 'organizer' && user?.id) {
+    if (user?.id) {
       loadOrganizerEvents();
     }
+
+    // Set up event listener for real-time updates
+    const handleEventUpdate = (events: any[]) => {
+      setOrganizerEvents(events.filter(e => e.organizer_id === user?.id));
+    };
+
+    organizerCrudService.addEventListener(handleEventUpdate);
+
+    return () => {
+      organizerCrudService.removeEventListener(handleEventUpdate);
+    };
   }, [setBreadcrumbs]);
 
   const loadOrganizerEvents = async () => {
@@ -62,6 +73,17 @@ const UnifiedDashboard: React.FC = () => {
       const result = await organizerCrudService.getMyEvents(user.id);
       if (result.success && result.events) {
         setOrganizerEvents(result.events);
+        // Update stats based on actual events
+        setStats(prev => ({
+          ...prev,
+          organizer: {
+            totalEvents: result.events.length,
+            publishedEvents: result.events.filter(e => e.status === 'published').length,
+            draftEvents: result.events.filter(e => e.status === 'draft').length,
+            totalRevenue: result.events.reduce((sum, e) => sum + (e.price || 0), 0),
+            totalAttendees: result.events.reduce((sum, e) => sum + (e.capacity || 0), 0)
+          }
+        }));
       }
     } catch (error) {
       console.error('Failed to load organizer events:', error);
@@ -256,13 +278,13 @@ const UnifiedDashboard: React.FC = () => {
             <span>Create</span>
           </button>
         </div>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          {isLoadingEvents ? (
-            <div className="col-span-2 flex items-center justify-center py-8">
-              <Loader2 className="w-6 h-6 animate-spin text-indigo-600" />
-            </div>
-          ) : organizerEvents.length > 0 ? (
-            organizerEvents.slice(0, 2).map((event) => (
+        {isLoadingEvents ? (
+          <div className="flex items-center justify-center py-8">
+            <Loader2 className="w-6 h-6 animate-spin text-indigo-600" />
+          </div>
+        ) : organizerEvents.length > 0 ? (
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {organizerEvents.slice(0, 4).map((event) => (
               <div 
                 key={event.id}
                 className="group bg-gray-50 rounded-lg p-4 hover:shadow-md transition-all duration-200 cursor-pointer"
@@ -290,20 +312,20 @@ const UnifiedDashboard: React.FC = () => {
                   </span>
                 </div>
               </div>
-            ))
-          ) : (
-            <div className="col-span-2 text-center py-8">
-              <Calendar className="w-12 h-12 text-gray-400 mx-auto mb-3" />
-              <p className="text-gray-600 mb-4">No events created yet</p>
-              <button
-                onClick={() => navigate('/organizer/create-event')}
-                className="bg-indigo-600 text-white px-4 py-2 rounded-lg hover:bg-indigo-700 transition-colors duration-200"
-              >
-                Create Your First Event
-              </button>
-            </div>
-          )}
-        </div>
+            ))}
+          </div>
+        ) : (
+          <div className="text-center py-8">
+            <Calendar className="w-12 h-12 text-gray-400 mx-auto mb-3" />
+            <p className="text-gray-600 mb-4">No events created yet</p>
+            <button
+              onClick={() => navigate('/organizer/create-event')}
+              className="bg-indigo-600 text-white px-4 py-2 rounded-lg hover:bg-indigo-700 transition-colors duration-200"
+            >
+              Create Your First Event
+            </button>
+          </div>
+        )}
       </div>
     </div>
   );

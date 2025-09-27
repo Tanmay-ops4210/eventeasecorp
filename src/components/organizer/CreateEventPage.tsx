@@ -130,7 +130,10 @@ const CreateEventPage: React.FC = () => {
 
       if (result.success) {
         alert('Event saved as draft successfully!');
-        navigate('/dashboard');
+        // Navigate back to dashboard and refresh
+        setTimeout(() => {
+          navigate('/dashboard');
+        }, 1000);
       } else {
         // Handle specific errors
         if (result.error?.includes('permission denied') || result.error?.includes('Organizer permissions required')) {
