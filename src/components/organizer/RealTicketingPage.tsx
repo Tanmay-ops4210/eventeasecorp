@@ -1,12 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useApp } from '../../contexts/AppContext';
 import { useAuth } from '../../contexts/NewAuthContext';
-import {
-  Ticket, Plus, Edit, Trash2, Save, X, MoreVertical, Search,
-  DollarSign, Hash, Calendar, Clock, BarChart3, Users,
-  AlertTriangle, CheckCircle, Info, Loader2, ArrowLeft,
-  ArrowRight, ToggleLeft, ToggleRight, Eye, EyeOff
-} from 'lucide-react';
+import { Ticket, Plus, CreditCard as Edit, Trash2, Save, X, MoreVertical, Search, DollarSign, Hash, Calendar, Clock, BarChart3, Users, AlertTriangle, CheckCircle, Info, Loader2, ArrowLeft, ArrowRight, ToggleLeft, ToggleRight, Eye, EyeOff } from 'lucide-react';
 import { realEventService, RealEvent, RealTicketType, TicketFormData } from '../../services/realEventService';
 import { organizerCrudService, OrganizerEvent, OrganizerTicketType, TicketFormData as CrudTicketFormData } from '../../services/organizerCrudService';
 
