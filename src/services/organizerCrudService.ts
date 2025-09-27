@@ -223,6 +223,29 @@ class OrganizerCrudService {
     }
   }
 
+  async getEventById(eventId: string): Promise<{ success: boolean; event?: OrganizerEvent; error?: string }> {
+    try {
+      // Check organizer access
+      const accessCheck = await this.checkOrganizerAccess();
+      if (!accessCheck.success) {
+        return { success: false, error: accessCheck.error };
+      }
+
+      // Mock event fetch
+      await new Promise(resolve => setTimeout(resolve, 200));
+      
+      const event = mockEvents.find(event => event.id === eventId);
+      if (!event) {
+        return { success: false, error: 'Event not found' };
+      }
+      
+      return { success: true, event };
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'An unexpected error occurred';
+      return { success: false, error: `Failed to fetch event: ${message}` };
+    }
+  }
+
   async updateEvent(eventId: string, updates: Partial<EventFormData>): Promise<{ success: boolean; error?: string }> {
     try {
       // Check organizer access

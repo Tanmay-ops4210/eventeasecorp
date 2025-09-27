@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useApp } from '../../contexts/AppContext';
 import { useAuth } from '../../contexts/NewAuthContext';
@@ -27,49 +27,41 @@ const EventEditPage: React.FC = () => {
 
   React.useEffect(() => {
     setBreadcrumbs(['Edit Event']);
-    if (eventId) {
-      loadEvent();
-    }
-  }, [setBreadcrumbs, eventId]);
+  }, [setBreadcrumbs]);
 
-  const loadEvent = async () => {
+  const loadEvent = useCallback(async () => {
     if (!eventId) return;
     
     try {
       setIsLoadingEvent(true);
-      // Mock event loading - in real app, fetch from organizerCrudService
-      const mockEvent: OrganizerEvent = {
-        id: eventId,
-        organizer_id: user?.id || '',
-        title: 'Sample Event',
-        description: 'Sample event description',
-        category: 'conference',
-        event_date: '2024-03-15',
-        time: '09:00',
-        venue: 'Sample Venue',
-        capacity: 100,
-        image_url: 'https://images.pexels.com/photos/3184291/pexels-photo-3184291.jpeg?auto=compress&cs=tinysrgb&w=800',
-        status: 'draft',
-        visibility: 'public',
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString()
-      };
+      const result = await organizerCrudService.getEventById(eventId);
       
-      setEvent(mockEvent);
-      setEventData({
-        title: mockEvent.title,
-        description: mockEvent.description || '',
-        venue: mockEvent.venue,
-        capacity: mockEvent.capacity,
-        category: mockEvent.category
-      });
-      setImagePreview(mockEvent.image_url || '');
+      if (result.success && result.event) {
+        setEvent(result.event);
+        setEventData({
+          title: result.event.title,
+          description: result.event.description || '',
+          venue: result.event.venue,
+          capacity: result.event.capacity,
+          category: result.event.category
+        });
+        setImagePreview(result.event.image_url || '');
+        setPrice(result.event.price || 0);
+      } else {
+        setErrors({ general: result.error || 'Failed to load event' });
+      }
     } catch (error) {
       setErrors({ general: 'Failed to load event' });
     } finally {
       setIsLoadingEvent(false);
     }
-  };
+  }, [eventId]);
+
+  useEffect(() => {
+    if (eventId) {
+      loadEvent();
+    }
+  }, [eventId, loadEvent]);
 
   const handleInputChange = (field: string, value: string | number) => {
     setEventData(prev => ({ ...prev, [field]: value }));
@@ -90,6 +82,11 @@ const EventEditPage: React.FC = () => {
       if (!file.type.startsWith('image/')) {
         setErrors({ image: 'Please select a valid image file' });
         return;
+      }
+      
+      // Revoke previous object URL to prevent memory leaks
+      if (imagePreview && imagePreview.startsWith('blob:')) {
+        URL.revokeObjectURL(imagePreview);
       }
       
       setSelectedImage(file);
@@ -144,7 +141,15 @@ const EventEditPage: React.FC = () => {
       // Upload image if selected
       let imageUrl = imagePreview;
       if (selectedImage) {
-        imageUrl = URL.createObjectURL(selectedImage);
+        // In a real app, this would upload to a storage service
+        // For mock purposes, simulate a persistent URL
+        const mockImageUrls = [
+          'https://images.pexels.com/photos/3184291/pexels-photo-3184291.jpeg?auto=compress&cs=tinysrgb&w=800',
+          'https://images.pexels.com/photos/2747449/pexels-photo-2747449.jpeg?auto=compress&cs=tinysrgb&w=800',
+          'https://images.pexels.com/photos/1190298/pexels-photo-1190298.jpeg?auto=compress&cs=tinysrgb&w=800',
+          'https://images.pexels.com/photos/2608517/pexels-photo-2608517.jpeg?auto=compress&cs=tinysrgb&w=800'
+        ];
+        imageUrl = mockImageUrls[Math.floor(Math.random() * mockImageUrls.length)];
       }
 
       const updateData = {
@@ -155,8 +160,10 @@ const EventEditPage: React.FC = () => {
 
       const result = await organizerCrudService.updateEvent(eventId, updateData);
       if (result.success) {
+        // Update local state to reflect the saved image URL
+        setImagePreview(imageUrl);
+        setSelectedImage(null);
         alert('Event updated successfully!');
-        navigate('/dashboard');
       } else {
         alert(result.error || 'Failed to update event');
       }
@@ -301,6 +308,10 @@ const EventEditPage: React.FC = () => {
                           <button
                             type="button"
                             onClick={() => {
+                              // Revoke object URL if it exists
+                              if (imagePreview && imagePreview.startsWith('blob:')) {
+                                URL.revokeObjectURL(imagePreview);
+                              }
                               setSelectedImage(null);
                               setImagePreview('');
                             }}
