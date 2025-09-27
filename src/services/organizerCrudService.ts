@@ -127,12 +127,26 @@ let mockEvents: OrganizerEvent[] = [];
 
 class OrganizerCrudService {
   private static instance: OrganizerCrudService;
+  private eventListeners: ((events: OrganizerEvent[]) => void)[] = [];
 
   static getInstance(): OrganizerCrudService {
     if (!OrganizerCrudService.instance) {
       OrganizerCrudService.instance = new OrganizerCrudService();
     }
     return OrganizerCrudService.instance;
+  }
+
+  // Add event listener for real-time updates
+  addEventListener(callback: (events: OrganizerEvent[]) => void) {
+    this.eventListeners.push(callback);
+  }
+
+  removeEventListener(callback: (events: OrganizerEvent[]) => void) {
+    this.eventListeners = this.eventListeners.filter(listener => listener !== callback);
+  }
+
+  private notifyEventListeners() {
+    this.eventListeners.forEach(callback => callback([...mockEvents]));
   }
 
   // Check if user is authenticated and has organizer role
@@ -177,6 +191,9 @@ class OrganizerCrudService {
 
       // Store the event in mock storage
       mockEvents.push(newEvent);
+
+      // Notify listeners of the change
+      this.notifyEventListeners();
 
       return { success: true, event: newEvent };
     } catch (error) {
@@ -228,6 +245,9 @@ class OrganizerCrudService {
         updated_at: new Date().toISOString()
       };
 
+      // Notify listeners of the change
+      this.notifyEventListeners();
+
       return { success: true };
     } catch (error) {
       return { success: false, error: 'Failed to update event' };
@@ -256,6 +276,9 @@ class OrganizerCrudService {
         updated_at: new Date().toISOString()
       };
 
+      // Notify listeners of the change
+      this.notifyEventListeners();
+
       return { success: true };
     } catch (error) {
       return { success: false, error: 'Failed to publish event' };
@@ -279,6 +302,9 @@ class OrganizerCrudService {
       }
 
       mockEvents.splice(eventIndex, 1);
+
+      // Notify listeners of the change
+      this.notifyEventListeners();
 
       return { success: true };
     } catch (error) {
