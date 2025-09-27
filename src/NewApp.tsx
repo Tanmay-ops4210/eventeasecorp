@@ -36,7 +36,6 @@ const SimplePasswordReset = lazy(() => import('./components/auth/SimplePasswordR
 // Unified Dashboard Component
 const UnifiedDashboard = lazy(() => import('./components/dashboard/UnifiedDashboard'));
 const AttendeeMyEventsPage = lazy(() => import('./components/attendee/MyEventsPage'));
-const MyNetworkPage = lazy(() => import('./components/attendee/MyNetworkPage'));
 const NotificationsPage = lazy(() => import('./components/attendee/NotificationsPage'));
 const AttendeeProfilePage = lazy(() => import('./components/attendee/AttendeeProfilePage'));
 const AgendaBuilderPage = lazy(() => import('./components/attendee/AgendaBuilderPage'));
