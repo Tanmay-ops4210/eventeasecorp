@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useApp } from '../../contexts/AppContext';
 import { useAuth } from '../../contexts/NewAuthContext';
-import { Save, Calendar, MapPin, Users, Type, ArrowLeft, Loader2, Upload, X } from 'lucide-react';
+import { Save, Calendar, MapPin, Users, Type, ArrowLeft, Loader2, Upload, X, DollarSign, Check } from 'lucide-react';
 import { organizerCrudService, EventFormData } from '../../services/organizerCrudService';
 
 const CreateEventPage: React.FC = () => {
@@ -13,6 +13,7 @@ const CreateEventPage: React.FC = () => {
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [selectedImage, setSelectedImage] = useState<File | null>(null);
   const [imagePreview, setImagePreview] = useState<string>('');
+  const [price, setPrice] = useState<number>(0);
   const [eventData, setEventData] = useState<EventFormData>({
     title: '',
     description: '',
@@ -224,9 +225,7 @@ const CreateEventPage: React.FC = () => {
                       type="url"
                       value={eventData.image_url || ''}
                       onChange={(e) => handleInputChange('image_url', e.target.value)}
-                     autoComplete="url"
-                     autoComplete="off"
-                     autoComplete="off"
+                      autoComplete="off"
                       className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-colors duration-200 ${
                         errors.image_url ? 'border-red-500' : 'border-gray-300'
                       }`}
