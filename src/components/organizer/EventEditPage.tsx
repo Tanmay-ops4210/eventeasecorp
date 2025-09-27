@@ -2,10 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useApp } from '../../contexts/AppContext';
 import { useAuth } from '../../contexts/NewAuthContext';
-import { 
-  Save, Calendar, MapPin, Users, DollarSign, Type, ArrowLeft, 
-  Check, AlertTriangle, Loader2, Upload, X, Publish 
-} from 'lucide-react';
+import { Save, Calendar, MapPin, Users, DollarSign, Type, ArrowLeft, Check, AlertTriangle, Loader2, Upload, X, Fish as Publish } from 'lucide-react';
 import { organizerCrudService, OrganizerEvent } from '../../services/organizerCrudService';
 
 const EventEditPage: React.FC = () => {
