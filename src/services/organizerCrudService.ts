@@ -123,6 +123,8 @@ export interface MarketingCampaign {
   created_at: string;
 }
 
+let mockEvents: OrganizerEvent[] = [];
+
 class OrganizerCrudService {
   private static instance: OrganizerCrudService;
 
@@ -169,11 +171,12 @@ class OrganizerCrudService {
         image_url: eventData.image_url,
         status: 'draft',
         visibility: eventData.visibility || 'public',
-        price: eventData.price || 0,
-        currency: eventData.currency || 'INR',
         created_at: new Date().toISOString(),
         updated_at: new Date().toISOString()
       };
+
+      // Store the event in mock storage
+      mockEvents.push(newEvent);
 
       return { success: true, event: newEvent };
     } catch (error) {
@@ -193,28 +196,41 @@ class OrganizerCrudService {
       // Mock events fetch
       await new Promise(resolve => setTimeout(resolve, 300));
       
-      const mockEvents: OrganizerEvent[] = [
-        {
-          id: '1',
-          organizer_id: organizerId,
-          title: 'Tech Conference 2024',
-          description: 'Annual technology conference',
-          category: 'technology',
-          event_date: '2024-03-15',
-          time: '09:00',
-          venue: 'Convention Center',
-          capacity: 500,
-          status: 'published',
-          visibility: 'public',
-          created_at: new Date().toISOString(),
-          updated_at: new Date().toISOString()
-        }
-      ];
-
-      return { success: true, events: mockEvents };
+      // Filter events by organizer
+      const organizerEvents = mockEvents.filter(event => event.organizer_id === organizerId);
+      
+      return { success: true, events: organizerEvents };
     } catch (error) {
       const message = error instanceof Error ? error.message : 'An unexpected error occurred';
       return { success: false, error: `Failed to fetch events: ${message}` };
+    }
+  }
+
+  async updateEvent(eventId: string, updates: Partial<EventFormData>): Promise<{ success: boolean; error?: string }> {
+    try {
+      // Check organizer access
+      const accessCheck = await this.checkOrganizerAccess();
+      if (!accessCheck.success) {
+        return { success: false, error: accessCheck.error };
+      }
+
+      // Mock update
+      await new Promise(resolve => setTimeout(resolve, 300));
+      
+      const eventIndex = mockEvents.findIndex(event => event.id === eventId);
+      if (eventIndex === -1) {
+        return { success: false, error: 'Event not found' };
+      }
+
+      mockEvents[eventIndex] = {
+        ...mockEvents[eventIndex],
+        ...updates,
+        updated_at: new Date().toISOString()
+      };
+
+      return { success: true };
+    } catch (error) {
+      return { success: false, error: 'Failed to update event' };
     }
   }
 
@@ -229,9 +245,44 @@ class OrganizerCrudService {
       // Mock publish operation
       await new Promise(resolve => setTimeout(resolve, 300));
 
+      const eventIndex = mockEvents.findIndex(event => event.id === eventId);
+      if (eventIndex === -1) {
+        return { success: false, error: 'Event not found' };
+      }
+
+      mockEvents[eventIndex] = {
+        ...mockEvents[eventIndex],
+        status: 'published',
+        updated_at: new Date().toISOString()
+      };
+
       return { success: true };
     } catch (error) {
       return { success: false, error: 'Failed to publish event' };
+    }
+  }
+
+  async deleteEvent(eventId: string): Promise<{ success: boolean; error?: string }> {
+    try {
+      // Check organizer access
+      const accessCheck = await this.checkOrganizerAccess();
+      if (!accessCheck.success) {
+        return { success: false, error: accessCheck.error };
+      }
+
+      // Mock delete
+      await new Promise(resolve => setTimeout(resolve, 300));
+      
+      const eventIndex = mockEvents.findIndex(event => event.id === eventId);
+      if (eventIndex === -1) {
+        return { success: false, error: 'Event not found' };
+      }
+
+      mockEvents.splice(eventIndex, 1);
+
+      return { success: true };
+    } catch (error) {
+      return { success: false, error: 'Failed to delete event' };
     }
   }
 

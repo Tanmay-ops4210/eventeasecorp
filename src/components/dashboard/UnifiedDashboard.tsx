@@ -1,7 +1,9 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useApp } from '../../contexts/AppContext';
 import { useAuth } from '../../contexts/NewAuthContext';
 import { Calendar, Users, BarChart3, TrendingUp, Eye, Plus, Settings, Ticket, Mail, Twitch as Switch, Home, BookOpen, CheckCircle, Clock, AlertTriangle, Loader2, ArrowRight, Star, MapPin, DollarSign } from 'lucide-react';
+import { organizerCrudService, OrganizerEvent } from '../../services/organizerCrudService';
 
 type ViewMode = 'attendee' | 'organizer';
 
@@ -23,8 +25,11 @@ interface DashboardStats {
 
 const UnifiedDashboard: React.FC = () => {
   const { setBreadcrumbs } = useApp();
+  const navigate = useNavigate();
   const { user, profile } = useAuth();
   const [viewMode, setViewMode] = useState<ViewMode>('attendee');
+  const [organizerEvents, setOrganizerEvents] = useState<OrganizerEvent[]>([]);
+  const [isLoadingEvents, setIsLoadingEvents] = useState(false);
   const [stats, setStats] = useState<DashboardStats>({
     attendee: {
       upcomingEvents: 3,
@@ -44,10 +49,36 @@ const UnifiedDashboard: React.FC = () => {
 
   React.useEffect(() => {
     setBreadcrumbs(['Dashboard']);
+    if (viewMode === 'organizer' && user?.id) {
+      loadOrganizerEvents();
+    }
   }, [setBreadcrumbs]);
+
+  const loadOrganizerEvents = async () => {
+    if (!user?.id) return;
+    
+    setIsLoadingEvents(true);
+    try {
+      const result = await organizerCrudService.getMyEvents(user.id);
+      if (result.success && result.events) {
+        setOrganizerEvents(result.events);
+      }
+    } catch (error) {
+      console.error('Failed to load organizer events:', error);
+    } finally {
+      setIsLoadingEvents(false);
+    }
+  };
 
   const handleViewSwitch = () => {
     setViewMode(viewMode === 'attendee' ? 'organizer' : 'attendee');
+    if (viewMode === 'attendee' && user?.id) {
+      loadOrganizerEvents();
+    }
+  };
+
+  const handleEventCardClick = (eventId: string) => {
+    navigate(`/organizer/event/${eventId}/edit`);
   };
 
   const renderAttendeeView = () => (
@@ -226,46 +257,52 @@ const UnifiedDashboard: React.FC = () => {
           </button>
         </div>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          {/* Sample Event Cards */}
-          <div 
-            className="group bg-gray-50 rounded-lg p-4 hover:shadow-md transition-all duration-200 cursor-pointer"
-            onClick={() => window.location.href = '/organizer/event/1/edit'}
-          >
-            <img
-              src="https://images.pexels.com/photos/3184291/pexels-photo-3184291.jpeg?auto=compress&cs=tinysrgb&w=400"
-              alt="Tech Innovation Summit"
-              className="w-full h-24 object-cover rounded-lg mb-3"
-            />
-            <div className="flex items-center justify-between">
-              <div className="flex-1">
-                <p className="font-medium text-gray-900 text-sm">Tech Innovation Summit 2024</p>
-                <p className="text-xs text-gray-500">March 15, 2024</p>
-              </div>
-              <span className="bg-green-100 text-green-800 px-2 py-1 rounded-full text-xs font-medium">
-                Published
-              </span>
+          {isLoadingEvents ? (
+            <div className="col-span-2 flex items-center justify-center py-8">
+              <Loader2 className="w-6 h-6 animate-spin text-indigo-600" />
             </div>
-          </div>
-          
-          <div 
-            className="group bg-gray-50 rounded-lg p-4 hover:shadow-md transition-all duration-200 cursor-pointer"
-            onClick={() => window.location.href = '/organizer/event/2/edit'}
-          >
-            <img
-              src="https://images.pexels.com/photos/3861958/pexels-photo-3861958.jpeg?auto=compress&cs=tinysrgb&w=400"
-              alt="Digital Marketing Workshop"
-              className="w-full h-24 object-cover rounded-lg mb-3"
-            />
-            <div className="flex items-center justify-between">
-              <div className="flex-1">
-                <p className="font-medium text-gray-900 text-sm">Digital Marketing Workshop</p>
-                <p className="text-xs text-gray-500">March 22, 2024</p>
+          ) : organizerEvents.length > 0 ? (
+            organizerEvents.slice(0, 2).map((event) => (
+              <div 
+                key={event.id}
+                className="group bg-gray-50 rounded-lg p-4 hover:shadow-md transition-all duration-200 cursor-pointer"
+                onClick={() => handleEventCardClick(event.id)}
+              >
+                <img
+                  src={event.image_url || 'https://images.pexels.com/photos/3184291/pexels-photo-3184291.jpeg?auto=compress&cs=tinysrgb&w=400'}
+                  alt={event.title}
+                  className="w-full h-24 object-cover rounded-lg mb-3"
+                  onError={(e) => {
+                    e.currentTarget.src = 'https://images.pexels.com/photos/3184291/pexels-photo-3184291.jpeg?auto=compress&cs=tinysrgb&w=400';
+                  }}
+                />
+                <div className="flex items-center justify-between">
+                  <div className="flex-1">
+                    <p className="font-medium text-gray-900 text-sm">{event.title}</p>
+                    <p className="text-xs text-gray-500">{new Date(event.event_date).toLocaleDateString()}</p>
+                  </div>
+                  <span className={`px-2 py-1 rounded-full text-xs font-medium capitalize ${
+                    event.status === 'published' ? 'bg-green-100 text-green-800' :
+                    event.status === 'draft' ? 'bg-orange-100 text-orange-800' :
+                    'bg-gray-100 text-gray-800'
+                  }`}>
+                    {event.status}
+                  </span>
+                </div>
               </div>
-              <span className="bg-orange-100 text-orange-800 px-2 py-1 rounded-full text-xs font-medium">
-                Draft
-              </span>
+            ))
+          ) : (
+            <div className="col-span-2 text-center py-8">
+              <Calendar className="w-12 h-12 text-gray-400 mx-auto mb-3" />
+              <p className="text-gray-600 mb-4">No events created yet</p>
+              <button
+                onClick={() => navigate('/organizer/create-event')}
+                className="bg-indigo-600 text-white px-4 py-2 rounded-lg hover:bg-indigo-700 transition-colors duration-200"
+              >
+                Create Your First Event
+              </button>
             </div>
-          </div>
+          )}
         </div>
       </div>
     </div>

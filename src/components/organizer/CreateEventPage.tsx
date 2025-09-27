@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useApp } from '../../contexts/AppContext';
 import { useAuth } from '../../contexts/NewAuthContext';
-import { Save, Calendar, MapPin, Users, Type, ArrowLeft, Loader2, Upload, X, DollarSign, Check } from 'lucide-react';
+import { Save, Calendar, MapPin, Users, Type, ArrowLeft, Loader2, Upload, X, DollarSign } from 'lucide-react';
 import { organizerCrudService, EventFormData } from '../../services/organizerCrudService';
 
 const CreateEventPage: React.FC = () => {
@@ -13,7 +13,6 @@ const CreateEventPage: React.FC = () => {
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [selectedImage, setSelectedImage] = useState<File | null>(null);
   const [imagePreview, setImagePreview] = useState<string>('');
-  const [price, setPrice] = useState<number>(0);
   const [eventData, setEventData] = useState<EventFormData>({
     title: '',
     description: '',
@@ -35,6 +34,32 @@ const CreateEventPage: React.FC = () => {
     
     if (errors[field]) {
       setErrors(prev => ({ ...prev, [field]: '' }));
+    }
+  };
+
+  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      if (file.size > 5 * 1024 * 1024) {
+        setErrors({ image: 'Image size must be less than 5MB' });
+        return;
+      }
+      
+      if (!file.type.startsWith('image/')) {
+        setErrors({ image: 'Please select a valid image file' });
+        return;
+      }
+      
+      setSelectedImage(file);
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        setImagePreview(e.target?.result as string);
+      };
+      reader.readAsDataURL(file);
+      
+      if (errors.image) {
+        setErrors(prev => ({ ...prev, image: '' }));
+      }
     }
   };
 
@@ -72,25 +97,16 @@ const CreateEventPage: React.FC = () => {
       newErrors.capacity = 'Capacity must be at least 1';
     }
 
-    if (!selectedImage && !imagePreview) {
-      newErrors.image = 'Event image is required';
-    }
-
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
 
-  const handleSave = async (markComplete: boolean = false) => {
+  const handleSave = async () => {
     if (!user) return;
 
-    // For incomplete save, only require title
-    if (!markComplete && !eventData.title.trim()) {
+    // Only require title for draft save
+    if (!eventData.title.trim()) {
       setErrors({ title: 'Event title is required to save' });
-      return;
-    }
-
-    // For complete/publish, validate all fields
-    if (markComplete && !validateForm()) {
       return;
     }
 
@@ -113,7 +129,7 @@ const CreateEventPage: React.FC = () => {
       const result = await organizerCrudService.createEvent(eventDataWithImage, user.id);
 
       if (result.success) {
-        alert(`Event ${markComplete ? 'created and marked complete' : 'saved as draft'} successfully!`);
+        alert('Event saved as draft successfully!');
         navigate('/dashboard');
       } else {
         // Handle specific errors
@@ -131,40 +147,6 @@ const CreateEventPage: React.FC = () => {
       setIsLoading(false);
     }
   };
-
-  const handlePublish = async () => {
-    if (!validateForm() || !user) return;
-
-    setIsLoading(true);
-    try {
-      const result = await organizerCrudService.createEvent(eventData, user.id);
-
-      if (result.success && result.event) {
-        const publishResult = await organizerCrudService.publishEvent(result.event.id);
-        if (publishResult.success) {
-          alert('Event created and published successfully!');
-          navigate('/my-events');
-        } else {
-          alert(publishResult.error || 'Failed to publish event');
-        }
-      } else {
-        alert(result.error || 'Failed to create event');
-      }
-    } catch (error) {
-      alert('Failed to create and publish event');
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  const isFormValid = eventData.title.trim() && 
-                     eventData.description?.trim() &&
-                     eventData.event_date && 
-                     eventData.time && 
-                     eventData.venue.trim() && 
-                     eventData.image_url?.trim() &&
-                     eventData.capacity > 0 &&
-                     Object.keys(errors).length === 0;
 
   return (
     <div className="min-h-screen bg-gray-50 pt-20">
@@ -219,30 +201,54 @@ const CreateEventPage: React.FC = () => {
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Event Image URL *</label>
-                  <div className="space-y-3">
-                    <input
-                      type="url"
-                      value={eventData.image_url || ''}
-                      onChange={(e) => handleInputChange('image_url', e.target.value)}
-                      autoComplete="off"
-                      className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-colors duration-200 ${
-                        errors.image_url ? 'border-red-500' : 'border-gray-300'
-                      }`}
-                      placeholder="https://example.com/event-image.jpg"
-                    />
-                    {errors.image_url && <p className="text-red-500 text-sm mt-1">{errors.image_url}</p>}
-                    
-                    {eventData.image_url && (
-                      <div className="mt-3">
-                        <img
-                          src={eventData.image_url}
-                          alt="Event preview"
-                          className="w-full h-48 object-cover rounded-lg shadow-md"
-                          onError={(e) => {
-                            e.currentTarget.src = 'https://images.pexels.com/photos/3184291/pexels-photo-3184291.jpeg?auto=compress&cs=tinysrgb&w=800';
-                          }}
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Event Image *</label>
+                  <div className="space-y-4">
+                    <div className="flex items-center justify-center w-full">
+                      <label className={`flex flex-col items-center justify-center w-full h-32 border-2 border-dashed rounded-lg cursor-pointer transition-colors duration-200 ${
+                        errors.image ? 'border-red-500 bg-red-50' : 'border-gray-300 bg-gray-50 hover:bg-gray-100'
+                      }`}>
+                        <div className="flex flex-col items-center justify-center pt-5 pb-6">
+                          <Upload className="w-8 h-8 mb-4 text-gray-500" />
+                          <p className="mb-2 text-sm text-gray-500">
+                            <span className="font-semibold">Click to upload</span> or drag and drop
+                          </p>
+                          <p className="text-xs text-gray-500">PNG, JPG, GIF up to 5MB</p>
+                        </div>
+                        <input
+                          type="file"
+                          className="hidden"
+                          accept="image/*"
+                          onChange={handleImageUpload}
                         />
+                      </label>
+                    </div>
+                    {errors.image && <p className="text-red-500 text-sm mt-1">{errors.image}</p>}
+                    
+                    {imagePreview && (
+                      <div className="mt-4">
+                        <p className="text-sm font-medium text-gray-700 mb-2">Preview:</p>
+                        <div className="relative">
+                          <img
+                            src={imagePreview}
+                            alt="Event preview"
+                            className="w-full h-48 object-cover rounded-lg shadow-md"
+                          />
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setSelectedImage(null);
+                              setImagePreview('');
+                            }}
+                            className="absolute top-2 right-2 bg-red-500 text-white rounded-full p-1 hover:bg-red-600 transition-colors duration-200"
+                          >
+                            <X className="w-4 h-4" />
+                          </button>
+                        </div>
+                        {selectedImage && (
+                          <p className="text-sm text-gray-500 mt-2">
+                            File: {selectedImage.name} ({(selectedImage.size / 1024 / 1024).toFixed(2)} MB)
+                          </p>
+                        )}
                       </div>
                     )}
                   </div>
@@ -357,33 +363,6 @@ const CreateEventPage: React.FC = () => {
               </div>
             </div>
 
-            {/* Pricing */}
-            <div>
-              <h2 className="text-xl font-bold text-gray-900 mb-6 flex items-center space-x-2">
-                <DollarSign className="w-5 h-5" />
-                <span>Pricing</span>
-              </h2>
-              
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Price (₹)</label>
-                <div className="relative">
-                  <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 text-lg">₹</span>
-                  <input
-                    type="number"
-                    value={price}
-                    onChange={(e) => setPrice(parseFloat(e.target.value) || 0)}
-                    min="0"
-                    step="0.01"
-                    className={`w-full pl-10 pr-4 py-3 border rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-colors duration-200 ${
-                      errors.price ? 'border-red-500' : 'border-gray-300'
-                    }`}
-                    placeholder="0.00"
-                  />
-                </div>
-                {errors.price && <p className="text-red-500 text-sm mt-1">{errors.price}</p>}
-                <p className="text-sm text-gray-500 mt-1">Set to 0 for free events</p>
-              </div>
-            </div>
           </div>
 
           {/* Action Buttons */}
@@ -396,42 +375,17 @@ const CreateEventPage: React.FC = () => {
             )}
             
             <div className="text-sm text-gray-500">
-              {eventData.title.trim() ? (
-                <span className="flex items-center space-x-2 text-green-600">
-                  <Check className="w-4 h-4" />
-                  <span>Ready to save</span>
-                </span>
-              ) : (
-                <span>Enter a title to save as draft</span>
-              )}
+              <span>Enter event details to save as draft</span>
             </div>
 
-            <div className="flex space-x-4">
+            <div>
               <button
-                onClick={() => handleSave(false)}
+                onClick={handleSave}
                 disabled={isLoading || !eventData.title.trim()}
-                className="flex items-center space-x-2 px-6 py-3 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors duration-200"
+                className="flex items-center space-x-2 px-6 py-3 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors duration-200"
               >
                 {isLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
                 <span>Save Draft</span>
-              </button>
-
-              <button
-                onClick={() => handleSave(true)}
-                disabled={isLoading || !isFormValid}
-                className="flex items-center space-x-2 px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 transform hover:scale-105 disabled:transform-none"
-              >
-                {isLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Check className="w-4 h-4" />}
-                <span>Mark Complete</span>
-              </button>
-
-              <button
-                onClick={handlePublish}
-                disabled={isLoading || !isFormValid}
-                className="flex items-center space-x-2 px-6 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 transform hover:scale-105 disabled:transform-none"
-              >
-                {isLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Check className="w-4 h-4" />}
-                <span>Publish Event</span>
               </button>
             </div>
           </div>
