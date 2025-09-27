@@ -51,7 +51,6 @@ const AgendaManagerPage = lazy(() => import('./components/organizer/AgendaManage
 const VenueManagerPage = lazy(() => import('./components/organizer/VenueManagerPage'));
 const RealTicketingPage = lazy(() => import('./components/organizer/RealTicketingPage'));
 const DiscountCodesPage = lazy(() => import('./components/organizer/DiscountCodesPage'));
-const RealEmailCampaignsPage = lazy(() => import('./components/organizer/RealEmailCampaignsPage'));
 const RealAttendeeManagementPage = lazy(() => import('./components/organizer/RealAttendeeManagementPage'));
 const SpeakerPortalPage = lazy(() => import('./components/organizer/SpeakerPortalPage'));
 const StaffRolesPage = lazy(() => import('./components/organizer/StaffRolesPage'));
