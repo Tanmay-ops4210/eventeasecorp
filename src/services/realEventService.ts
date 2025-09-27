@@ -115,14 +115,30 @@ export interface DashboardStats {
   averageAttendance: number;
 }
 
+let mockEvents: RealEvent[] = [];
+
 class RealEventService {
   private static instance: RealEventService;
+  private eventListeners: ((events: any[]) => void)[] = [];
 
   static getInstance(): RealEventService {
     if (!RealEventService.instance) {
       RealEventService.instance = new RealEventService();
     }
     return RealEventService.instance;
+  }
+
+  // Add event listener for real-time updates
+  addEventListener(callback: (events: any[]) => void) {
+    this.eventListeners.push(callback);
+  }
+
+  removeEventListener(callback: (events: any[]) => void) {
+    this.eventListeners = this.eventListeners.filter(listener => listener !== callback);
+  }
+
+  private notifyEventListeners() {
+    this.eventListeners.forEach(callback => callback([...mockEvents]));
   }
 
   /**
@@ -228,6 +244,12 @@ class RealEventService {
         updated_at: new Date().toISOString()
       };
 
+      // Store the event in mock storage
+      mockEvents.push(newEvent);
+
+      // Notify listeners of the change
+      this.notifyEventListeners();
+
       return { success: true, event: newEvent };
     } catch (error) {
       const message = error instanceof Error ? error.message : 'An unexpected error occurred';
@@ -240,25 +262,10 @@ class RealEventService {
       // Mock events fetch
       await new Promise(resolve => setTimeout(resolve, 300));
       
-      const mockEvents: RealEvent[] = [
-        {
-          id: '1',
-          organizer_id: organizerId,
-          title: 'Tech Innovation Summit 2024',
-          description: 'Annual technology conference',
-          event_date: '2024-03-15',
-          time: '09:00',
-          venue: 'Convention Center',
-          capacity: 500,
-          category: 'technology',
-          status: 'published',
-          visibility: 'public',
-          created_at: new Date().toISOString(),
-          updated_at: new Date().toISOString()
-        }
-      ];
+      // Filter events by organizer
+      const organizerEvents = mockEvents.filter(event => event.organizer_id === organizerId);
 
-      return { success: true, events: mockEvents };
+      return { success: true, events: organizerEvents };
     } catch (error) {
       const message = error instanceof Error ? error.message : 'An unexpected error occurred';
       return { success: false, error: `Failed to fetch events: ${message}` };
@@ -355,6 +362,18 @@ class RealEventService {
     try {
       // Mock delete
       await new Promise(resolve => setTimeout(resolve, 300));
+      
+      // Find and remove the event from mock storage
+      const eventIndex = mockEvents.findIndex(event => event.id === eventId);
+      if (eventIndex === -1) {
+        return { success: false, error: 'Event not found' };
+      }
+      
+      mockEvents.splice(eventIndex, 1);
+
+      // Notify listeners of the change
+      this.notifyEventListeners();
+
       return { success: true };
     } catch (error) {
       return { success: false, error: 'Failed to delete event' };
@@ -365,6 +384,21 @@ class RealEventService {
     try {
       // Mock publish
       await new Promise(resolve => setTimeout(resolve, 300));
+
+      // Find and update the event in mock storage
+      const eventIndex = mockEvents.findIndex(event => event.id === eventId);
+      if (eventIndex === -1) {
+        return { success: false, error: 'Event not found' };
+      }
+      
+      mockEvents[eventIndex] = {
+        ...mockEvents[eventIndex],
+        status: 'published',
+        updated_at: new Date().toISOString()
+      };
+
+      // Notify listeners of the change
+      this.notifyEventListeners();
 
       return { success: true };
     } catch (error) {
