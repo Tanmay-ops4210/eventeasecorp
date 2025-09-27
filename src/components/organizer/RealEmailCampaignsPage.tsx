@@ -2,11 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useApp } from '../../contexts/AppContext';
 import { useAuth } from '../../contexts/NewAuthContext';
-import {
-  Mail, Plus, Send, Edit, Trash2, Eye, Users, BarChart3,
-  Calendar, Clock, Target, Filter, Search, Download,
-  Loader2, CheckCircle, AlertTriangle, Copy
-} from 'lucide-react';
+import { Mail, Plus, Send, CreditCard as Edit, Trash2, Eye, Users, BarChart3, Calendar, Clock, Target, Filter, Search, Download, Loader2, CheckCircle, AlertTriangle, Copy } from 'lucide-react';
 import { organizerCrudService, MarketingCampaign } from '../../services/organizerCrudService';
 
 const RealEmailCampaignsPage: React.FC = () => {
