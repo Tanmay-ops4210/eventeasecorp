@@ -215,27 +215,56 @@ const UnifiedDashboard: React.FC = () => {
 
       {/* Recent Events */}
       <div className="bg-white rounded-2xl shadow-lg p-6">
-        <h3 className="text-lg font-semibold text-gray-900 mb-4">Your Events</h3>
-        <div className="space-y-3">
-          <div className="flex items-center space-x-3 p-3 bg-gray-50 rounded-lg">
-            <Calendar className="w-5 h-5 text-indigo-600" />
-            <div className="flex-1">
-              <p className="font-medium text-gray-900">Tech Innovation Summit 2024</p>
-              <p className="text-sm text-gray-500">March 15, 2024 • Published</p>
+        <div className="flex items-center justify-between mb-4">
+          <h3 className="text-lg font-semibold text-gray-900">Your Events</h3>
+          <button
+            onClick={() => window.location.href = '/organizer/create-event'}
+            className="flex items-center space-x-2 px-3 py-1 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 text-sm"
+          >
+            <Plus className="w-4 h-4" />
+            <span>Create</span>
+          </button>
+        </div>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          {/* Sample Event Cards */}
+          <div 
+            className="group bg-gray-50 rounded-lg p-4 hover:shadow-md transition-all duration-200 cursor-pointer"
+            onClick={() => window.location.href = '/organizer/event/1/edit'}
+          >
+            <img
+              src="https://images.pexels.com/photos/3184291/pexels-photo-3184291.jpeg?auto=compress&cs=tinysrgb&w=400"
+              alt="Tech Innovation Summit"
+              className="w-full h-24 object-cover rounded-lg mb-3"
+            />
+            <div className="flex items-center justify-between">
+              <div className="flex-1">
+                <p className="font-medium text-gray-900 text-sm">Tech Innovation Summit 2024</p>
+                <p className="text-xs text-gray-500">March 15, 2024</p>
+              </div>
+              <span className="bg-green-100 text-green-800 px-2 py-1 rounded-full text-xs font-medium">
+                Published
+              </span>
             </div>
-            <span className="bg-green-100 text-green-800 px-2 py-1 rounded-full text-xs font-medium">
-              Published
-            </span>
           </div>
-          <div className="flex items-center space-x-3 p-3 bg-gray-50 rounded-lg">
-            <Calendar className="w-5 h-5 text-orange-600" />
-            <div className="flex-1">
-              <p className="font-medium text-gray-900">Digital Marketing Workshop</p>
-              <p className="text-sm text-gray-500">March 22, 2024 • Draft</p>
+          
+          <div 
+            className="group bg-gray-50 rounded-lg p-4 hover:shadow-md transition-all duration-200 cursor-pointer"
+            onClick={() => window.location.href = '/organizer/event/2/edit'}
+          >
+            <img
+              src="https://images.pexels.com/photos/3861958/pexels-photo-3861958.jpeg?auto=compress&cs=tinysrgb&w=400"
+              alt="Digital Marketing Workshop"
+              className="w-full h-24 object-cover rounded-lg mb-3"
+            />
+            <div className="flex items-center justify-between">
+              <div className="flex-1">
+                <p className="font-medium text-gray-900 text-sm">Digital Marketing Workshop</p>
+                <p className="text-xs text-gray-500">March 22, 2024</p>
+              </div>
+              <span className="bg-orange-100 text-orange-800 px-2 py-1 rounded-full text-xs font-medium">
+                Draft
+              </span>
             </div>
-            <span className="bg-orange-100 text-orange-800 px-2 py-1 rounded-full text-xs font-medium">
-              Draft
-            </span>
           </div>
         </div>
       </div>

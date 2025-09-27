@@ -91,10 +91,8 @@ export interface EventFormData {
   end_time?: string;
   venue: string;
   capacity: number;
-  image_url?: string;
+  image_url?: string; // This will be set after image upload
   visibility: 'public' | 'private' | 'unlisted';
-  price?: number;
-  currency?: string;
 }
 
 export interface TicketFormData {

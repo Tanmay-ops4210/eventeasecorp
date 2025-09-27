@@ -58,6 +58,8 @@ const SpeakerPortalPage = lazy(() => import('./components/organizer/SpeakerPorta
 const StaffRolesPage = lazy(() => import('./components/organizer/StaffRolesPage'));
 const RealAnalyticsPage = lazy(() => import('./components/organizer/RealAnalyticsPage'));
 const OrganizerSettingsPage = lazy(() => import('./components/organizer/OrganizerSettingsPage'));
+const EventEditPage = lazy(() => import('./components/organizer/EventEditPage'));
+const EventTicketingSetupPage = lazy(() => import('./components/organizer/EventTicketingSetupPage'));
 
 // Admin Components
 const AdminDashboard = lazy(() => import('./components/admin/AdminDashboard'));
@@ -154,14 +156,6 @@ const AppContent: React.FC = () => {
             />
 
             {/* --- Attendee-specific Routes --- */}
-            <Route 
-              path="/my-network" 
-              element={
-                <ProtectedRoute allowedRoles={['attendee']}>
-                  <MyNetworkPage />
-                </ProtectedRoute>
-              } 
-            />
             <Route 
               path="/notifications" 
               element={
@@ -313,6 +307,22 @@ const AppContent: React.FC = () => {
               element={
                 <ProtectedRoute allowedRoles={['organizer']}>
                   <StaffRolesPage />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/organizer/event/:eventId/edit" 
+              element={
+                <ProtectedRoute allowedRoles={['organizer']}>
+                  <EventEditPage />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/organizer/event/:eventId/ticketing" 
+              element={
+                <ProtectedRoute allowedRoles={['organizer']}>
+                  <EventTicketingSetupPage />
                 </ProtectedRoute>
               } 
             />

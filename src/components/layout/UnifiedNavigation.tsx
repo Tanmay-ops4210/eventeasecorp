@@ -15,7 +15,6 @@ const UnifiedNavigation: React.FC = () => {
   const attendeeNavItems = [
     { label: 'Discover', path: '/discover', icon: Home },
     { label: 'My Events', path: '/my-events', icon: Calendar },
-    { label: 'My Network', path: '/my-network', icon: Users },
     { label: 'Resources', path: '/resources', icon: BookOpen },
   ];
 
@@ -26,7 +25,6 @@ const UnifiedNavigation: React.FC = () => {
     { label: 'Attendees', path: '/organizer/attendee-management', icon: Users },
     { label: 'Analytics', path: '/organizer/analytics', icon: BarChart3 },
     { label: 'Ticketing', path: '/organizer/ticketing', icon: Ticket },
-    { label: 'Marketing', path: '/organizer/email-campaigns', icon: Mail },
   ];
 
   const currentNavItems = viewMode === 'attendee' ? attendeeNavItems : organizerNavItems;
