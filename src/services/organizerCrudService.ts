@@ -19,6 +19,27 @@ export interface OrganizerEvent {
   currency?: string;
 }
 
+// Add attendees property to OrganizerEvent interface
+export interface OrganizerEvent {
+  id: string;
+  organizer_id: string;
+  title: string;
+  description?: string;
+  category: string;
+  event_date: string;
+  time: string;
+  end_time?: string;
+  venue: string;
+  capacity: number;
+  attendees?: number;
+  image_url?: string;
+  status: 'draft' | 'published' | 'ongoing' | 'completed' | 'cancelled';
+  visibility: 'public' | 'private' | 'unlisted';
+  created_at: string;
+  updated_at: string;
+  price?: number;
+  currency?: string;
+}
 export interface OrganizerTicketType {
   id: string;
   event_id: string;
@@ -182,6 +203,7 @@ class OrganizerCrudService {
         end_time: eventData.end_time,
         venue: eventData.venue,
         capacity: eventData.capacity,
+        attendees: 0,
         image_url: eventData.image_url,
         status: 'draft',
         visibility: eventData.visibility || 'public',

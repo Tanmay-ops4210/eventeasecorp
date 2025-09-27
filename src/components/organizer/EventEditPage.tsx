@@ -13,55 +13,41 @@ const EventEditPage: React.FC = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [isLoadingEvent, setIsLoadingEvent] = useState(true);
   const [errors, setErrors] = useState<Record<string, string>>({});
-  const [selectedImage, setSelectedImage] = useState<File | null>(null);
-  const [imagePreview, setImagePreview] = useState<string>('');
-  const [price, setPrice] = useState<number>(0);
-  const [event, setEvent] = useState<OrganizerEvent | null>(null);
-  const [eventData, setEventData] = useState({
-    title: '',
-    description: '',
-    venue: '',
-    capacity: 100,
-    category: 'conference'
-  });
-
-  React.useEffect(() => {
-    setBreadcrumbs(['Edit Event']);
   }, [setBreadcrumbs]);
 
-  const loadEvent = useCallback(async () => {
-    if (!eventId) return;
-    
-    try {
-      setIsLoadingEvent(true);
-      const result = await organizerCrudService.getEventById(eventId);
-      
-      if (result.success && result.event) {
-        setEvent(result.event);
-        setEventData({
-          title: result.event.title,
-          description: result.event.description || '',
-          venue: result.event.venue,
-          capacity: result.event.capacity,
-          category: result.event.category
-        });
-        setImagePreview(result.event.image_url || '');
-        setPrice(result.event.price || 0);
-      } else {
-        setErrors({ general: result.error || 'Failed to load event' });
-      }
-    } catch (error) {
-      setErrors({ general: 'Failed to load event' });
-    } finally {
-      setIsLoadingEvent(false);
-    }
-  }, [eventId]);
-
   useEffect(() => {
+    const loadEvent = async () => {
+      if (!eventId) return;
+      
+      try {
+        setIsLoadingEvent(true);
+        const result = await organizerCrudService.getEventById(eventId);
+        
+        if (result.success && result.event) {
+          setEvent(result.event);
+          setEventData({
+            title: result.event.title,
+            description: result.event.description || '',
+            venue: result.event.venue,
+            capacity: result.event.capacity,
+            category: result.event.category
+          });
+          setImagePreview(result.event.image_url || '');
+          setPrice(result.event.price || 0);
+        } else {
+          setErrors({ general: result.error || 'Failed to load event' });
+        }
+      } catch (error) {
+        setErrors({ general: 'Failed to load event' });
+      } finally {
+        setIsLoadingEvent(false);
+      }
+    };
+
     if (eventId) {
       loadEvent();
     }
-  }, [eventId, loadEvent]);
+  }, [eventId]);
 
   const handleInputChange = (field: string, value: string | number) => {
     setEventData(prev => ({ ...prev, [field]: value }));

@@ -32,17 +32,17 @@ const UnifiedDashboard: React.FC = () => {
   const [isLoadingEvents, setIsLoadingEvents] = useState(false);
   const [stats, setStats] = useState<DashboardStats>({
     attendee: {
-      upcomingEvents: 3,
-      networkConnections: 47,
-      eventsAttended: 12,
-      savedEvents: 8
+      upcomingEvents: 0,
+      networkConnections: 0,
+      eventsAttended: 0,
+      savedEvents: 0
     },
     organizer: {
-      totalEvents: 5,
-      publishedEvents: 3,
-      draftEvents: 2,
-      totalRevenue: 25000,
-      totalAttendees: 450
+      totalEvents: 0,
+      publishedEvents: 0,
+      draftEvents: 0,
+      totalRevenue: 0,
+      totalAttendees: 0
     }
   });
   const [isLoading, setIsLoading] = useState(false);
@@ -80,7 +80,7 @@ const UnifiedDashboard: React.FC = () => {
             totalEvents: result.events.length,
             publishedEvents: result.events.filter(e => e.status === 'published').length,
             draftEvents: result.events.filter(e => e.status === 'draft').length,
-            totalRevenue: result.events.reduce((sum, e) => sum + (e.price || 0), 0),
+            totalRevenue: result.events.reduce((sum, e) => sum + ((e.price || 0) * (e.attendees || 0)), 0),
             totalAttendees: result.events.reduce((sum, e) => sum + (e.capacity || 0), 0)
           }
         }));
